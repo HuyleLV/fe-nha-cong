@@ -1,4 +1,4 @@
-import TrangChu from "@/features/trang-chu";
+import Blog from "@/features/blog";
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,6 +11,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
-  return <TrangChu />;
+export default async function Page() {
+  return <Blog />;
 }
