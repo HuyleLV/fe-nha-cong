@@ -88,7 +88,7 @@ export default function AdminApartmentsPage() {
         <h1 className="text-xl font-semibold text-emerald-900">QUẢN LÝ CĂN HỘ</h1>
         <button
           onClick={() => router.push("/admin/apartment/create")}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
         >
           <Plus className="size-4" /> Thêm căn hộ
         </button>

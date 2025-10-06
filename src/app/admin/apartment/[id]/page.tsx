@@ -14,6 +14,20 @@ import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment, ApartmentForm, ApartmentStatus } from "@/type/apartment";
 import { Location } from "@/type/location";
+import CustomSunEditor from "../../components/customSunEditor";
+
+/* ---------- helpers ---------- */
+function wordCountFromHtml(html?: string) {
+  if (!html) return 0;
+  const text = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<\/?[^>]+(>|$)/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return 0;
+  return text.split(" ").length;
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -46,7 +60,7 @@ export default function ApartmentFormPage() {
       title: "",
       slug: "",
       excerpt: "",
-      description: "",
+      description: "", // sẽ được điều khiển bởi SunEditor
       locationId: undefined as unknown as number,
       streetAddress: "",
       lat: "",
@@ -64,13 +78,16 @@ export default function ApartmentFormPage() {
   const title = watch("title");
   const slug = watch("slug");
   const cover = watch("coverImageUrl") ?? "";
+  const descriptionHtml = watch("description") || "";
 
+  // Tự tạo slug theo tiêu đề nếu slug đang trống
   useEffect(() => {
     const cur = (slug || "").trim();
     if (!cur && title?.trim()) setValue("slug", toSlug(title), { shouldDirty: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  // Load detail in edit mode
+  // Load detail khi edit
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
@@ -91,6 +108,7 @@ export default function ApartmentFormPage() {
           currency: ap.currency,
           status: ap.status,
           coverImageUrl: ap.coverImageUrl || "",
+          locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
         });
         setSelectedLocation(ap.location || null);
       } catch {
@@ -107,10 +125,11 @@ export default function ApartmentFormPage() {
       ...values,
       title: values.title.trim(),
       slug: (values.slug?.trim() || toSlug(values.title)).trim(),
-      locationId: Number(values.locationId),
+      locationId: Number(values.locationId || selectedLocation?.id),
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
+      description: values.description || "", // từ SunEditor
     };
 
     try {
@@ -144,11 +163,13 @@ export default function ApartmentFormPage() {
             <Save className="w-5 h-5 text-emerald-600" />
             <div>
               <p className="text-sm text-slate-500">{isEdit ? "Chỉnh sửa căn hộ" : "Tạo căn hộ mới"}</p>
-              <h1 className="text-lg font-semibold text-slate-800 line-clamp-1">{title?.trim() || "Căn hộ chưa có tiêu đề"}</h1>
+              <h1 className="text-lg font-semibold text-slate-800 line-clamp-1">
+                {title?.trim() || "Căn hộ chưa có tiêu đề"}
+              </h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {dirtyFields && (
+            {Object.keys(dirtyFields || {}).length > 0 && (
               <span className="hidden md:inline-flex items-center gap-1 text-xs text-slate-500">
                 <Info className="w-4 h-4" /> Thay đổi chưa lưu
               </span>
@@ -219,21 +240,13 @@ export default function ApartmentFormPage() {
             </div>
           </Section>
 
-          <Section title="Nội dung mô tả">
-            <div className="grid grid-cols-1 gap-3">
-              <textarea
-                rows={3}
-                className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Mô tả ngắn (excerpt)…"
-                {...register("excerpt")}
-              />
-              <textarea
-                rows={8}
-                className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Mô tả chi tiết (có thể dùng HTML)…"
-                {...register("description")}
-              />
-            </div>
+          <Section title="Mô tả ngắn">
+            <textarea
+              rows={3}
+              className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+              placeholder="Mô tả ngắn (excerpt)…"
+              {...register("excerpt")}
+            />
           </Section>
 
           <Section title="Địa chỉ & Toạ độ (tuỳ chọn)">
@@ -260,6 +273,27 @@ export default function ApartmentFormPage() {
               />
             </div>
           </Section>
+
+          {/* 🔁 Thay textarea bằng SunEditor cho mô tả chi tiết */}
+          <Section title="Mô tả chi tiết">
+            <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
+              <Controller
+                name="description"
+                control={control}
+                rules={{
+                  validate: (v) =>
+                    (v && v.replace(/<[^>]*>/g, "").trim().length > 0) || "Vui lòng nhập nội dung",
+                }}
+                render={({ field: { value, onChange } }) => (
+                  <CustomSunEditor value={value || ""} onChange={onChange} />
+                )}
+              />
+            </div>
+            {errors.description && (
+              <p className="text-red-600 text-sm mt-2">{String(errors.description.message || errors.description)}</p>
+            )}
+            <div className="text-xs text-slate-500 mt-2">{wordCountFromHtml(descriptionHtml)} từ</div>
+          </Section>
         </div>
 
         {/* RIGHT */}
@@ -269,6 +303,7 @@ export default function ApartmentFormPage() {
               <Controller
                 control={control}
                 name="locationId"
+                rules={{ required: "Vui lòng chọn khu vực" }}
                 render={({ field }) => (
                   <LocationLookup
                     value={selectedLocation}
