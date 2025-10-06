@@ -1,4 +1,3 @@
-// app/blog/[slug]/share-actions.tsx
 "use client";
 
 import { Copy, Share2 } from "lucide-react";

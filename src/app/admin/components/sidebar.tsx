@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Newspaper } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -25,6 +25,8 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
+    { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
+    { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
   ];
 
   const onLogout = () => {
