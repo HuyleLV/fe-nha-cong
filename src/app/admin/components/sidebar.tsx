@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -27,6 +27,7 @@ export default function Sidebar() {
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
     { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
+    { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
   ];
 
   const onLogout = () => {

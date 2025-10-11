@@ -47,12 +47,14 @@ export type ApartmentForm = {
 
 
 export type ApartmentQuery = {
+    locationId?: number;
+    locationSlug?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    status?: ApartmentStatus;
+    q?: string;
     page?: number;
     limit?: number;
-    search?: string; // title/slug
-    status?: ApartmentStatus | "all";
-    locationId?: number;
-    minPrice?: string; // numeric string
-    maxPrice?: string;
-    bedrooms?: number;
 };

@@ -108,3 +108,17 @@ export function fPhoneNumber(phoneNumber: string) {
 
   return phoneNumber.slice(0, 1) !== "+" ? `+${phoneNumber}` : phoneNumber;
 }
+
+export function formatMoneyVND(amount: number | string, showSymbol: boolean = true): string {
+  const value = typeof amount === "number" ? amount : Number(amount);
+  if (isNaN(value)) return "0 ₫";
+
+  const formatted = new Intl.NumberFormat("vi-VN", {
+    style: showSymbol ? "currency" : "decimal",
+    currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+
+  return formatted;
+}

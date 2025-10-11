@@ -43,10 +43,10 @@ export default function AdminApartmentsPage() {
       const { items, meta } = await apartmentService.getAll({
         page,
         limit: LIMIT,
-        search: search || undefined,
+        q: search || undefined,
         locationId: selectedLocation?.id,
-        minPrice: minPrice ? String(minPrice) : undefined,
-        maxPrice: maxPrice ? String(maxPrice) : undefined,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
         bedrooms: bedrooms ? Number(bedrooms) : undefined,
       });
       setItems(items || []);
@@ -97,7 +97,7 @@ export default function AdminApartmentsPage() {
       {/* Table */}
       <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden mt-5">
         <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
-            <tr className="text-left text-slate-600 border-b">
+            <tr className="text-left text-slate-600">
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Tiêu đề</th>
               <th className="px-4 py-3">Slug</th>

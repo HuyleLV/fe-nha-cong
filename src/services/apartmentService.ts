@@ -8,7 +8,7 @@ export const apartmentService = {
             params,
             validateStatus: () => true,
         });
-        if (res.status !== 200) throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        if (res.status >= 400) throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
         return { items: res.data.data, meta: res.data.meta };
     },
     
