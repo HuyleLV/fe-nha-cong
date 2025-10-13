@@ -9,6 +9,7 @@ import banner from "@/assets/banner-01.jpg";
 import PartnersCarousel, { PartnerLogo } from "@/components/partnersCarousel";
 import FaqCarousel, { FaqItem } from "@/components/faqCarousel";
 import { Apartment } from "@/type/apartment";
+import { useDevice } from "@/hooks/useDevice";
 
 /* ================= Types từ API ================= */
 type ApiApartment = {
@@ -49,7 +50,7 @@ const FAQS: FaqItem[] = [
 ];
 
 export default function TrangChu() {
-  /* ============= state fetch API ============= */
+  const { isMobile } = useDevice();
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +123,7 @@ export default function TrangChu() {
 
   return (
     <div className="w-full bg-gradient-to-b from-emerald-50 to-white">
-      <Image src={banner} alt="nha-cong" className="w-full h-200" priority />
+      <Image src={banner} alt="nha-cong" className={`w-full ${isMobile ? 'h-60' : 'h-200'}`} priority />
 
       {/* Search */}
       <div className="p-4">

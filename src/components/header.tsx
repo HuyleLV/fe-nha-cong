@@ -1,63 +1,354 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "../assets/logo-trang.png";
-import { Home, MapPin, BedDouble, Bath, Heart, UserRound, Menu } from "lucide-react";
+import {
+  Heart,
+  UserRound,
+  Menu,
+  X,
+  UserPlus,
+  LogIn,
+  LifeBuoy,
+  ArrowRight,
+  Building2,
+  MapPin,
+  Newspaper,
+  Phone,
+} from "lucide-react";
 
 export default function Header() {
+  const [openUser, setOpenUser] = useState(false);
+  const [openNavMobile, setOpenNavMobile] = useState(false);
+  const [openNavDesktop, setOpenNavDesktop] = useState(false);
+
+  const userBtnRef = useRef<HTMLButtonElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown & panels on outside/Esc
+  useEffect(() => {
+    const outside = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (
+        userMenuRef.current &&
+        userBtnRef.current &&
+        !userMenuRef.current.contains(t) &&
+        !userBtnRef.current.contains(t)
+      ) {
+        setOpenUser(false);
+      }
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenUser(false);
+        setOpenNavMobile(false);
+        setOpenNavDesktop(false);
+      }
+    };
+    document.addEventListener("mousedown", outside);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, []);
+
+  // Lock scroll when any panel open
+  const anyPanelOpen = openNavMobile || openNavDesktop;
+  useEffect(() => {
+    if (anyPanelOpen) document.body.classList.add("overflow-hidden");
+    else document.body.classList.remove("overflow-hidden");
+    return () => document.body.classList.remove("overflow-hidden");
+  }, [anyPanelOpen]);
+
+  const mainMenus = [
+    { label: "TÌM PHÒNG", href: "/" },
+    { label: "TÌM VIỆC", href: "/" },
+    { label: "TÌM XE", href: "/" },
+    { label: "TÌM THỢ", href: "/" },
+  ];
 
   return (
-    <header className="text-white shadow-md bg-cover bg-center bg-gradient-to-r from-[#006633] to-[#4CAF50]">
-      {/* Top bar */}
-      <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center">
-          <Image src={logo} alt="Logo" width={80} height={40} priority />
-        </Link>
+    <>
+      {/* Header */}
+      <header className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white shadow-md">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-2">
+          {/* Logo */}
+          <Link href="/" className="inline-flex items-center">
+            <Image src={logo} alt="Logo" className="h-10 w-auto" priority />
+          </Link>
 
-        <div className="flex items-center justify-between gap-10 text-lg font-semibold bg-white text-green-800 py-2 px-5 rounded-full shadow">
-          <Link
-            href="/"
-            className="hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] px-4 py-1 rounded-full transition duration-300 cursor-pointer"
-          >
-            TÌM PHÒNG
-          </Link>
-          <Link
-            href="/"
-            className="hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] px-4 py-1 rounded-full transition duration-300 cursor-pointer"
-          >
-            TÌM VIỆC
-          </Link>
-          <Link
-            href="/"
-            className="hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] px-4 py-1 rounded-full transition duration-300 cursor-pointer"
-          >
-            TÌM XE
-          </Link>
-          <Link
-            href="/"
-            className="hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] px-4 py-1 rounded-full transition duration-300 cursor-pointer"
-          >
-            TÌM THỢ
-          </Link>
+          {/* Nav desktop */}
+          <nav className="hidden md:flex items-center gap-6 text-base font-semibold bg-white text-green-800 py-2 px-6 rounded-full shadow">
+            {mainMenus.map((m) => (
+              <Link
+                key={m.label}
+                href={m.href}
+                className="px-4 py-1 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] transition"
+              >
+                {m.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Actions */}
+          <div className="relative flex items-center gap-2 md:gap-3">
+            <button
+              type="button"
+              aria-label="Yêu thích"
+              className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+            >
+              <Heart className="text-white w-5 h-5" />
+            </button>
+
+            <button
+              ref={userBtnRef}
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={openUser}
+              aria-controls="user-menu"
+              onClick={() => setOpenUser((v) => !v)}
+              className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+            >
+              <UserRound className="text-white w-5 h-5" />
+            </button>
+
+            {/* Menu Mobile trigger */}
+            <button
+              type="button"
+              aria-label="Mở menu mobile"
+              onClick={() => setOpenNavMobile(true)}
+              className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition md:hidden cursor-pointer"
+            >
+              <Menu className="text-white w-5 h-5" />
+            </button>
+
+            {/* Menu Desktop trigger */}
+            <button
+              type="button"
+              aria-label="Mở menu desktop"
+              onClick={() => setOpenNavDesktop(true)}
+              className="hidden md:inline-flex p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+            >
+              <Menu className="text-white w-5 h-5" />
+            </button>
+
+            {/* Dropdown User */}
+            {openUser && (
+              <div
+                id="user-menu"
+                ref={userMenuRef}
+                role="menu"
+                className="absolute right-0 top-12 w-64 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden"
+              >
+                <div className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-500">
+                  Dành cho khách hàng
+                </div>
+                <Link href="/auth/register" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
+                  <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
+                </Link>
+                <Link href="/auth/login" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
+                  <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
+                </Link>
+
+                <div className="my-2 h-px bg-slate-200" />
+
+                <div className="px-4 pb-2 text-sm font-semibold text-slate-500">Dành cho đối tác</div>
+                <Link href="/auth/register" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
+                  <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
+                </Link>
+                <Link href="/partner/login" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
+                  <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
+                </Link>
+
+                <div className="my-2 h-px bg-slate-200" />
+
+                <Link href="/help" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
+                  <LifeBuoy className="w-4 h-4 mr-3" /> Trợ giúp
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Spacer */}
+      <div className="h-12 md:h-[64px]" />
+
+      {/* ===== Overlay (shared) ===== */}
+      {anyPanelOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px]"
+          onClick={() => {
+            setOpenNavMobile(false);
+            setOpenNavDesktop(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ===== Mobile Off-canvas (md:hidden) ===== */}
+      <aside
+        className={`fixed top-0 right-0 z-[60] h-dvh w-[86%] max-w-xs bg-white text-slate-800 shadow-2xl md:hidden transition-transform duration-300 ${
+          openNavMobile ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu điều hướng (mobile)"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <Image src={logo} alt="Logo" width={28} height={28} />
+            <span className="font-semibold text-slate-700">NhaCong</span>
+          </div>
+          <button onClick={() => setOpenNavMobile(false)} className="p-2 rounded-full hover:bg-slate-100" aria-label="Đóng">
+            <X className="w-5 h-5 text-slate-600" />
+          </button>
         </div>
 
-        <div className="flex items-center justify-between gap-4 text-lg font-semibold">
-          <div className="border p-1 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] 
-                          hover:scale-110 hover:shadow-lg transition duration-300 cursor-pointer">
-            <Heart className="text-white" />
-          </div>
-          <div className="border p-1 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] 
-                          hover:scale-110 hover:shadow-lg transition duration-300 cursor-pointer">
-            <UserRound className="text-white" />
-          </div>
-          <div className="border p-1 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] 
-                          hover:scale-110 hover:shadow-lg transition duration-300 cursor-pointer">
-            <Menu className="text-white" />
-          </div>
-        </div>
+        <nav className="px-3 py-2">
+          {mainMenus.map((m) => (
+            <Link
+              key={m.label}
+              href={m.href}
+              onClick={() => setOpenNavMobile(false)}
+              className="block rounded-xl px-4 py-3 text-[15px] font-medium hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              {m.label}
+            </Link>
+          ))}
+        </nav>
 
-      </div>
-    </header>
+        <div className="mx-3 my-3 h-px bg-slate-200" />
+
+        <div className="px-3">
+          <div className="text-xs font-semibold text-slate-500 px-1 mb-1">Tài khoản</div>
+          <Link href="/auth/register" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+            <UserPlus className="w-4 h-4 mr-3" /> Đăng ký khách hàng
+          </Link>
+          <Link href="/auth/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+            <LogIn className="w-4 h-4 mr-3" /> Đăng nhập khách hàng
+          </Link>
+          <Link href="/partner/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+            <LogIn className="w-4 h-4 mr-3" /> Đăng nhập đối tác
+          </Link>
+
+          <div className="mx-1 my-3 h-px bg-slate-200" />
+
+          <Link href="/help" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+            <LifeBuoy className="w-4 h-4 mr-3" /> Trợ giúp
+          </Link>
+        </div>
+      </aside>
+
+      {/* ===== Desktop Off-canvas (hidden md:flex) ===== */}
+      <aside
+        className={`fixed top-0 right-0 z-[60] hidden md:flex h-dvh w-[420px] bg-white text-slate-800 shadow-2xl transition-transform duration-300 ${
+          openNavDesktop ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu mở rộng (desktop)"
+      >
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b">
+            <div className="flex items-center gap-2">
+              <Image src={logo} alt="Logo" width={28} height={28} />
+              <span className="font-semibold text-slate-700">Bảng điều hướng</span>
+            </div>
+            <button onClick={() => setOpenNavDesktop(false)} className="p-2 rounded-full hover:bg-slate-100" aria-label="Đóng">
+              <X className="w-5 h-5 text-slate-600" />
+            </button>
+          </div>
+
+          {/* Khối CTA đối tác */}
+          <div className="p-5">
+            <div className="rounded-2xl border bg-emerald-50/60 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl p-2 bg-emerald-100">
+                  <Building2 className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-emerald-800">Trở thành đối tác</div>
+                  <p className="text-sm text-emerald-700/80 mt-1">
+                    Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/hop-tac-cung-chung-toi"
+                onClick={() => setOpenNavDesktop(false)}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
+              >
+                Bắt đầu ngay <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Lối tắt */}
+          <div className="px-5">
+            <div className="text-xs font-semibold text-slate-500 mb-2">Lối tắt</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { t: "Tin mới đăng", href: "/new" },
+                { t: "Ưu đãi hôm nay", href: "/deal" },
+                { t: "Đã lưu", href: "/saved" },
+                { t: "So sánh", href: "/compare" },
+              ].map((i) => (
+                <Link
+                  key={i.t}
+                  href={i.href}
+                  onClick={() => setOpenNavDesktop(false)}
+                  className="rounded-xl border px-3 py-2 hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  {i.t}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Khu vực phổ biến */}
+          <div className="px-5 mt-5">
+            <div className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> Khu vực phổ biến
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["Hà Nội", "TP.HCM", "Đà Nẵng", "Hải Phòng", "Cần Thơ"].map((loc) => (
+                <Link
+                  key={loc}
+                  href={`/search?city=${encodeURIComponent(loc)}`}
+                  onClick={() => setOpenNavDesktop(false)}
+                  className="rounded-full border px-3 py-1.5 text-sm hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  {loc}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Blog & Hỗ trợ */}
+          <div className="px-5 mt-6 space-y-3">
+            <Link
+              href="/blog"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <Newspaper className="w-5 h-5" /> Blog & Cẩm nang thuê nhà
+            </Link>
+            <Link
+              href="/ve-chung-toi"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <Phone className="w-5 h-5" /> Về chúng tôi
+            </Link>
+          </div>
+
+          <div className="mt-auto p-5 text-xs text-slate-500">© {new Date().getFullYear()} NhaCong</div>
+        </div>
+      </aside>
+    </>
   );
 }
