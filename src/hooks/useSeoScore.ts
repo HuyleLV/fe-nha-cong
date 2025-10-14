@@ -38,7 +38,7 @@ const hasImage = (html: string) => /<img\b[^>]*>/i.test(html || '');
 const hasImageWithAlt = (html: string) => /<img\b[^>]*\balt\s*=\s*"(.*?)"[^>]*>/i.test(html || '');
 const hasOutboundLink = (html: string) => /<a\b[^>]*\bhref\s*=\s*"(https?:\/\/(?!.*(localhost|127\.0\.0\.1))).*?"/i.test(html || '');
 const hasInternalLink = (html: string) => /<a\b[^>]*\bhref\s*=\s*"(\/[^"]*|https?:\/\/[^"]*(yourdomain\.com|nhacong\.com\.vn))"/i.test(html || '');
-const hasH2 = (html: string) => /<h2\b[^>]*>.*?<\/h2>/is.test(html || '');
+const hasH2 = (html: string) => /<h2\b[^>]*>[\s\S]*<\/h2>/i.test(html || '');
 const keywordInH2 = (html: string, kw: string) => {
     if (!kw) return false;
     const m = html.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/gi) || [];
