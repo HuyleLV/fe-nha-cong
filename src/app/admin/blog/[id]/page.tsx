@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import {
-  Save, Eye, ChevronRight, Link as LinkIcon, Tag as TagIcon,
+  Save, ChevronRight, Link as LinkIcon, Tag as TagIcon,
   Info, X, Pin, CheckCircle2
 } from 'lucide-react';
 
@@ -17,6 +17,8 @@ import { BlogStatus } from '@/type/blog';
 
 import CustomSunEditor from '@/app/admin/components/customSunEditor';
 import UploadPicker from '@/components/UploadPicker';
+import SeoScoreCard from '@/components/SeoScoreCard';
+import { useSeoScore } from '@/hooks/useSeoScore';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -28,11 +30,17 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
-// Đếm từ trong HTML: bỏ tag đi rồi đếm
+// Đếm từ trong HTML (bỏ tag rồi đếm)
 function wordCountFromHtml(html: string) {
   const text = html?.replace(/<[^>]*>/g, ' ')?.replace(/\s+/g, ' ')?.trim() ?? '';
   return (text.match(/\b[\p{L}\p{N}'’-]+\b/gu) || []).length;
 }
+
+// Mở rộng payload tại chỗ để gửi thêm pointSeo/focusKeyword mà không ép sửa global type
+type BlogFormWithSeo = BlogForm & {
+  pointSeo?: number;
+  focusKeyword?: string;
+};
 
 export default function BlogFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +49,7 @@ export default function BlogFormPage() {
 
   const [loadingDetail, setLoadingDetail] = useState<boolean>(isEdit);
   const [tagInput, setTagInput] = useState('');
+  const [focusKeyword, setFocusKeyword] = useState(''); // ô nhập từ khóa trọng tâm
 
   const {
     register,
@@ -63,15 +72,15 @@ export default function BlogFormPage() {
     },
   });
 
-  // class chung cho input/textarea
   const editableInput =
-    "w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500";
+    'w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500';
 
-  // Đăng ký tags
+  // RHF: đăng ký field tags (ẩn)
   useEffect(() => {
     register('tags');
   }, [register]);
 
+  // Watch fields
   const title = watch('title');
   const slug = watch('slug');
   const excerpt = watch('excerpt') ?? '';
@@ -79,15 +88,16 @@ export default function BlogFormPage() {
   const tags = (watch('tags') || []) as string[];
   const contentHtml = watch('content') || '';
 
-  // Auto slug từ title
+  // Auto slug từ title (chỉ khi chưa nhập slug thủ công)
   useEffect(() => {
     const currentSlug = (slug || '').trim();
     if (!currentSlug && title?.trim()) {
       setValue('slug', toSlug(title), { shouldDirty: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  // Load detail khi edit
+  // Load chi tiết khi edit
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
@@ -103,6 +113,9 @@ export default function BlogFormPage() {
           isPinned: !!b.isPinned,
           tags: b.tags ?? [],
         });
+        // Ưu tiên giá trị từ API; nếu không có thì gợi ý theo title
+        const suggested = b.title ? b.title.split(' ').slice(0, 3).join(' ') : '';
+        setFocusKeyword(b.focusKeyword ?? suggested);
       } catch {
         toast.error('Không tải được bài viết');
         router.replace('/admin/blog');
@@ -111,6 +124,13 @@ export default function BlogFormPage() {
       }
     })();
   }, [id, isEdit, reset, router]);
+
+  // Khi tạo mới: gợi ý focusKeyword theo title nếu đang rỗng
+  useEffect(() => {
+    if (!isEdit && !focusKeyword && title?.trim()) {
+      setFocusKeyword(title.split(' ').slice(0, 3).join(' '));
+    }
+  }, [isEdit, title, focusKeyword]);
 
   // Tags
   const addTag = () => {
@@ -131,32 +151,45 @@ export default function BlogFormPage() {
     }
   };
 
+  // ====== TÍNH SEO SCORE ======
+  const seoRes = useSeoScore({
+    title: title || '',
+    slug: slug || toSlug(title || ''),
+    excerpt: excerpt || '',
+    contentHtml: contentHtml || '',
+    cover: cover || '',
+    tags,
+    focusKeyword: focusKeyword || '',
+  });
+  const pointSeo = seoRes.score;
+
   // Submit
   const onSubmit = async (values: BlogForm) => {
     const cleanedSlug = (values.slug?.trim() || toSlug(values.title)).trim();
 
-    const payload: BlogForm = {
+    const payload: BlogFormWithSeo = {
       title: values.title.trim(),
       slug: cleanedSlug,
       status: values.status,
       isPinned: !!values.isPinned,
       tags: (values.tags || []).map((s) => s.trim()).filter(Boolean),
+      pointSeo,
+      focusKeyword: focusKeyword || '',
     };
 
     const ex = values.excerpt?.trim();
     const ct = values.content?.toString();
     const cv = values.coverImageUrl?.trim();
-
     if (ex) payload.excerpt = ex;
     if (ct) payload.content = ct;
     if (cv) payload.coverImageUrl = cv;
 
     try {
       if (isEdit) {
-        await blogService.update(Number(id), payload);
+        await blogService.update(Number(id), payload as any);
         toast.success('Cập nhật bài viết thành công!');
       } else {
-        await blogService.create(payload);
+        await blogService.create(payload as any);
         toast.success('Tạo bài viết thành công!');
       }
       router.push('/admin/blog');
@@ -190,7 +223,7 @@ export default function BlogFormPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {dirtyFields && (
+            {Object.keys(dirtyFields || {}).length > 0 && (
               <span className="hidden md:inline-flex items-center gap-1 text-xs text-slate-500">
                 <Info className="w-4 h-4" /> Thay đổi chưa lưu
               </span>
@@ -318,6 +351,26 @@ export default function BlogFormPage() {
               <input type="hidden" {...register('tags')} />
             </div>
           </Section>
+
+          <Section title="Nội dung">
+            <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
+              <Controller
+                name="content"
+                control={control}
+                rules={{
+                  validate: (v) =>
+                    (v && v.replace(/<[^>]*>/g, '').trim().length > 0) || 'Vui lòng nhập nội dung',
+                }}
+                render={({ field: { value, onChange } }) => (
+                  <CustomSunEditor value={value || ''} onChange={onChange} />
+                )}
+              />
+            </div>
+            {errors.content && (
+              <p className="text-red-600 text-sm mt-2">{String(errors.content.message)}</p>
+            )}
+            <div className="text-xs text-slate-500 mt-2">{wordCountFromHtml(contentHtml)} từ</div>
+          </Section>
         </div>
 
         {/* RIGHT */}
@@ -350,57 +403,30 @@ export default function BlogFormPage() {
             <div className="p-3">
               <UploadPicker
                 value={cover || null}
-                onChange={(val) => setValue("coverImageUrl", val || "", { shouldDirty: true })}
+                onChange={(val) => setValue('coverImageUrl', val || '', { shouldDirty: true })}
               />
             </div>
           </Section>
 
-          <Section title="SEO">
-            <ul className="text-sm text-slate-600 space-y-2">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${title?.trim() ? 'text-emerald-600' : 'text-slate-300'}`} />
-                <span>Tiêu đề đã có.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 mt-0.5 ${
-                    (excerpt || '').length >= 80 && (excerpt || '').length <= 180
-                      ? 'text-emerald-600'
-                      : 'text-slate-300'
-                  }`}
-                />
-                <span>Mô tả ngắn nên ~80–180 ký tự. Hiện tại: {(excerpt || '').length}.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${tags.length ? 'text-emerald-600' : 'text-slate-300'}`} />
-                <span>Có ít nhất 1 tag.</span>
-              </li>
-            </ul>
+          <Section title="Điểm SEO">
+            <SeoScoreCard
+              title={title || ''}
+              slug={slug || toSlug(title || '')}
+              excerpt={excerpt || ''}
+              contentHtml={contentHtml || ''}
+              cover={cover || ''}
+              tags={tags}
+              focusKeyword={focusKeyword}
+              onChangeFocusKeyword={setFocusKeyword}
+            />
+            <div className="text-xs text-slate-500 mt-2">
+              Điểm sẽ gửi lên API: <span className="font-semibold">{pointSeo}</span>
+            </div>
           </Section>
         </div>
       </div>
-      
 
-      <Section title="Nội dung">
-        <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
-          <Controller
-            name="content"
-            control={control}
-            rules={{
-              validate: (v) =>
-                (v && v.replace(/<[^>]*>/g, '').trim().length > 0) || 'Vui lòng nhập nội dung',
-            }}
-            render={({ field: { value, onChange } }) => (
-              <CustomSunEditor value={value || ''} onChange={onChange} />
-            )}
-          />
-        </div>
-        {errors.content && (
-          <p className="text-red-600 text-sm mt-2">{String(errors.content.message)}</p>
-        )}
-        <div className="text-xs text-slate-500 mt-2">{wordCountFromHtml(contentHtml)} từ</div>
-      </Section>
-
+      {/* Form submit ẩn để nút header submit được */}
       <form id="blog-form" onSubmit={handleSubmit(onSubmit)} className="hidden" />
     </div>
   );

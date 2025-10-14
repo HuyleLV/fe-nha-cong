@@ -15,6 +15,8 @@ export type Blog = {
     isPinned: boolean;
     tags: string[];
     viewCount: number;
+    pointSeo: number;
+    focusKeyword?: string;
     authorId: number;
     createdAt: string;
     updatedAt: string;
@@ -28,5 +30,7 @@ export type BlogForm = {
     coverImageUrl?: string;
     status: BlogStatus;
     isPinned: boolean;
+    pointSeo: number;
+    focusKeyword?: string;
     tags: string[];
 };
