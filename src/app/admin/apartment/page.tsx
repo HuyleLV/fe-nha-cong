@@ -4,12 +4,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { Edit, Trash2, Plus, Search, MapPin, Filter } from "lucide-react";
+import { Edit, Trash2, Plus, MapPin, Filter, SlidersHorizontal, RotateCcw } from "lucide-react";
 
 import Spinner from "@/components/spinner";
 import Pagination from "@/components/Pagination";
 import { formatDateTime } from "@/utils/format-time";
-
 import { apartmentService } from "@/services/apartmentService";
 import LocationLookup from "../components/locationLookup";
 import { Apartment, ApartmentStatus } from "@/type/apartment";
@@ -17,6 +16,172 @@ import { Location } from "@/type/location";
 
 const LIMIT = 10;
 
+/** helpers */
+const toNum = (v?: string | number | null) => {
+  if (v === null || v === undefined) return undefined;
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : undefined;
+};
+
+/** --- Mini components nội bộ file --- */
+function ToggleChip({ active, onToggle, children }: { active: boolean; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`px-3 py-1 rounded-full border text-sm transition
+        ${active ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FiltersSection(props: {
+  // state & handlers
+  search: string; setSearch: (v: string) => void;
+  status: ApartmentStatus | ""; setStatus: (v: ApartmentStatus | "") => void;
+  selectedLocation: Location | null; setSelectedLocation: (l: Location | null) => void;
+  minPrice: string; setMinPrice: (v: string) => void;
+  maxPrice: string; setMaxPrice: (v: string) => void;
+  minArea: string; setMinArea: (v: string) => void;
+  maxArea: string; setMaxArea: (v: string) => void;
+  bedrooms: string; setBedrooms: (v: string) => void;
+  bathrooms: string; setBathrooms: (v: string) => void;
+
+  hasPrivateBathroom: boolean; setHasPrivateBathroom: (v: boolean) => void;
+  hasMezzanine: boolean; setHasMezzanine: (v: boolean) => void;
+  noOwnerLiving: boolean; setNoOwnerLiving: (v: boolean) => void;
+  hasAirConditioner: boolean; setHasAirConditioner: (v: boolean) => void;
+  hasWaterHeater: boolean; setHasWaterHeater: (v: boolean) => void;
+  hasWashingMachine: boolean; setHasWashingMachine: (v: boolean) => void;
+  hasWardrobe: boolean; setHasWardrobe: (v: boolean) => void;
+  flexibleHours: boolean; setFlexibleHours: (v: boolean) => void;
+
+  sort: "newest" | "price_asc" | "price_desc" | "area_desc";
+  setSort: (v: "newest" | "price_asc" | "price_desc" | "area_desc") => void;
+
+  onClearAll: () => void;
+}) {
+  const {
+    search, setSearch,
+    status, setStatus,
+    selectedLocation, setSelectedLocation,
+    minPrice, setMinPrice, maxPrice, setMaxPrice,
+    minArea, setMinArea, maxArea, setMaxArea,
+    bedrooms, setBedrooms, bathrooms, setBathrooms,
+    hasPrivateBathroom, setHasPrivateBathroom,
+    hasMezzanine, setHasMezzanine,
+    noOwnerLiving, setNoOwnerLiving,
+    hasAirConditioner, setHasAirConditioner,
+    hasWaterHeater, setHasWaterHeater,
+    hasWashingMachine, setHasWashingMachine,
+    hasWardrobe, setHasWardrobe,
+    flexibleHours, setFlexibleHours,
+    sort, setSort,
+    onClearAll,
+  } = props;
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  return (
+    <div className="mt-4 border rounded-lg p-3 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-slate-700">
+          <Filter className="size-4" />
+          <span className="font-medium">Bộ lọc</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((s) => !s)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm hover:bg-slate-50"
+            title="Hiện/ẩn bộ lọc nâng cao"
+          >
+            <SlidersHorizontal className="size-4" />
+            {showAdvanced ? "Ẩn nâng cao" : "Nâng cao"}
+          </button>
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm hover:bg-slate-50"
+            title="Xoá bộ lọc"
+          >
+            <RotateCcw className="size-4" />
+            Xoá
+          </button>
+        </div>
+      </div>
+
+      {/* Cơ bản */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Tìm theo tiêu đề, mô tả..."
+          className="rounded border px-3 py-2 outline-none focus:ring-2 ring-emerald-500"
+        />
+
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as ApartmentStatus | "")}
+          className="rounded border px-3 py-2"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="draft">Nháp</option>
+          <option value="published">Đã đăng</option>
+          <option value="archived">Đã ẩn</option>
+        </select>
+
+        <LocationLookup
+          value={selectedLocation}
+          onChange={setSelectedLocation}
+          placeholder="Chọn khu vực"
+        />
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="rounded border px-3 py-2"
+        >
+          <option value="newest">Mới nhất</option>
+          <option value="price_asc">Giá tăng dần</option>
+          <option value="price_desc">Giá giảm dần</option>
+          <option value="area_desc">Diện tích lớn nhất</option>
+        </select>
+      </div>
+
+      {/* Số */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mt-3">
+        <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Giá tối thiểu" className="rounded border px-3 py-2" inputMode="numeric" />
+        <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Giá tối đa" className="rounded border px-3 py-2" inputMode="numeric" />
+        <input value={minArea} onChange={(e) => setMinArea(e.target.value)} placeholder="Diện tích min (m²)" className="rounded border px-3 py-2" inputMode="numeric" />
+        <input value={maxArea} onChange={(e) => setMaxArea(e.target.value)} placeholder="Diện tích max (m²)" className="rounded border px-3 py-2" inputMode="numeric" />
+        <input value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="Phòng ngủ ≥" className="rounded border px-3 py-2" inputMode="numeric" />
+        <input value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="Phòng tắm ≥" className="rounded border px-3 py-2" inputMode="numeric" />
+      </div>
+
+      {/* Nâng cao */}
+      {showAdvanced && (
+        <div className="mt-3 border-t pt-3">
+          <div className="text-sm text-slate-600 mb-2">Tiện nghi</div>
+          <div className="flex flex-wrap gap-2">
+            <ToggleChip active={hasPrivateBathroom} onToggle={() => setHasPrivateBathroom(!hasPrivateBathroom)}>VS khép kín</ToggleChip>
+            <ToggleChip active={hasMezzanine} onToggle={() => setHasMezzanine(!hasMezzanine)}>Gác xép</ToggleChip>
+            <ToggleChip active={noOwnerLiving} onToggle={() => setNoOwnerLiving(!noOwnerLiving)}>Không chung chủ</ToggleChip>
+            <ToggleChip active={hasAirConditioner} onToggle={() => setHasAirConditioner(!hasAirConditioner)}>Điều hoà</ToggleChip>
+            <ToggleChip active={hasWaterHeater} onToggle={() => setHasWaterHeater(!hasWaterHeater)}>Nóng lạnh</ToggleChip>
+            <ToggleChip active={hasWashingMachine} onToggle={() => setHasWashingMachine(!hasWashingMachine)}>Máy giặt</ToggleChip>
+            <ToggleChip active={hasWardrobe} onToggle={() => setHasWardrobe(!hasWardrobe)}>Tủ quần áo</ToggleChip>
+            <ToggleChip active={flexibleHours} onToggle={() => setFlexibleHours(!flexibleHours)}>Giờ linh hoạt</ToggleChip>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** --- Trang chính --- */
 export default function AdminApartmentsPage() {
   const router = useRouter();
 
@@ -33,9 +198,26 @@ export default function AdminApartmentsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ApartmentStatus | "">("");
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
-  const [bedrooms, setBedrooms] = useState<string>(""); // keep as string, send number if valid
+
+  const [minArea, setMinArea] = useState<string>("");
+  const [maxArea, setMaxArea] = useState<string>("");
+
+  const [bedrooms, setBedrooms] = useState<string>("");
+  const [bathrooms, setBathrooms] = useState<string>("");
+
+  const [hasPrivateBathroom, setHasPrivateBathroom] = useState(false);
+  const [hasMezzanine, setHasMezzanine] = useState(false);
+  const [noOwnerLiving, setNoOwnerLiving] = useState(false);
+  const [hasAirConditioner, setHasAirConditioner] = useState(false);
+  const [hasWaterHeater, setHasWaterHeater] = useState(false);
+  const [hasWashingMachine, setHasWashingMachine] = useState(false);
+  const [hasWardrobe, setHasWardrobe] = useState(false);
+  const [flexibleHours, setFlexibleHours] = useState(false);
+
+  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "area_desc">("newest");
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,35 +226,97 @@ export default function AdminApartmentsPage() {
         page,
         limit: LIMIT,
         q: search || undefined,
+        status: status || undefined,
         locationId: selectedLocation?.id,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        minArea: minArea ? Number(minArea) : undefined,
+        maxArea: maxArea ? Number(maxArea) : undefined,
         bedrooms: bedrooms ? Number(bedrooms) : undefined,
+        bathrooms: bathrooms ? Number(bathrooms) : undefined,
+        hasPrivateBathroom: hasPrivateBathroom || undefined,
+        hasMezzanine: hasMezzanine || undefined,
+        noOwnerLiving: noOwnerLiving || undefined,
+        hasAirConditioner: hasAirConditioner || undefined,
+        hasWaterHeater: hasWaterHeater || undefined,
+        hasWashingMachine: hasWashingMachine || undefined,
+        hasWardrobe: hasWardrobe || undefined,
+        flexibleHours: flexibleHours || undefined,
+        sort,
       });
+
       setItems(items || []);
-      setTotal(meta.total);
+      setTotal(meta?.total || 0);
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message || "Không tải được danh sách căn hộ");
+      toast.error(e?.response?.data?.message || e?.message || "Không tải được danh sách căn hộ");
     } finally {
       setLoading(false);
     }
   };
 
+  // thay đổi filter “tức thời”
+  useEffect(() => {
+    setPage(1);
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    status,
+    selectedLocation,
+    bedrooms,
+    bathrooms,
+    hasPrivateBathroom,
+    hasMezzanine,
+    noOwnerLiving,
+    hasAirConditioner,
+    hasWaterHeater,
+    hasWashingMachine,
+    hasWardrobe,
+    flexibleHours,
+    sort,
+  ]);
+
+  // đổi trang
   useEffect(() => {
     fetchData();
-  }, [page, status, selectedLocation, bedrooms]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
+  // debounce cho search/price/area
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(1);
       fetchData();
     }, 400);
     return () => clearTimeout(t);
-  }, [search, minPrice, maxPrice]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, minPrice, maxPrice, minArea, maxArea]);
 
   const handlePrev = () => page > 1 && setPage(page - 1);
   const handleNext = () => page < totalPages && setPage(page + 1);
+
+  const clearAll = () => {
+    setSearch("");
+    setStatus("");
+    setSelectedLocation(null);
+    setMinPrice("");
+    setMaxPrice("");
+    setMinArea("");
+    setMaxArea("");
+    setBedrooms("");
+    setBathrooms("");
+    setHasPrivateBathroom(false);
+    setHasMezzanine(false);
+    setNoOwnerLiving(false);
+    setHasAirConditioner(false);
+    setHasWaterHeater(false);
+    setHasWashingMachine(false);
+    setHasWardrobe(false);
+    setFlexibleHours(false);
+    setSort("newest");
+    setPage(1);
+    fetchData();
+  };
 
   if (loading)
     return (
@@ -84,7 +328,7 @@ export default function AdminApartmentsPage() {
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-emerald-900">QUẢN LÝ CĂN HỘ</h1>
         <button
           onClick={() => router.push("/admin/apartment/create")}
@@ -94,86 +338,128 @@ export default function AdminApartmentsPage() {
         </button>
       </div>
 
+      {/* Filters (gọn trong 1 section) */}
+      <FiltersSection
+        search={search} setSearch={setSearch}
+        status={status} setStatus={setStatus}
+        selectedLocation={selectedLocation} setSelectedLocation={setSelectedLocation}
+        minPrice={minPrice} setMinPrice={setMinPrice}
+        maxPrice={maxPrice} setMaxPrice={setMaxPrice}
+        minArea={minArea} setMinArea={setMinArea}
+        maxArea={maxArea} setMaxArea={setMaxArea}
+        bedrooms={bedrooms} setBedrooms={setBedrooms}
+        bathrooms={bathrooms} setBathrooms={setBathrooms}
+        hasPrivateBathroom={hasPrivateBathroom} setHasPrivateBathroom={setHasPrivateBathroom}
+        hasMezzanine={hasMezzanine} setHasMezzanine={setHasMezzanine}
+        noOwnerLiving={noOwnerLiving} setNoOwnerLiving={setNoOwnerLiving}
+        hasAirConditioner={hasAirConditioner} setHasAirConditioner={setHasAirConditioner}
+        hasWaterHeater={hasWaterHeater} setHasWaterHeater={setHasWaterHeater}
+        hasWashingMachine={hasWashingMachine} setHasWashingMachine={setHasWashingMachine}
+        hasWardrobe={hasWardrobe} setHasWardrobe={setHasWardrobe}
+        flexibleHours={flexibleHours} setFlexibleHours={setFlexibleHours}
+        sort={sort} setSort={setSort}
+        onClearAll={clearAll}
+      />
+
       {/* Table */}
-      <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden mt-5">
-        <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden">
+          <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
             <tr className="text-left text-slate-600">
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Tiêu đề</th>
               <th className="px-4 py-3">Slug</th>
               <th className="px-4 py-3">Giá thuê</th>
+              <th className="px-4 py-3">Diện tích</th>
               <th className="px-4 py-3">Phòng</th>
               <th className="px-4 py-3">Khu vực</th>
               <th className="px-4 py-3">Trạng thái</th>
               <th className="px-4 py-3">Cập nhật</th>
-            <th className="px-4 py-3 text-center">Thao tác</th>
+              <th className="px-4 py-3 text-center">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 text-[15px]">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-6 text-center text-slate-500">
+                <td colSpan={10} className="py-6 text-center text-slate-500">
                   Chưa có dữ liệu
                 </td>
               </tr>
             ) : (
-              items.map((it) => (
-                <tr key={it.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">{it.id}</td>
-                  <td className="px-4 py-3 font-medium">{it.title}</td>
-                  <td className="px-4 py-3 text-slate-600">{it.slug}</td>
-                  <td className="px-4 py-3">
-                    {Number(it.rentPrice).toLocaleString("vi-VN")} {it.currency}
-                  </td>
-                  <td className="px-4 py-3">
-                    {it.bedrooms} ngủ · {it.bathrooms} tắm
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="size-4 text-emerald-600" />
-                      {it.addressPath}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 capitalize">{it.status}</td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {formatDateTime(it.updatedAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => router.push(`/admin/apartment/${it.id}`)}
-                        className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+              items.map((it) => {
+                const price = toNum(it.rentPrice);
+                const area = toNum(it.areaM2);
+
+                return (
+                  <tr key={it.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">{it.id}</td>
+                    <td className="px-4 py-3 font-medium">{it.title}</td>
+                    <td className="px-4 py-3 text-slate-600">{it.slug}</td>
+                    <td className="px-4 py-3">
+                      {price !== undefined ? price.toLocaleString("vi-VN") : "-"} {it.currency || "VND"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {area !== undefined ? `${area.toLocaleString("vi-VN")} m²` : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {it.bedrooms} ngủ · {it.bathrooms} tắm
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-4 text-emerald-600" />
+                        {it.addressPath || it.location?.name}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-0.5 rounded text-sm capitalize ${
+                          it.status === "published"
+                            ? "bg-green-100 text-green-700"
+                            : it.status === "draft"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-slate-200 text-slate-700"
+                        }`}
                       >
-                        <Edit size={15} />
-                        Sửa
-                      </button>
-                      <button
-                        onClick={async () => {
-                          const ok = confirm(`Xoá "${it.title}"?`);
-                          if (!ok) return;
-                          try {
-                            await apartmentService.delete(it.id);
-                            toast.success("Đã xoá");
-                            setItems((prev) => prev.filter((x) => x.id !== it.id));
-                            setTotal((t) => Math.max(0, t - 1));
-                          } catch (e: any) {
-                            toast.error(
-                              e?.response?.data?.message || "Không xoá được"
-                            );
-                          }
-                        }}
-                        className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
-                      >
-                        <Trash2 size={15} />
-                        Xoá
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        {it.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">{formatDateTime(it.updatedAt)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => router.push(`/admin/apartment/${it.id}`)}
+                          className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                        >
+                          <Edit size={15} />
+                          Sửa
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const ok = confirm(`Xoá "${it.title}"?`);
+                            if (!ok) return;
+                            try {
+                              await apartmentService.delete(it.id);
+                              toast.success("Đã xoá");
+                              setItems((prev) => prev.filter((x) => x.id !== it.id));
+                              setTotal((t) => Math.max(0, t - 1));
+                            } catch (e: any) {
+                              toast.error(e?.response?.data?.message || "Không xoá được");
+                            }
+                          }}
+                          className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                        >
+                          <Trash2 size={15} />
+                          Xoá
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
+      </div>
 
       {/* Pagination */}
       <div className="mt-4">

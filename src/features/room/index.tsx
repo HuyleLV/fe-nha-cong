@@ -65,6 +65,14 @@ const parseNum = (v: any, fallback = 0): number => {
   const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
   return Number.isFinite(n) ? n : fallback;
 };
+const formatDateVN = (d?: string | number | Date) => {
+  if (!d) return "";
+  try {
+    return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  } catch {
+    return "";
+  }
+};
 
 type SimilarItem = {
   id: number;
@@ -107,7 +115,7 @@ const Section = ({ title, children, right }: { title: string; children: React.Re
   </section>
 );
 
-/* ===================== Pieces ===================== */
+/* ===================== Pieces (giữ nguyên) ===================== */
 function Breadcrumb({ title, district }: { title: string; district?: string }) {
   return (
     <div className="mb-3 flex items-center gap-1 text-sm text-emerald-900/80">
@@ -196,9 +204,9 @@ function AmenityGrid({ amenities }: { amenities: AmenityKey[] }) {
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
       {amenities.map((k) => (
-        <div key={k} className="group flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2 text-emerald-900 transition hover:-translate-y-0.5 hover:shadow-md">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 ring-1 ring-emerald-200">{AMENITY_META[k].icon}</span>
-          <span>{AMENITY_META[k].label}</span>
+        <div key={k} className="group bg-emerald-100 flex items-center gap-2 rounded-xl border border-emerald-100 px-3 py-2 text-emerald-900 transition hover:-translate-y-0.5 hover:shadow-md">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white ring-1 ring-emerald-200">{AMENITY_META[k].icon}</span>
+          <span className="font-semibold">{AMENITY_META[k].label}</span>
         </div>
       ))}
     </div>
@@ -308,9 +316,9 @@ function SimilarGrid({ items }: { items: SimilarItem[] }) {
   );
 }
 
-function StickyActions({ phone, contactName, listingId, onFav }: { phone: string; contactName?: string; listingId?: number | string; onFav: () => void; }) {
+function StickyActions({ phone, contactName, listingId, addressLine, onFav }: { phone: string; contactName?: string; listingId?: number | string; addressLine: string, onFav: () => void; }) {
   return (
-    <div className="sticky top-6 z-[1]">
+    <div className="sticky top-20">
       <div className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.6)] backdrop-blur">
         <div className="mb-3 flex items-center justify-between">
           <button onClick={onFav} className="flex items-center gap-2 rounded-xl border border-emerald-200 px-3 py-2 text-emerald-800 hover:bg-emerald-50"><Heart className="h-5 w-5" /> Lưu tin</button>
@@ -322,15 +330,22 @@ function StickyActions({ phone, contactName, listingId, onFav }: { phone: string
         <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 px-4 py-3 text-emerald-800 hover:bg-emerald-50">
           <CalendarDays className="h-5 w-5" /> Đặt lịch xem phòng
         </button>
-        <div className="mt-4 rounded-xl bg-emerald-50/70 p-3 text-sm text-emerald-800">
-          <p className="font-medium">Người liên hệ</p>
-          <p className="mt-1">• {contactName || "Chủ nhà"}</p>
-          {listingId ? (
-            <div className="mt-2 flex items-center gap-2">
-              <code className="rounded bg-white px-2 py-1">#{listingId}</code>
-              <span className="text-emerald-700/70">Mã tin</span>
-            </div>
-          ) : null}
+        <div className="rounded-2xl border border-emerald-100 bg-white p-4 mt-3">
+          <div className="mt-1 text-xl font-semibold text-emerald-950">Thông tin Chủ nhà</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {phone ? (
+              <a href={`tel:${phone}`} className="text-lg inline-flex items-center gap-2 py-1.5 text-emerald-800">
+                <Phone className="h-5 w-5" /> {phone}
+              </a>
+            ) : null}
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            {addressLine ? (
+              <a href={`tel:${phone}`} className="text-lg inline-flex items-center gap-2 py-1.5 text-emerald-800">
+                <MapPin className="h-10 w-10" /> {addressLine}
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -350,7 +365,62 @@ function StickyActions({ phone, contactName, listingId, onFav }: { phone: string
   );
 }
 
-/* ===================== Page ===================== */
+/* ===================== BỔ SUNG MỚI (không đụng code cũ) ===================== */
+function AvailabilityBar({ availableFrom }: { availableFrom?: string | number | Date }) {
+  if (!availableFrom) return null;
+  return (
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+      Dự kiến có thể vào ở từ <b>{formatDateVN(availableFrom)}</b>
+    </div>
+  );
+}
+
+function PriceBreakdown({
+  roomPrice,
+  deposit,
+  electricPrice,
+  waterPrice,
+  internetFee,
+  serviceFee,
+}: {
+  roomPrice?: number;
+  deposit?: number;
+  electricPrice?: number;
+  waterPrice?: number;
+  internetFee?: number;
+  serviceFee?: number;
+}) {
+  const rows = [
+    { k: "Tiền phòng", v: roomPrice, strong: true },
+    { k: "Tiền cọc", v: deposit, strong: true },
+    { k: "Điện", v: electricPrice ? `${formatMoneyVND(electricPrice)}/kWh` : undefined, strong: true },
+    { k: "Nước", v: waterPrice ? `${formatMoneyVND(waterPrice)}/m³` : undefined, strong: true },
+    { k: "Internet", v: internetFee ? formatMoneyVND(internetFee) : undefined, strong: true },
+    { k: "Dịch vụ/QL toà nhà", v: serviceFee ? formatMoneyVND(serviceFee) : undefined, strong: true },
+  ].filter(r => r.v != null && r.v !== undefined);
+
+  if (!rows.length) return null;
+
+  return (
+    <div className="divide-y divide-emerald-100 rounded-2xl border border-emerald-100 bg-white">
+      {rows.map((r, i) => (
+        <div key={i} className="flex items-center justify-between px-4 py-3">
+          <span className="text-emerald-900/90">{r.k}</span>
+          <span className={clsx("text-emerald-900", r.strong && "font-semibold")}>
+            {typeof r.v === "number" ? formatMoneyVND(r.v) : r.v}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HouseRules({ rules }: { rules?: string[] }) {
+  if (!rules?.length) return null;
+  return <Chips items={rules} />;
+}
+
+/* ===================== Page (GIỮ NGUYÊN, chỉ chèn section mới) ===================== */
 export default function RoomPage({ slug }: {slug: string }) {
   const [fav, setFav] = useState(false);
   const [data, setData] = useState<Apartment | null>(null);
@@ -413,12 +483,23 @@ export default function RoomPage({ slug }: {slug: string }) {
   const areaM2 = parseNum((data as any).areaM2);
   const bedrooms = parseNum((data as any).bedrooms);
   const bathrooms = parseNum((data as any).bathrooms);
-  const depositVnd = priceVnd || undefined; // fix cứng: cọc = 1 tháng
+  const depositVnd = parseNum((data as any).deposit) || priceVnd || undefined; // cọc = field deposit, fallback 1 tháng
   const images = data.coverImageUrl ? [data.coverImageUrl] : [];
   const district = (data.location?.level?.toLowerCase?.() === "district" && data.location?.name) || undefined;
   const addressLine = data.streetAddress || [district, "Hà Nội"].filter(Boolean).join(", ");
   const lat = parseNum((data as any).lat, undefined as any);
   const lng = parseNum((data as any).lng, undefined as any);
+
+  // Bổ sung các trường tuỳ chọn
+  const electricPrice = parseNum((data as any).electricityPricePerKwh, 0) || undefined;
+  const waterPrice = parseNum((data as any).waterPricePerM3, 0) || undefined;
+  const internetFee = parseNum((data as any).internetPricePerRoom, 0) || undefined;
+  const serviceFee = parseNum((data as any).commonServiceFeePerPerson, 0) || undefined;
+  const availableFrom = (data as any)?.availableFrom as any;
+  const rules = ((data as any)?.houseRules as string[]) || undefined;
+
+  const landlordName = (data as any)?.contactName || CONTACT_NAME;
+  const landlordPhone = (data as any)?.contactPhone || CONTACT_PHONE;
 
   return (
     <div className="relative">
@@ -433,6 +514,9 @@ export default function RoomPage({ slug }: {slug: string }) {
           <div className="space-y-5 lg:col-span-2">
             <Gallery images={images} />
 
+            {/* BỔ SUNG: Tình trạng */}
+            <AvailabilityBar availableFrom={availableFrom} />
+
             <Section title="Tổng quan">
               <KeyFacts areaM2={areaM2} bedrooms={bedrooms} bathrooms={bathrooms} />
             </Section>
@@ -441,8 +525,21 @@ export default function RoomPage({ slug }: {slug: string }) {
               <AmenityGrid amenities={DEFAULT_AMENITIES} />
             </Section>
 
-            <Section title="Chính sách">
-              <Chips items={DEFAULT_POLICIES} />
+            {/* BỔ SUNG: Bảng chi phí */}
+            <Section title="Chi phí chi tiết">
+              <PriceBreakdown
+                roomPrice={priceVnd}
+                deposit={depositVnd}
+                electricPrice={electricPrice}
+                waterPrice={waterPrice}
+                internetFee={internetFee}
+                serviceFee={serviceFee}
+              />
+            </Section>
+
+            {/* BỔ SUNG: Quy định */}
+            <Section title="Quy định nhà">
+              <HouseRules rules={rules || DEFAULT_POLICIES} />
             </Section>
 
             {data.description ? (
@@ -463,10 +560,7 @@ export default function RoomPage({ slug }: {slug: string }) {
 
           {/* Right column */}
           <div className="space-y-5 lg:col-span-1">
-            <StickyActions phone={CONTACT_PHONE} contactName={CONTACT_NAME} listingId={data.id} onFav={() => setFav((v) => !v)} />
-            <Section title="Địa chỉ">
-              <div className="text-sm text-emerald-800/90">{addressLine}</div>
-            </Section>
+            <StickyActions phone={landlordPhone} addressLine={addressLine} contactName={landlordName} listingId={data.id} onFav={() => setFav((v) => !v)} />
           </div>
         </div>
       </div>

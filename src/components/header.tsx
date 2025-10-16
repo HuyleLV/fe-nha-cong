@@ -140,7 +140,7 @@ export default function Header() {
               <div
                 id="user-menu"
                 ref={userMenuRef}
-                role="menu"
+                  role="menu"
                 className="absolute right-0 top-12 w-64 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden"
               >
                 <div className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-500">

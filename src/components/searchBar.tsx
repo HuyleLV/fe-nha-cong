@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import clsx from "clsx";
+import type { Route } from "next";
 
 type Props = {
   placeholder?: string;
@@ -27,7 +28,7 @@ export default function SearchBar({
     e.preventDefault();
     const value = q.trim();
     if (!value) return;
-    if (onSearch) onSearch(value);      // ✅ gọi nếu có
+    if (onSearch) onSearch(value);      
     else router.push(`/search?q=${encodeURIComponent(value)}`);
   }
 

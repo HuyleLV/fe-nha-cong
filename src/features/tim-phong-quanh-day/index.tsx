@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   MapPinned, ChevronDown, ChevronRight, BadgePercent, Flame, Heart,
-  BedDouble, Bath, Ruler, FilterX, Map as MapIcon, List,
+  BedDouble, Bath, Ruler, FilterX, Map as MapIcon, List, RotateCcw
 } from "lucide-react";
 import SearchBar from "@/components/searchBar";
 import { Apartment, ApartmentStatus } from "@/type/apartment";
 import { apartmentService } from "@/services/apartmentService";
 import Pagination from "@/components/Pagination";
 import { toSlug } from "@/utils/formatSlug";
+import LocationLookup from "@/app/admin/components/locationLookup";
 
 // ================ Helpers =================
 const cx = (...arr: (string | false | undefined)[]) => arr.filter(Boolean).join(" ");
@@ -17,25 +18,45 @@ const toVnd = (n?: number | string) => {
   const v = typeof n === "string" ? Number(n) : n ?? 0;
   return (Number.isFinite(v) ? v : 0).toLocaleString("vi-VN");
 };
-const priceNum = (x: Apartment) => Number((x as any)?.rentPrice ?? 0);
-
-// cấu hình trang
+const toNum = (v?: string | number | null) => {
+  if (v === null || v === undefined) return undefined;
+  const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : undefined;
+};
 const LIMIT = 10;
 
 // ================ Root Page =================
 export default function TimPhongQuanhDayPage() {
-  const [query, setQuery] = useState("");
+  // View / sort
   const [view, setView] = useState<"list" | "map">("list");
-  const [sort, setSort] = useState<"best" | "price-asc" | "price-desc" | "newest">("best");
+  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "area_desc">("newest");
+
+  // search + yêu thích
+  const [query, setQuery] = useState("");
   const [liked, setLiked] = useState<number[]>([]);
 
   // Filters ↔ QueryApartmentDto
-  const [areas, setAreas] = useState<string[]>([]);
-  const [price, setPrice] = useState<[number, number]>([2_000_000, 8_000_000]);
-  const [bedrooms, setBedrooms] = useState<number | undefined>(undefined);
-  const [bathrooms, setBathrooms] = useState<number | undefined>(undefined);
+  const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<ApartmentStatus | undefined>("published");
-  const [onlyHot, setOnlyHot] = useState(false); 
+  const [minPrice, setMinPrice] = useState<string>("0");
+  const [maxPrice, setMaxPrice] = useState<string>("8000000");
+  const [minArea, setMinArea] = useState<string>("0");
+  const [maxArea, setMaxArea] = useState<string>("100");
+  const [bedrooms, setBedrooms] = useState<string>("");
+  const [bathrooms, setBathrooms] = useState<string>("");
+
+  // Amenities (boolean)
+  const [hasPrivateBathroom, setHasPrivateBathroom] = useState(false);
+  const [hasMezzanine, setHasMezzanine] = useState(false);
+  const [noOwnerLiving, setNoOwnerLiving] = useState(false);
+  const [hasAirConditioner, setHasAirConditioner] = useState(false);
+  const [hasWaterHeater, setHasWaterHeater] = useState(false);
+  const [hasWashingMachine, setHasWashingMachine] = useState(false);
+  const [hasWardrobe, setHasWardrobe] = useState(false);
+  const [flexibleHours, setFlexibleHours] = useState(false);
+
+  // “Ưu tiên giá tốt” (client-side)
+  const [onlyHot, setOnlyHot] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -52,17 +73,29 @@ export default function TimPhongQuanhDayPage() {
   // Build params (khớp QueryApartmentDto)
   const buildParams = () => ({
     q: query?.trim() || undefined,
-    locationSlug: areas.length > 0 ? toSlug(areas[0]) : undefined,
-    minPrice: price?.[0],
-    maxPrice: price?.[1],
-    bedrooms,
-    bathrooms,
+    locationSlug: locationSlug || undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    minArea: minArea ? Number(minArea) : undefined,
+    maxArea: maxArea ? Number(maxArea) : undefined,
+    bedrooms: bedrooms ? Number(bedrooms) : undefined,
+    bathrooms: bathrooms ? Number(bathrooms) : undefined,
     status,
+    sort,                  // ✅ server-side sort
+    // amenities: chỉ gửi khi true
+    hasPrivateBathroom: hasPrivateBathroom || undefined,
+    hasMezzanine: hasMezzanine || undefined,
+    noOwnerLiving: noOwnerLiving || undefined,
+    hasAirConditioner: hasAirConditioner || undefined,
+    hasWaterHeater: hasWaterHeater || undefined,
+    hasWashingMachine: hasWashingMachine || undefined,
+    hasWardrobe: hasWardrobe || undefined,
+    flexibleHours: flexibleHours || undefined,
     page,
     limit: LIMIT,
   });
 
-  // Call API via service + paginate meta
+  // Call API via service + paginate meta (debounce 300ms)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -75,32 +108,59 @@ export default function TimPhongQuanhDayPage() {
 
         setList(items || []);
         setTotal(meta.total ?? 0);
-        setTotalPages(meta.totalPages ?? Math.max(1, Math.ceil((meta.total || 0) / (meta.limit || LIMIT))));
-        // đồng bộ page nếu server có thể điều chỉnh
+        const pgCount = meta.totalPages ?? Math.max(1, Math.ceil((meta.total || 0) / (meta.limit || LIMIT)));
+        setTotalPages(pgCount);
+
         if (meta.page && meta.page !== page) setPage(meta.page);
       } catch (e: any) {
         if (!cancelled) setErr(e?.message || "Lỗi tải dữ liệu");
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }, 250); // debounce
+    }, 300);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, areas, price, bedrooms, bathrooms, status, page]); // không phụ thuộc LIMIT vì là hằng
+  }, [
+    query, locationSlug, minPrice, maxPrice, minArea, maxArea,
+    bedrooms, bathrooms, status, sort,
+    hasPrivateBathroom, hasMezzanine, noOwnerLiving, hasAirConditioner,
+    hasWaterHeater, hasWashingMachine, hasWardrobe, flexibleHours, page
+  ]);
 
-  // client-side sort (nếu server chưa hỗ trợ)
+  // client-side “hot”
   const results = useMemo(() => {
     let arr = [...list];
     if (onlyHot) arr = arr.filter((r: any) => r?.isHot || r?.hot);
-    if (sort === "price-asc")  arr.sort((a, b) => priceNum(a) - priceNum(b));
-    if (sort === "price-desc") arr.sort((a, b) => priceNum(b) - priceNum(a));
-    if (sort === "newest")     arr = arr.slice().reverse();
     return arr;
-  }, [list, onlyHot, sort]);
+  }, [list, onlyHot]);
+
+  // reset filters
+  const clearAll = () => {
+    setQuery("");
+    setLocationSlug(undefined);
+    setStatus("published");
+    setMinPrice("0");
+    setMaxPrice("8000000");
+    setMinArea("0");
+    setMaxArea("100");
+    setBedrooms("");
+    setBathrooms("");
+    setHasPrivateBathroom(false);
+    setHasMezzanine(false);
+    setNoOwnerLiving(false);
+    setHasAirConditioner(false);
+    setHasWaterHeater(false);
+    setHasWashingMachine(false);
+    setHasWardrobe(false);
+    setFlexibleHours(false);
+    setOnlyHot(false);
+    setSort("newest");
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,91 +177,149 @@ export default function TimPhongQuanhDayPage() {
         {/* Sidebar */}
         <aside className="md:col-span-1">
           <div className="sticky top-4 bg-white rounded-2xl border border-emerald-200 shadow-sm p-4">
+            {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-green-900 font-bold">Bộ lọc</h2>
-              <button
-                onClick={() => {
-                  setAreas([]);
-                  setBedrooms(undefined);
-                  setBathrooms(undefined);
-                  setStatus("published");
-                  setOnlyHot(false);
-                  setPrice([2_000_000, 8_000_000]);
-                  setPage(1);
-                }}
-                className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
-              >
-                <FilterX className="w-4 h-4" /> Đặt lại
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={clearAll}
+                  className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
+                >
+                  <RotateCcw className="w-4 h-4" /> Xoá
+                </button>
+                <button
+                  onClick={() => setPage(1)}
+                  className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
+                >
+                  <FilterX className="w-4 h-4" /> Áp dụng
+                </button>
+              </div>
             </div>
 
+
+            {/* Khu vực */}
             <Accordion title="Khu vực">
-              <CheckGroup
-                options={["Cầu Giấy", "Thanh Xuân", "Hai Bà Trưng", "Hoàng Mai", "Hà Đông", "Mỹ Đình"]}
-                values={areas}
-                onChange={(v) => {
-                  setAreas(v);
+              <LocationLookup
+                value={null as any}
+                onChange={(loc: any) => {
+                  setLocationSlug(loc?.slug || (loc?.name ? toSlug(loc.name) : undefined));
                   setPage(1);
                 }}
+                placeholder="Chọn khu vực"
               />
+              {locationSlug && (
+                <div className="text-xs text-slate-600 mt-2">
+                  Đang lọc theo: <span className="font-medium text-green-700">{locationSlug}</span>
+                </div>
+              )}
             </Accordion>
 
+            {/* Giá (DualRange) */}
             <Accordion title="Giá (VND/tháng)">
-              <PriceRange
-                value={price}
-                onChange={(v) => {
-                  const [min, max] = normalizeMinMax(v[0], v[1]);
-                  setPrice([min, max]);
-                  setPage(1);
-                }}
+              {/* Preset nhanh */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {[
+                  { label: "< 3tr", v: [0, 3_000_000] },
+                  { label: "3–5tr", v: [3_000_000, 5_000_000] },
+                  { label: "5–8tr", v: [5_000_000, 8_000_000] },
+                  { label: "8–12tr", v: [8_000_000, 12_000_000] },
+                ].map((p) => (
+                  <button
+                    key={p.label}
+                    onClick={() => { setMinPrice(String(p.v[0])); setMaxPrice(String(p.v[1])); setPage(1); }}
+                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <DualRange
                 min={0}
                 max={12_000_000}
-                step={500_000}
+                step={50_000}
+                valueMin={Number(minPrice || 0)}
+                valueMax={Number(maxPrice || 12_000_000)}
+                onChange={(minV, maxV) => {
+                  setMinPrice(String(minV));
+                  setMaxPrice(String(maxV));
+                  setPage(1);
+                }}
+                format={(v) => `${toVnd(v)} đ`}
               />
             </Accordion>
 
+            {/* Diện tích (DualRange) */}
+            <Accordion title="Diện tích (m²)">
+              {/* Preset nhanh */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {[
+                  { label: "<20", v: [0, 20] },
+                  { label: "20–30", v: [20, 30] },
+                  { label: "30–40", v: [30, 40] },
+                  { label: "≥40", v: [40, 100] },
+                ].map((p) => (
+                  <button
+                    key={p.label}
+                    onClick={() => { setMinArea(String(p.v[0])); setMaxArea(String(p.v[1])); setPage(1); }}
+                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <DualRange
+                min={0}
+                max={100}
+                step={1}
+                valueMin={Number(minArea || 0)}
+                valueMax={Number(maxArea || 100)}
+                onChange={(minV, maxV) => {
+                  setMinArea(String(minV));
+                  setMaxArea(String(maxV));
+                  setPage(1);
+                }}
+                format={(v) => `${v} m²`}
+              />
+            </Accordion>
+
+            {/* Phòng ngủ / WC */}
             <Accordion title="Phòng ngủ / WC">
               <div className="grid grid-cols-2 gap-2">
-                <NumberChip
-                  labelPrefix="PN"
-                  values={[0, 1, 2, 3]}
-                  current={bedrooms}
-                  onChange={(n) => {
-                    setBedrooms(n);
-                    setPage(1);
-                  }}
-                />
-                <NumberChip
-                  labelPrefix="WC"
-                  values={[0, 1, 2]}
-                  current={bathrooms}
-                  onChange={(n) => {
-                    setBathrooms(n);
-                    setPage(1);
-                  }}
-                />
+                <NumberChip labelPrefix="PN" values={[0, 1, 2, 3]} current={bedrooms} onChange={setBedrooms} />
+                <NumberChip labelPrefix="WC" values={[0, 1, 2]} current={bathrooms} onChange={setBathrooms} />
               </div>
             </Accordion>
 
-            <div className="mt-3 flex items-center justify-between">
+            {/* Tiện nghi */}
+            <Accordion title="Tiện nghi (Nâng cao)">
+              <div className="flex flex-wrap gap-2">
+                <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>VS khép kín</ToggleChip>
+                <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
+                <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
+                <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
+                <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
+                <ToggleChip active={hasWashingMachine} onToggle={() => { setHasWashingMachine(!hasWashingMachine); setPage(1); }}>Máy giặt</ToggleChip>
+                <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
+                <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
+              </div>
+            </Accordion>
+
+            {/* Khác */}
+            <Accordion title="Khác">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={onlyHot}
-                  onChange={(e) => setOnlyHot(e.target.checked)}
+                  onChange={(e) => { setOnlyHot(e.target.checked); setPage(1); }}
                   className="accent-green-600"
                 />
                 <span className="inline-flex items-center gap-1">
                   Ưu tiên <Flame className="w-4 h-4 text-orange-500" /> Giá tốt
                 </span>
               </label>
-              <button
-                onClick={() => setPage(1)}
-                className="bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white px-4 py-2 rounded-xl font-semibold shadow hover:opacity-95"
-              >
-                Áp dụng
-              </button>
-            </div>
+            </Accordion>
           </div>
         </aside>
 
@@ -226,7 +344,7 @@ export default function TimPhongQuanhDayPage() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
           ) : view === "list" ? (
             results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl-grid-cols-2 gap-5">
                 {results.map((r) => (
                   <RoomCard
                     key={r.id}
@@ -245,16 +363,13 @@ export default function TimPhongQuanhDayPage() {
             )
           ) : (
             <div className="rounded-2xl border border-green-200 bg-white overflow-hidden">
-              {/* header nhỏ (tuỳ chọn) */}
               <div className="flex items-center gap-2 p-3 border-b border-green-100 text-sm text-gray-700">
                 <MapIcon className="text-green-700" />
-                <span>Bản đồ Hà Đông</span>
+                <span>Bản đồ</span>
               </div>
-
-              {/* khung bản đồ */}
               <div className="h-[600px]">
                 <iframe
-                  title="Bản đồ Hà Đông"
+                  title="Bản đồ"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d59615.428462975906!2d105.71369061023124!3d20.953949609279487!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3134532bef4bcdb7%3A0xbcc7a679fcba07f6!2zSMOgIMSQw7RuZywgSMOgIE7hu5lpLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1759043217443!5m2!1svi!2s"
                   className="w-full h-full border-0"
                   loading="lazy"
@@ -292,10 +407,10 @@ function Toolbar({ sort, setSort, view, setView, count }: any) {
             onChange={(e) => setSort(e.target.value)}
             className="appearance-none bg-white border border-green-200 text-sm rounded-xl px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-green-300"
           >
-            <option value="best">Phù hợp nhất</option>
-            <option value="price-asc">Giá tăng dần</option>
-            <option value="price-desc">Giá giảm dần</option>
             <option value="newest">Mới nhất</option>
+            <option value="price_asc">Giá tăng dần</option>
+            <option value="price_desc">Giá giảm dần</option>
+            <option value="area_desc">Diện tích lớn nhất</option>
           </select>
           <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500" />
         </div>
@@ -337,33 +452,16 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function CheckGroup({
-  options,
-  values,
-  onChange,
-}: {
-  options: string[];
-  values: string[];
-  onChange: (v: string[]) => void;
-}) {
+function ToggleChip({ active, onToggle, children }: { active: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {options.map((opt) => {
-        const checked = values.includes(opt);
-        return (
-          <button
-            key={opt}
-            onClick={() => onChange(checked ? values.filter((v) => v !== opt) : [...values, opt])}
-            className={cx(
-              "text-sm px-3 py-2 rounded-xl border transition flex items-center justify-center",
-              checked ? "bg-green-600 text-white border-green-600" : "border-green-200 hover:bg-green-50 text-green-800"
-            )}
-          >
-            {opt}
-          </button>
-        );
-      })}
-    </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`px-3 py-1 rounded-full border text-sm transition
+        ${active ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -375,16 +473,16 @@ function NumberChip({
 }: {
   labelPrefix: string;
   values: number[];
-  current?: number;
-  onChange: (v: number | undefined) => void;
+  current?: string;
+  onChange: (v: string) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button
-        onClick={() => onChange(undefined)}
+        onClick={() => onChange("")}
         className={cx(
           "text-xs px-3 py-1.5 rounded-xl border transition",
-          current == null ? "bg-green-600 text-white border-green-600" : "border-green-200 hover:bg-green-50 text-green-800"
+          !current ? "bg-green-600 text-white border-green-600" : "border-green-200 hover:bg-green-50 text-green-800"
         )}
       >
         {labelPrefix} Tất cả
@@ -392,10 +490,10 @@ function NumberChip({
       {values.map((n) => (
         <button
           key={n}
-          onClick={() => onChange(n)}
+          onClick={() => onChange(String(n))}
           className={cx(
             "text-xs px-3 py-1.5 rounded-xl border transition",
-            current === n ? "bg-green-600 text-white border-green-600" : "border-green-200 hover:bg-green-50 text-green-800"
+            current === String(n) ? "bg-green-600 text-white border-green-600" : "border-green-200 hover:bg-green-50 text-green-800"
           )}
         >
           {labelPrefix} {n}
@@ -405,57 +503,16 @@ function NumberChip({
   );
 }
 
-function PriceRange({
-  value,
-  onChange,
-  min,
-  max,
-  step,
-}: {
-  value: [number, number];
-  onChange: (v: [number, number]) => void;
-  min: number;
-  max: number;
-  step: number;
-}) {
-  const [a, b] = value;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm mb-2">
-        <span>{toVnd(a)} đ</span>
-        <span>—</span>
-        <span>{toVnd(b)} đ</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={a}
-        onChange={(e) => onChange(normalizeMinMax(Number(e.target.value), b))}
-        className="w-full accent-green-600"
-      />
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={b}
-        onChange={(e) => onChange(normalizeMinMax(a, Number(e.target.value)))}
-        className="w-full accent-green-600 -mt-2"
-      />
-    </div>
-  );
-}
-
 function RoomCard({ data, liked, onLike }: { data: Apartment; liked: boolean; onLike: () => void }) {
   const price = toVnd(data.rentPrice);
-  const ward = data.addressPath;
-  const img = data.coverImageUrl || `https://picsum.photos/seed/apm-${data.id}/800/480`;
+  const ward = data.addressPath || data.location?.name;
+  const imgRel = data.coverImageUrl || `/api/static/placeholder/apm-${data.id}.jpg`;
+  const src = imgRel?.startsWith("http") ? imgRel : `${process.env.NEXT_PUBLIC_API_URL || ""}${imgRel}`;
+
   return (
     <article className="group bg-white rounded-2xl overflow-hidden border border-green-200 shadow-sm hover:shadow-md transition">
       <div className="relative">
-        <img src={process.env.NEXT_PUBLIC_API_URL + img} alt={data.title} className="w-full h-48 object-cover" />
+        <img src={src} alt={data.title} className="w-full h-48 object-cover" />
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <span className="inline-flex items-center gap-1 text-xs font-semibold bg-white/90 text-green-700 px-2 py-1 rounded-full border border-green-200 shadow-sm">
             <BadgePercent className="w-3 h-3" /> Ưu đãi
@@ -469,25 +526,115 @@ function RoomCard({ data, liked, onLike }: { data: Apartment; liked: boolean; on
         </button>
       </div>
       <div className="p-4">
-        <h3 className="font-bold text-green-900 group-hover:underline leading-snug line-clamp-2">{data.title}</h3>
-        <div className="mt-1 text-red-600 font-semibold">Từ {price} / tháng</div>
-        <div className="mt-1 text-sm text-gray-600">{ward}</div>
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-600">
-          <span className="inline-flex items-center gap-1"><BedDouble className="w-4 h-4 text-green-700" /> {data.bedrooms ?? 0} giường</span>
-          <span className="inline-flex items-center gap-1"><Bath className="w-4 h-4 text-green-700" /> {data.bathrooms ?? 0} WC</span>
-          <span className="inline-flex items-center gap-1"><Ruler className="w-4 h-4 text-green-700" /> {data.areaM2 ?? 0} m²</span>
-        </div>
-        <div className="mt-4 flex items-center justify-between">
-          <button className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold hover:opacity-95">Xem chi tiết</button>
-          <button className="px-4 py-2 rounded-xl border border-green-200 text-green-800 hover:bg-green-50">Liên hệ</button>
-        </div>
+        <a href={`/room/${data.slug}`}>
+          <h3 className="font-bold text-green-900 group-hover:underline leading-snug line-clamp-2">{data.title}</h3>
+          <div className="mt-1 text-red-600 font-semibold">Từ {price} / tháng</div>
+          <div className="mt-1 text-sm text-gray-600">{ward}</div>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+            <span className="inline-flex items-center gap-1"><BedDouble className="w-4 h-4 text-green-700" /> {data.bedrooms ?? 0} ngủ</span>
+            <span className="inline-flex items-center gap-1"><Bath className="w-4 h-4 text-green-700" /> {data.bathrooms ?? 0} WC</span>
+            <span className="inline-flex items-center gap-1"><Ruler className="w-4 h-4 text-green-700" /> {toNum(data.areaM2) ?? 0} m²</span>
+          </div>
+          <div className="mt-4 flex items-center justify-end">
+            <button className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold hover:opacity-95 cursor-pointer">Xem chi tiết</button>
+          </div>
+        </a>
       </div>
     </article>
   );
 }
 
-function normalizeMinMax(a: number, b: number): [number, number] {
-  return a > b ? [b, a] : [a, b];
+// DualRange – thanh kéo 2 đầu cho min/max
+function DualRange({
+  min,
+  max,
+  step = 1,
+  valueMin,
+  valueMax,
+  onChange,
+  format = (v: number) => String(v),
+}: {
+  min: number;
+  max: number;
+  step?: number;
+  valueMin: number;
+  valueMax: number;
+  onChange: (nextMin: number, nextMax: number) => void;
+  format?: (v: number) => string;
+}) {
+  const [localMin, setLocalMin] = useState(valueMin);
+  const [localMax, setLocalMax] = useState(valueMax);
+
+  // sync from props
+  useEffect(() => setLocalMin(valueMin), [valueMin]);
+  useEffect(() => setLocalMax(valueMax), [valueMax]);
+
+  const handleMin = (v: number) => {
+    const clamped = Math.min(Math.max(v, min), localMax);
+    setLocalMin(clamped);
+    onChange(clamped, localMax);
+  };
+  const handleMax = (v: number) => {
+    const clamped = Math.max(Math.min(v, max), localMin);
+    setLocalMax(clamped);
+    onChange(localMin, clamped);
+  };
+
+  const left = ((localMin - min) / (max - min)) * 100;
+  const right = ((localMax - min) / (max - min)) * 100;
+
+  return (
+    <div className="w-full">
+      {/* Values row */}
+      <div className="flex items-center justify-between text-sm mb-2">
+        <span>{format(localMin)}</span>
+        <span>—</span>
+        <span>{format(localMax)}</span>
+      </div>
+
+      {/* Track */}
+      <div className="relative h-8">
+        {/* background track */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 rounded-full bg-emerald-100" />
+        {/* selected range */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-emerald-400"
+          style={{ left: `${left}%`, right: `${100 - right}%` }}
+        />
+        {/* two inputs overlap */}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={localMin}
+          onChange={(e) => handleMin(Number(e.target.value))}
+          className="absolute w-full top-0 bottom-0 appearance-none bg-transparent pointer-events-auto"
+          style={{ zIndex: 2 }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={localMax}
+          onChange={(e) => handleMax(Number(e.target.value))}
+          className="absolute w-full top-0 bottom-0 appearance-none bg-transparent pointer-events-auto"
+          style={{ zIndex: 3 }}
+        />
+
+        {/* thumbs (visual only) */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-emerald-500 bg-white shadow"
+          style={{ left: `calc(${left}% - 8px)` }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-emerald-500 bg-white shadow"
+          style={{ left: `calc(${right}% - 8px)` }}
+        />
+      </div>
+    </div>
+  );
 }
 
 // skeleton

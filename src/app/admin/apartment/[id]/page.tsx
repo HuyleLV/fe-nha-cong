@@ -10,13 +10,18 @@ import Spinner from "@/components/spinner";
 import UploadPicker from "@/components/UploadPicker";
 import LocationLookup from "../../components/locationLookup";
 import { toSlug } from "@/utils/formatSlug";
-
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment, ApartmentForm, ApartmentStatus } from "@/type/apartment";
 import { Location } from "@/type/location";
 import CustomSunEditor from "../../components/customSunEditor";
+import SeoScoreCard from "@/components/SeoScoreCard";
 
 /* ---------- helpers ---------- */
+const inputCls =
+  "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
+const textAreaCls =
+  "w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 p-3 bg-white";
+
 function wordCountFromHtml(html?: string) {
   if (!html) return 0;
   const text = html
@@ -25,8 +30,7 @@ function wordCountFromHtml(html?: string) {
     .replace(/<\/?[^>]+(>|$)/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!text) return 0;
-  return text.split(" ").length;
+  return text ? text.split(" ").length : 0;
 }
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -60,7 +64,7 @@ export default function ApartmentFormPage() {
       title: "",
       slug: "",
       excerpt: "",
-      description: "", // sẽ được điều khiển bởi SunEditor
+      description: "",
       locationId: undefined as unknown as number,
       streetAddress: "",
       lat: "",
@@ -72,6 +76,24 @@ export default function ApartmentFormPage() {
       currency: "VND",
       status: "draft" as ApartmentStatus,
       coverImageUrl: "",
+
+      electricityPricePerKwh: null,
+      waterPricePerM3: null,
+      internetPricePerRoom: null,
+      commonServiceFeePerPerson: null,
+
+      hasAirConditioner: false,
+      hasWaterHeater: false,
+      hasKitchenCabinet: false,
+      hasWashingMachine: false,
+      hasWardrobe: false,
+
+      hasPrivateBathroom: false,
+      hasMezzanine: false,
+      noOwnerLiving: false,
+      flexibleHours: false,
+
+      focusKeyword: "", // ✅ chỉ để chấm điểm SEO, không gửi lên API
     },
   });
 
@@ -79,15 +101,15 @@ export default function ApartmentFormPage() {
   const slug = watch("slug");
   const cover = watch("coverImageUrl") ?? "";
   const descriptionHtml = watch("description") || "";
+  const focusKeyword = watch("focusKeyword") || ""; // ✅ theo dõi keyword
 
-  // Tự tạo slug theo tiêu đề nếu slug đang trống
+  // auto slug
   useEffect(() => {
-    const cur = (slug || "").trim();
-    if (!cur && title?.trim()) setValue("slug", toSlug(title), { shouldDirty: true });
+    if (!slug?.trim() && title?.trim()) setValue("slug", toSlug(title), { shouldDirty: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  // Load detail khi edit
+  // load detail
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
@@ -109,6 +131,24 @@ export default function ApartmentFormPage() {
           status: ap.status,
           coverImageUrl: ap.coverImageUrl || "",
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
+
+          electricityPricePerKwh: ap.electricityPricePerKwh ?? null,
+          waterPricePerM3: ap.waterPricePerM3 ?? null,
+          internetPricePerRoom: ap.internetPricePerRoom ?? null,
+          commonServiceFeePerPerson: ap.commonServiceFeePerPerson ?? null,
+
+          hasAirConditioner: ap.hasAirConditioner ?? false,
+          hasWaterHeater: ap.hasWaterHeater ?? false,
+          hasKitchenCabinet: ap.hasKitchenCabinet ?? false,
+          hasWashingMachine: ap.hasWashingMachine ?? false,
+          hasWardrobe: ap.hasWardrobe ?? false,
+
+          hasPrivateBathroom: ap.hasPrivateBathroom ?? false,
+          hasMezzanine: ap.hasMezzanine ?? false,
+          noOwnerLiving: ap.noOwnerLiving ?? false,
+          flexibleHours: ap.flexibleHours ?? false,
+
+          focusKeyword: "", // ✅ không load từ API
         });
         setSelectedLocation(ap.location || null);
       } catch {
@@ -120,6 +160,13 @@ export default function ApartmentFormPage() {
     })();
   }, [id, isEdit, reset, router]);
 
+  // normalize int or null for fee fields
+  const toIntOrNull = (v: unknown) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.round(n) : null;
+  };
+
   const onSubmit = async (values: ApartmentForm) => {
     const payload: ApartmentForm = {
       ...values,
@@ -129,8 +176,15 @@ export default function ApartmentFormPage() {
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
-      description: values.description || "", // từ SunEditor
+      description: values.description || "",
+
+      electricityPricePerKwh: toIntOrNull(values.electricityPricePerKwh),
+      waterPricePerM3: toIntOrNull(values.waterPricePerM3),
+      internetPricePerRoom: toIntOrNull(values.internetPricePerRoom),
+      commonServiceFeePerPerson: toIntOrNull(values.commonServiceFeePerPerson),
     };
+
+    delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
 
     try {
       if (isEdit) {
@@ -206,13 +260,10 @@ export default function ApartmentFormPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Title & slug */}
           <Section title="Tiêu đề & Permalink">
             <div className="space-y-3">
-              <input
-                className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Nhập tiêu đề căn hộ…"
-                {...register("title", { required: "Vui lòng nhập tiêu đề" })}
-              />
+              <input className={inputCls} placeholder="Nhập tiêu đề căn hộ…" {...register("title", { required: "Vui lòng nhập tiêu đề" })} />
               {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
 
               <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 flex items-center gap-2">
@@ -224,15 +275,11 @@ export default function ApartmentFormPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <input
-                  className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 font-mono"
-                  placeholder="slug-tuy-chinh (tuỳ chọn)"
-                  {...register("slug")}
-                />
+                <input className={`${inputCls} font-mono`} placeholder="slug-tuy-chinh (tuỳ chọn)" {...register("slug")} />
                 <button
                   type="button"
                   onClick={() => setValue("slug", toSlug(title || ""), { shouldDirty: true })}
-                  className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm cursor-pointer"
+                  className="h-10 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm cursor-pointer"
                 >
                   Tạo
                 </button>
@@ -240,59 +287,63 @@ export default function ApartmentFormPage() {
             </div>
           </Section>
 
+          {/* Excerpt */}
           <Section title="Mô tả ngắn">
-            <textarea
-              rows={3}
-              className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Mô tả ngắn (excerpt)…"
-              {...register("excerpt")}
-            />
+            <textarea rows={3} className={textAreaCls} placeholder="Mô tả ngắn (excerpt)…" {...register("excerpt")} />
           </Section>
 
+          {/* Address */}
           <Section title="Địa chỉ & Toạ độ (tuỳ chọn)">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input
-                className="rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500 md:col-span-3"
-                placeholder="Số nhà, đường, ..."
-                {...register("streetAddress")}
-              />
-              <input
-                className="rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Vĩ độ (lat)"
-                {...register("lat")}
-              />
-              <input
-                className="rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Kinh độ (lng)"
-                {...register("lng")}
-              />
-              <input
-                className="rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Diện tích m²"
-                {...register("areaM2")}
-              />
+              <input className={`${inputCls} md:col-span-3`} placeholder="Số nhà, đường, ..." {...register("streetAddress")} />
+              <input className={inputCls} placeholder="Vĩ độ (lat)" {...register("lat")} />
+              <input className={inputCls} placeholder="Kinh độ (lng)" {...register("lng")} />
+              <input className={inputCls} placeholder="Diện tích m²" {...register("areaM2")} />
             </div>
           </Section>
 
-          {/* 🔁 Thay textarea bằng SunEditor cho mô tả chi tiết */}
-          <Section title="Mô tả chi tiết">
-            <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
-              <Controller
-                name="description"
-                control={control}
-                rules={{
-                  validate: (v) =>
-                    (v && v.replace(/<[^>]*>/g, "").trim().length > 0) || "Vui lòng nhập nội dung",
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomSunEditor value={value || ""} onChange={onChange} />
-                )}
-              />
+          {/* Fees */}
+          <Section title="Phí dịch vụ (đồng)">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Điện (đ/Kwh)</label>
+                <input type="number" min={0} placeholder="4000" className={inputCls} {...register("electricityPricePerKwh", { valueAsNumber: true })} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Nước (đ/m³)</label>
+                <input type="number" min={0} placeholder="35000" className={inputCls} {...register("waterPricePerM3", { valueAsNumber: true })} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Mạng (đ/Phòng)</label>
+                <input type="number" min={0} placeholder="100000" className={inputCls} {...register("internetPricePerRoom", { valueAsNumber: true })} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Dịch vụ chung (đ/Người)</label>
+                <input type="number" min={0} placeholder="130000" className={inputCls} {...register("commonServiceFeePerPerson", { valueAsNumber: true })} />
+              </div>
             </div>
-            {errors.description && (
-              <p className="text-red-600 text-sm mt-2">{String(errors.description.message || errors.description)}</p>
-            )}
-            <div className="text-xs text-slate-500 mt-2">{wordCountFromHtml(descriptionHtml)} từ</div>
+            <p className="text-xs text-slate-500 mt-2">Để trống nếu không áp dụng.</p>
+          </Section>
+
+          {/* Furniture */}
+          <Section title="Nội thất">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasAirConditioner")} /> Điều hoà</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWaterHeater")} /> Nóng lạnh</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenCabinet")} /> Kệ bếp</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachine")} /> Máy giặt</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWardrobe")} /> Tủ quần áo</label>
+            </div>
+          </Section>
+
+          {/* Amenities */}
+          <Section title="Tiện nghi">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasPrivateBathroom")} /> Vệ sinh khép kín</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
+            </div>
           </Section>
         </div>
 
@@ -314,17 +365,12 @@ export default function ApartmentFormPage() {
                   />
                 )}
               />
-              {errors.locationId && (
-                <p className="text-red-600 text-sm">{String(errors.locationId.message)}</p>
-              )}
+              {errors.locationId && <p className="text-red-600 text-sm">{String(errors.locationId.message)}</p>}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Trạng thái</label>
-                  <select
-                    className="w-full rounded border border-dashed border-slate-300 bg-white focus:border-emerald-500 focus:ring-emerald-500"
-                    {...register("status", { required: true })}
-                  >
+                  <select className={inputCls} {...register("status", { required: true })}>
                     <option value="draft">draft</option>
                     <option value="published">published</option>
                     <option value="archived">archived</option>
@@ -332,82 +378,111 @@ export default function ApartmentFormPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Đơn vị tiền tệ</label>
-                  <input
-                    className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    placeholder="VND"
-                    {...register("currency")}
-                  />
+                  <input className={inputCls} placeholder="VND" {...register("currency")} />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Phòng ngủ</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    {...register("bedrooms", { valueAsNumber: true })}
-                  />
+                  <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true })} />
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Phòng tắm</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                    {...register("bathrooms", { valueAsNumber: true })}
-                  />
+                  <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true })} />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
-                <input
-                  inputMode="numeric"
-                  className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-                  placeholder="Ví dụ: 6500000"
-                  {...register("rentPrice", { required: "Vui lòng nhập giá thuê" })}
-                />
-                {errors.rentPrice && (
-                  <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>
-                )}
+                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê" })} />
+                {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
               </div>
             </div>
           </Section>
 
           <Section title="Ảnh cover (tuỳ chọn)">
-            <UploadPicker
-              value={cover || null}
-              onChange={(val) => setValue("coverImageUrl", val || "", { shouldDirty: true })}
-            />
+            <UploadPicker value={cover || null} onChange={(val) => setValue("coverImageUrl", val || "", { shouldDirty: true })} />
           </Section>
 
           <Section title="Kiểm tra nhanh">
             <ul className="text-sm text-slate-600 space-y-2">
               <li className="flex items-start gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 mt-0.5 ${title?.trim() ? "text-emerald-600" : "text-slate-300"}`}
-                />
+                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${title?.trim() ? "text-emerald-600" : "text-slate-300"}`} />
                 <span>Đã có tiêu đề.</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 mt-0.5 ${
-                    (slug || toSlug(title || "")).length ? "text-emerald-600" : "text-slate-300"
-                  }`}
-                />
+                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${(slug || toSlug(title || "")).length ? "text-emerald-600" : "text-slate-300"}`} />
                 <span>Slug hợp lệ.</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 mt-0.5 ${selectedLocation ? "text-emerald-600" : "text-slate-300"}`}
-                />
+                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${selectedLocation ? "text-emerald-600" : "text-slate-300"}`} />
                 <span>Đã chọn khu vực.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className={`w-4 h-4 mt-0.5 ${wordCountFromHtml(descriptionHtml) >= 300 ? "text-emerald-600" : "text-slate-300"}`} />
+                <span>Tối thiểu 300 từ mô tả chi tiết.</span>
               </li>
             </ul>
           </Section>
         </div>
+      </div>
+
+      {/* ===== MÔ TẢ CHI TIẾT: luôn ở dưới cùng, full-width ===== */}
+      <div className="p-4">
+        <Section title="Mô tả chi tiết">
+          <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
+            <Controller
+              name="description"
+              control={control}
+              rules={{
+                validate: (v) =>
+                  (v && v.replace(/<[^>]*>/g, "").trim().length > 0) || "Vui lòng nhập nội dung",
+              }}
+              render={({ field: { value, onChange } }) => (
+                <CustomSunEditor value={value || ""} onChange={onChange} />
+              )}
+            />
+          </div>
+          {errors.description && (
+            <p className="text-red-600 text-sm mt-2">
+              {String(errors.description.message || errors.description)}
+            </p>
+          )}
+          <div className="text-xs text-slate-500 mt-2">{wordCountFromHtml(descriptionHtml)} từ</div>
+
+          {/* ===== SEO SCORING ===== */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Focus keyword input */}
+            <div className="lg:col-span-1 space-y-2">
+              <label className="text-sm text-slate-600">Từ khoá chính (Focus Keyword)</label>
+              <input
+                className={inputCls}
+                placeholder="vd: phòng trọ hà đông, căn hộ mini hà nội…"
+                value={focusKeyword}
+                onChange={(e) => setValue("focusKeyword", e.target.value)}
+              />
+              <p className="text-xs text-slate-500">
+                Dùng 1 cụm từ để SeoScoreCard chấm điểm nội dung.
+              </p>
+            </div>
+
+            {/* SeoScoreCard */}
+            <div className="lg:col-span-2">
+              <SeoScoreCard
+                title={title || ""}
+                slug={slug || toSlug(title || "")}
+                excerpt={watch("excerpt") || ""}
+                contentHtml={descriptionHtml || ""}
+                cover={cover || ""}
+                tags={[]} // hiện tại căn hộ không có tag, nên truyền mảng rỗng
+                focusKeyword={focusKeyword}
+                onChangeFocusKeyword={(kw) => setValue("focusKeyword", kw)}
+              />
+            </div>
+          </div>
+
+        </Section>
       </div>
 
       <form id="apartment-form" onSubmit={handleSubmit(onSubmit)} className="hidden" />
