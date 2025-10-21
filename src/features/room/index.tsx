@@ -21,6 +21,22 @@ const withBase = (u?: string | null) => {
   if (u.startsWith("http") || u.startsWith("data:")) return u;
   return `${process.env.NEXT_PUBLIC_API_URL || ""}${u}`;
 };
+// Simple cookie reader for checking auth token
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(";").shift() || null;
+  return null;
+}
+const hasLoginToken = () => {
+  if (typeof window === "undefined") return false;
+  return !!(
+    getCookie("access_token") ||
+    window.localStorage.getItem("access_token") ||
+    window.sessionStorage.getItem("access_token")
+  );
+};
 const parseNum = (v: any, fallback = 0): number => {
   if (v == null) return fallback;
   const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
@@ -411,6 +427,11 @@ function BookingModal({
       toast.success("Đã gửi yêu cầu đặt lịch xem phòng!");
       onClose();
     } catch (e: any) {
+      if (e?.response?.status === 401) {
+        toast.info("Vui lòng đăng nhập để đặt lịch xem phòng.");
+        onClose();
+        return;
+      }
       // Cố gắng bóc tách lỗi theo NestJS (Bad Request) { error, message: string|string[], statusCode }
       const resp = e?.response?.data;
       const messages: string[] = Array.isArray(resp?.message)
@@ -772,7 +793,13 @@ export default function RoomPage({ slug }: { slug: string }) {
                     </a>
                   )}
                   <button
-                    onClick={() => setBookingOpen(true)}
+                    onClick={() => {
+                      if (!hasLoginToken()) {
+                        toast.info("Vui lòng đăng nhập để đặt lịch xem phòng.");
+                        return;
+                      }
+                      setBookingOpen(true);
+                    }}
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 px-4 py-3 text-emerald-800 hover:bg-emerald-50"
                   >
                     <CalendarDays className="h-5 w-5" /> Đặt lịch xem phòng
