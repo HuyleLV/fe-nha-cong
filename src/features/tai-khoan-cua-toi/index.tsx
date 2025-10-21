@@ -297,20 +297,20 @@ export default function AccountPage() {
 
         <div className="grid gap-5 lg:grid-cols-3">
           {/* Calendar grid */}
-          <div className="rounded-2xl bg-white border shadow-sm p-3 lg:col-span-2 max-w-md mx-auto">
+          <div className="rounded-2xl bg-white border shadow-sm p-4 lg:col-span-2">
             <div className="mb-2 flex items-center justify-between">
-              <button onClick={goPrevMonth} className="rounded-lg p-1.5 hover:bg-slate-50">
-                <ChevronLeft className="h-4 w-4" />
+              <button onClick={goPrevMonth} className="rounded-lg p-2 hover:bg-slate-50">
+                <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="text-xs font-semibold text-slate-800 uppercase tracking-wide">{monthLabel}</div>
-              <button onClick={goNextMonth} className="rounded-lg p-1.5 hover:bg-slate-50">
-                <ChevronRight className="h-4 w-4" />
+              <div className="text-sm font-semibold text-slate-800 uppercase tracking-wide">{monthLabel}</div>
+              <button onClick={goNextMonth} className="rounded-lg p-2 hover:bg-slate-50">
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-500">
+            <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-500">
               {['T2','T3','T4','T5','T6','T7','CN'].map(d => <div key={d} className="py-0.5">{d}</div>)}
             </div>
-            <div className="mt-1 grid grid-cols-7 gap-1">
+            <div className="mt-1 grid grid-cols-7 gap-2">
               {days.map((d, idx) => {
                 const events = d ? (eventsByDate[d] || []) : [];
                 const dayNum = d ? Number(d.slice(-2)) : '';
@@ -324,15 +324,15 @@ export default function AccountPage() {
                   <button
                     key={idx}
                     onClick={() => d && setSelectedDate(d)}
-                    className={`aspect-square rounded-lg border text-[11px] ${
+                    className={`aspect-square rounded-lg border text-sm ${
                       d ? 'bg-white hover:bg-slate-50' : 'bg-transparent border-transparent'
                     } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                   >
                     <span className="leading-none">{dayNum}</span>
                     {d && (
-                      <div className="mt-0.5 flex items-center gap-0.5">
+                      <div className="mt-1 flex items-center gap-1">
                         {colors.map((c, i) => (
-                          <span key={i} className={`h-1.5 w-1.5 rounded-full ${c}`} />
+                          <span key={i} className={`h-2 w-2 rounded-full ${c}`} />
                         ))}
                         {more > 0 && <span className="ml-0.5 text-[10px] text-slate-500">+{more}</span>}
                       </div>
