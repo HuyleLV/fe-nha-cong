@@ -29,4 +29,32 @@ export type Me = {
     name?: string; 
     email?: string 
     role: string; 
+    avatarUrl?: string;
+    phone?: string;
 };
+
+export interface LoginUserRequest {
+    email: string;
+    password_hash: string;
+}
+
+export interface resLoginUser {
+    message?: string;
+    user?: User;
+    expiresIn?: string;
+    accessToken?: string;
+}
+
+export interface RegisterUserRequest {
+    name?: string;
+    phone?: string;
+    email?: string;
+    password_hash?: string;
+    confirmPassword?: string;
+    agree?: boolean;
+}
+
+export interface resRegisterUser {
+    message?: string;
+    user?: User;
+}

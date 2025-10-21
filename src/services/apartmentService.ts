@@ -1,111 +1,127 @@
+// src/services/apartment.service.ts
 import { Apartment, ApartmentQuery, ApartmentForm } from "@/type/apartment";
 import { ApiResponse, PaginationMeta } from "@/type/common";
 import axiosClient from "@/utils/axiosClient";
+
+/** Kiểu dữ liệu cho trang chủ (home-sections) */
+export type ApiSectionHome = {
+  district: { id: number; name: string; slug: string; level?: string };
+  apartments: (Apartment & { favorited?: boolean; addressPath?: string | null })[];
+};
+
+export type HomeSectionsResponse = {
+  city: { id: number; name: string; slug: string; level?: string };
+  sections: ApiSectionHome[];
+};
 
 /** Loại bỏ key có value undefined để query sạch sẽ */
 const cleanParams = <T extends Record<string, any>>(p?: T): Partial<T> | undefined => {
   if (!p) return undefined;
   const out: Record<string, any> = {};
-  Object.keys(p).forEach((k) => {
+  for (const k of Object.keys(p)) {
     const v = (p as any)[k];
     if (v !== undefined) out[k] = v;
-  });
+  }
   return out as Partial<T>;
 };
 
 export const apartmentService = {
-    /** List: API trả { items, meta } */
-    async getAll(
-        params?: ApartmentQuery
-    ): Promise<{ items: Apartment[]; meta: PaginationMeta }> {
-        const res = await axiosClient.get<{
-            items: Apartment[];
-            meta: PaginationMeta;
-        }>("/api/apartments", {
-            params: cleanParams(params),
-            validateStatus: () => true,
-        });
+  /** GET /api/apartments → { items, meta } */
+  async getAll(params?: ApartmentQuery): Promise<{ items: Apartment[]; meta: PaginationMeta }> {
+    try {
+      const payload = await axiosClient.get<
+        { items: Apartment[]; meta: PaginationMeta },
+        { items: Apartment[]; meta: PaginationMeta }
+      >(
+        "/api/apartments",
+        { params: cleanParams(params) }
+      );
 
-        if (res.status >= 400) {
-        // cố gắng lấy message từ payload
-            const msg =
-                (res.data as any)?.message ||
-                (res as any)?.data?.error ||
-                `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
+      return {
+        items: payload?.items ?? [],
+        meta: payload?.meta ?? { total: 0, page: 1, limit: 10, pageCount: 1 },
+      };
+    } catch (err: any) {
+      throw new Error(err?.message || "Không thể tải danh sách căn hộ");
+    }
+  },
 
-        // ✅ khớp cấu trúc mới
-        return {
-            items: res.data?.items ?? [],
-            meta: res.data?.meta ?? { total: 0, page: 1, limit: 10, pageCount: 1 },
-        };
-    },
+  async getHomeSections(params: {
+    citySlug: string;
+    limitPerDistrict?: number;
+    signal?: AbortSignal;
+  }): Promise<HomeSectionsResponse> {
+    const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+    const url = `${base}/api/apartments/home-sections`;
 
-    async getById(id: number | string): Promise<Apartment> {
-        const res = await axiosClient.get<ApiResponse<Apartment> | Apartment>(
-            `/api/apartments/${id}`,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 200) {
-            const msg = (res.data as any)?.message ?? `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
-        // hỗ trợ cả 2 dạng: { data: entity } hoặc entity
-        return (res.data as any)?.data ?? (res.data as Apartment);
-    },
+    try {
+      const payload = await axiosClient.get<HomeSectionsResponse, HomeSectionsResponse>(url, {
+        params: {
+          citySlug: params.citySlug,
+          limitPerDistrict: params.limitPerDistrict ?? 4,
+        },
+        signal: params.signal,
+      });
 
-    async getBySlug(slug: string): Promise<Apartment> {
-        const res = await axiosClient.get<ApiResponse<Apartment> | Apartment>(
-            `/api/apartments/slug/${encodeURIComponent(slug)}`,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 200) {
-            const msg = (res.data as any)?.message ?? `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
-        return (res.data as any)?.data ?? (res.data as Apartment);
-    },
+      return payload; 
+    } catch (err: any) {
+      throw new Error(err?.message || "Không thể tải dữ liệu home-sections");
+    }
+  },
 
-    async create(payload: ApartmentForm): Promise<Apartment> {
-        const res = await axiosClient.post<ApiResponse<Apartment> | Apartment>(
-            `/api/apartments`,
-            payload,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 201 && res.status !== 200) {
-            const msg = (res.data as any)?.message ?? `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
-        return (res.data as any)?.data ?? (res.data as Apartment);
-    },
+  /** GET /api/apartments/:idOrSlug → hỗ trợ trả trực tiếp entity hoặc { data: entity } */
+  async getById(idOrSlug: number | string): Promise<Apartment> {
+    try {
+      const payload = await axiosClient.get<any, any>(`/api/apartments/${encodeURIComponent(String(idOrSlug))}`);
+      return (payload?.data ?? payload) as Apartment;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải căn hộ";
+      throw new Error(msg);
+    }
+  },
 
-    async update(
-        id: number | string,
-        payload: Partial<ApartmentForm>
-    ): Promise<Apartment> {
-        const res = await axiosClient.put<ApiResponse<Apartment> | Apartment>(
-            `/api/apartments/${id}`,
-            payload,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 200) {
-            const msg = (res.data as any)?.message ?? `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
-        return (res.data as any)?.data ?? (res.data as Apartment);
-    },
+  /** Đồng nhất: gọi chung endpoint :idOrSlug cho slug */
+  async getBySlug(slug: string): Promise<Apartment> {
+    return this.getById(slug);
+  },
 
-    async delete(id: number | string): Promise<boolean> {
-        const res = await axiosClient.delete<{ success?: boolean } | ApiResponse<null>>(
-            `/api/apartments/${id}`,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 200 && res.status !== 204) {
-            const msg = (res.data as any)?.message ?? `HTTP ${res.status}`;
-            throw new Error(msg);
-        }
-        // BE hiện đang trả { success: true } → vẫn mặc định true nếu 204
-        return (res.data as any)?.success ?? true;
-    },
+  /** POST /api/apartments */
+  async create(body: ApartmentForm): Promise<Apartment> {
+    try {
+      const payload = await axiosClient.post<any, any>(`/api/apartments`, body);
+      return (payload?.data ?? payload) as Apartment;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tạo căn hộ";
+      throw new Error(msg);
+    }
+  },
+
+  async update(
+    id: number | string,
+    payload: Partial<ApartmentForm> & { imagesStrategy?: "merge" | "replace" }
+  ): Promise<Apartment> {
+    try {
+      const response = await axiosClient.patch<any, any>(
+        `/api/apartments/${encodeURIComponent(String(id))}`,
+        payload
+      );
+      return (response?.data ?? response) as Apartment;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật căn hộ";
+      throw new Error(msg);
+    }
+  },
+
+  /** DELETE /api/apartments/:id */
+  async delete(id: number | string): Promise<boolean> {
+    try {
+      const payload = await axiosClient.delete<any, any>(
+        `/api/apartments/${encodeURIComponent(String(id))}`
+      );
+      return (payload as any)?.success ?? true;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể xoá căn hộ";
+      throw new Error(msg);
+    }
+  },
 };

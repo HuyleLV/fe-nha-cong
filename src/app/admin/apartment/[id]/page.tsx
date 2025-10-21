@@ -160,6 +160,16 @@ export default function ApartmentFormPage() {
     })();
   }, [id, isEdit, reset, router]);
 
+  // Đảm bảo locationId trong form luôn sync với selectedLocation để qua validation
+  useEffect(() => {
+    if (selectedLocation?.id) {
+      setValue("locationId", selectedLocation.id as unknown as number, { shouldDirty: false });
+    } else {
+      setValue("locationId", undefined as unknown as number, { shouldDirty: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLocation?.id]);
+
   // normalize int or null for fee fields
   const toIntOrNull = (v: unknown) => {
     if (v === null || v === undefined || v === "") return null;

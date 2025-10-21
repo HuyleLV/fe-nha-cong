@@ -1,68 +1,100 @@
-// src/types/apartment.ts
 import { Location } from "./location";
 
 export type ApartmentStatus = "draft" | "published" | "archived";
 
+/** Bản đọc về (read model) từ API */
 export type Apartment = {
   id: number;
   title: string;
   slug: string;
+
   excerpt?: string | null;
   description?: string | null;
-  location: Location; // eager from BE
+
+  /** Khóa ngoại – luôn có */
+  locationId: number;
+  /** Khóa ngoại – có thể null nếu không thuộc tòa nào */
+  buildingId?: number | null;
+
+  /** Optional: API có thể trả kèm location (expand/eager); đừng bắt buộc */
+  location?: Location;
+
   streetAddress?: string | null;
+
+  /** Toạ độ chi tiết của phòng (có thể null nếu dùng toạ độ của tòa) */
   lat?: string | null;
   lng?: string | null;
+
   bedrooms: number;
   bathrooms: number;
   areaM2?: string | null;
+
+  /** numeric string */
   rentPrice: string;
   currency: string;
+
   status: ApartmentStatus;
+
+  /** Ảnh đại diện */
   coverImageUrl?: string | null;
+  /** Bộ ảnh gallery */
+  images?: string[];             // NEW
+
+  /** (Tuỳ hệ thống) đường dẫn địa chỉ dạng text */
   addressPath?: string | null;
 
   // ===== Phí dịch vụ =====
-  electricityPricePerKwh?: number | null;       // 4.000 đ/Kwh
-  waterPricePerM3?: number | null;              // 35.000 đ/m3
-  internetPricePerRoom?: number | null;         // 100.000 đ/Phòng
-  commonServiceFeePerPerson?: number | null;    // 130.000 đ/Người
+  electricityPricePerKwh?: number | null;
+  waterPricePerM3?: number | null;
+  internetPricePerRoom?: number | null;
+  commonServiceFeePerPerson?: number | null;
 
   // ===== Nội thất =====
-  hasAirConditioner: boolean;     // Điều hoà
-  hasWaterHeater: boolean;        // Nóng lạnh
-  hasKitchenCabinet: boolean;     // Kệ bếp
-  hasWashingMachine: boolean;     // Máy giặt
-  hasWardrobe: boolean;           // Tủ quần áo
+  hasAirConditioner: boolean;
+  hasWaterHeater: boolean;
+  hasKitchenCabinet: boolean;
+  hasWashingMachine: boolean;
+  hasWardrobe: boolean;
 
   // ===== Tiện nghi =====
-  hasPrivateBathroom: boolean;    // Vệ sinh khép kín
-  hasMezzanine: boolean;          // Gác xép
-  noOwnerLiving: boolean;         // Không chung chủ
-  flexibleHours: boolean;         // Giờ linh hoạt
+  hasPrivateBathroom: boolean;
+  hasMezzanine: boolean;
+  noOwnerLiving: boolean;
+  flexibleHours: boolean;
+
+  favorited?: boolean;
 
   createdById: number;
   createdAt: string;
   updatedAt: string;
 };
 
+/** Bản ghi form gửi lên (create/update) */
 export type ApartmentForm = {
   title: string;
-  slug: string;
+  slug?: string;                  // để BE tự sinh nếu không truyền
   excerpt?: string;
   description?: string;
+
   locationId: number;
+  buildingId?: number | null;
+
   streetAddress?: string;
+
   lat?: string | null;
   lng?: string | null;
+
   bedrooms?: number;
   bathrooms?: number;
   areaM2?: string | null;
+
+  /** numeric string */
   rentPrice: string;
-  currency?: string;
-  status: ApartmentStatus;
+  currency?: string;              // default "VND" ở BE
+  status?: ApartmentStatus;       // default "draft" ở BE
+
   coverImageUrl?: string | null;
-  focusKeyword?: string;
+  images?: string[];              // NEW
 
   // ===== Phí dịch vụ =====
   electricityPricePerKwh?: number | null;
@@ -82,12 +114,17 @@ export type ApartmentForm = {
   hasMezzanine?: boolean;
   noOwnerLiving?: boolean;
   flexibleHours?: boolean;
+
+  /** SEO tuỳ hệ thống */
+  focusKeyword?: string;
 };
 
+/** Tham số query khi list */
 export type ApartmentQuery = {
-  // ===== Địa điểm =====
+  // ===== Khóa ngoại =====
   locationId?: number;
-  locationSlug?: string;
+  buildingId?: number;           
+  locationSlug?: string;        
 
   // ===== Giá thuê =====
   minPrice?: number;
@@ -107,7 +144,6 @@ export type ApartmentQuery = {
   // ===== Tìm kiếm =====
   q?: string;
 
-  // ===== Tiện nghi =====
   hasPrivateBathroom?: boolean;
   hasMezzanine?: boolean;
   noOwnerLiving?: boolean;
@@ -117,11 +153,8 @@ export type ApartmentQuery = {
   hasWardrobe?: boolean;
   flexibleHours?: boolean;
 
-  // ===== Sắp xếp =====
-  /** newest | price_asc | price_desc | area_desc */
   sort?: "newest" | "price_asc" | "price_desc" | "area_desc";
 
-  // ===== Phân trang =====
   page?: number;
   limit?: number;
 };

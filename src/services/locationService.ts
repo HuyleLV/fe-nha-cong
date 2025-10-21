@@ -1,91 +1,108 @@
 // services/locationService.ts
 import axiosClient from "@/utils/axiosClient";
-import { PaginationMeta, ApiResponse, PaginatedResponse } from "@/type/common";
+import { PaginationMeta } from "@/type/common";
 import { Location, LocationForm, LocationLevel } from "@/type/location";
 
+function normalizeList<T = any>(payload: any, params?: { page?: number; limit?: number }) {
+    const items: T[] = Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload)
+                ? payload
+                : [];
+
+    const meta: PaginationMeta = payload?.meta ?? {
+        page: Number(params?.page ?? 1) || 1,
+        limit: Number(params?.limit ?? (items.length || 10)) || 10,
+        total: items.length,
+        totalPages: 1,
+    };
+
+    return { items, meta } as { items: T[]; meta: PaginationMeta };
+}
+
 export const locationService = {
-    async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Location[]; meta: PaginationMeta }> {
-        const res = await axiosClient.get<PaginatedResponse<Location>>("/api/locations", {
-            params,
-            validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+    async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Location[]; meta: PaginationMeta }>
+    {
+        try {
+            const payload = await axiosClient.get<any, any>("/api/locations", { params });
+            return normalizeList<Location>(payload, params);
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách khu vực";
+            throw new Error(msg);
         }
-        return { items: res.data.data, meta: res.data.meta };
     },
 
     async getById(id: number | string): Promise<Location> {
-        const res = await axiosClient.get<ApiResponse<Location>>(`/api/locations/${id}`, {
-            validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const payload = await axiosClient.get<any, any>(`/api/locations/${encodeURIComponent(String(id))}`);
+            return (payload?.data ?? payload) as Location;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tải khu vực";
+            throw new Error(msg);
         }
-        return (res.data as any).data ?? (res.data as unknown as Location);
     },
 
     async getBySlug(slug: string): Promise<Location> {
-        const res = await axiosClient.get<ApiResponse<Location>>(
-            `/api/locations/slug/${encodeURIComponent(slug)}`,
-            { validateStatus: () => true }
-        );
-        if (res.status !== 200) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const payload = await axiosClient.get<any, any>(`/api/locations/slug/${encodeURIComponent(slug)}`);
+            return (payload?.data ?? payload) as Location;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tải khu vực";
+            throw new Error(msg);
         }
-        return (res.data as any).data ?? (res.data as unknown as Location);
     },
 
     async create(payload: LocationForm): Promise<Location> {
-        const res = await axiosClient.post<ApiResponse<Location>>(`/api/locations`, payload, {
-            validateStatus: () => true,
-        });
-        if (res.status !== 201 && res.status !== 200) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const res = await axiosClient.post<any, any>(`/api/locations`, payload);
+            return (res?.data ?? res) as Location;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tạo khu vực";
+            throw new Error(msg);
         }
-        return (res.data as any).data ?? (res.data as unknown as Location);
     },
 
     async update(id: number | string, payload: Partial<LocationForm>): Promise<Location> {
-        const res = await axiosClient.put<ApiResponse<Location>>(`/api/locations/${id}`, payload, {
-            validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const res = await axiosClient.put<any, any>(`/api/locations/${encodeURIComponent(String(id))}`, payload);
+            return (res?.data ?? res) as Location;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật khu vực";
+            throw new Error(msg);
         }
-        return (res.data as any).data ?? (res.data as unknown as Location);
     },
 
     async delete(id: number | string): Promise<boolean> {
-        const res = await axiosClient.delete<ApiResponse<null>>(`/api/locations/${id}`, {
-            validateStatus: () => true,
-        });
-        if (res.status !== 200 && res.status !== 204) {
-            throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            await axiosClient.delete<any, any>(`/api/locations/${encodeURIComponent(String(id))}`);
+            return true;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể xoá khu vực";
+            throw new Error(msg);
         }
-        return true;
     },
 
     /** Lấy danh sách parent hợp lệ cho một level con (nếu BE có endpoint này) */
     async getParents(params: { levelBelow: LocationLevel; keyword?: string; page?: number; limit?: number }) {
-        const res = await axiosClient.get<PaginatedResponse<Location>>(`/api/locations/parents`, {
-        params,
-        validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const payload = await axiosClient.get<any, any>(`/api/locations/parents`, { params });
+            return normalizeList<Location>(payload, params);
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách parent";
+            throw new Error(msg);
         }
-        return { items: res.data.data, meta: res.data.meta };
     },
 
     /** Lấy cây khu vực (nếu BE có endpoint này) */
     async getTree<T = any>() {
-        const res = await axiosClient.get<ApiResponse<T>>(`/api/locations/tree`, {
-        validateStatus: () => true,
-        });
-        if (res.status !== 200) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+        try {
+            const payload = await axiosClient.get<any, any>(`/api/locations/tree`);
+            return (payload?.data ?? payload) as T;
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || "Không thể tải cây khu vực";
+            throw new Error(msg);
         }
-        return (res.data as any).data ?? (res.data as unknown as T);
     },
 };

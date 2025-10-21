@@ -1,4 +1,3 @@
-// type/partner.ts
 export type PartnerRole = "landlord" | "customer" | "operator";
 
 export type PartnerLead = {
@@ -7,18 +6,15 @@ export type PartnerLead = {
   fullName: string;
   phone: string;
   email: string;
-  note?: string;
-  propertyCount?: number; // landlord
-  budget?: number;        // customer
-  companyName?: string;   // operator
-  createdAt: string;      // ISO
+  need?: string;     
+  createdAt: string; 
 };
 
 export type PartnerForm = Omit<PartnerLead, "id" | "createdAt">;
 
 export type PartnerQuery = {
-  page?: number;
-  limit?: number;
-  role?: PartnerRole;
-  q?: string; // search by name/email/phone
+  page?: number;        // Trang hiện tại (pagination)
+  limit?: number;       // Số lượng mỗi trang
+  role?: PartnerRole;   // Lọc theo vai trò
+  q?: string;           // Tìm kiếm theo tên / email / SĐT
 };

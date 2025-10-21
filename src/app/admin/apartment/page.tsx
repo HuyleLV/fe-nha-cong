@@ -4,10 +4,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { Edit, Trash2, Plus, MapPin, Filter, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Edit, Trash2, Plus, MapPin, Filter, SlidersHorizontal, RotateCcw, CalendarDays, Search } from "lucide-react";
 
 import Spinner from "@/components/spinner";
 import Pagination from "@/components/Pagination";
+import AdminTable from "@/components/AdminTable";
 import { formatDateTime } from "@/utils/format-time";
 import { apartmentService } from "@/services/apartmentService";
 import LocationLookup from "../components/locationLookup";
@@ -30,7 +31,7 @@ function ToggleChip({ active, onToggle, children }: { active: boolean; onToggle:
       type="button"
       onClick={onToggle}
       className={`px-3 py-1 rounded-full border text-sm transition
-        ${active ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+  ${active ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
     >
       {children}
     </button>
@@ -84,96 +85,173 @@ function FiltersSection(props: {
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const activeCount = [
+    search,
+    status,
+    selectedLocation?.id,
+    minPrice,
+    maxPrice,
+    minArea,
+    maxArea,
+    bedrooms,
+    bathrooms,
+    hasPrivateBathroom,
+    hasMezzanine,
+    noOwnerLiving,
+    hasAirConditioner,
+    hasWaterHeater,
+    hasWashingMachine,
+    hasWardrobe,
+    flexibleHours,
+    sort !== "newest" ? "sort" : "",
+  ].filter(Boolean).length;
+
   return (
-    <div className="mt-4 border rounded-lg p-3 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="mt-4 border rounded-lg p-3 md:p-3.5 bg-white shadow-sm">
+      {/* Header of filters */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-slate-700">
           <Filter className="size-4" />
           <span className="font-medium">Bộ lọc</span>
+          {activeCount > 0 && (
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs">{activeCount}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowAdvanced((s) => !s)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm hover:bg-slate-50"
-            title="Hiện/ẩn bộ lọc nâng cao"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded border text-sm hover:bg-slate-50"
           >
-            <SlidersHorizontal className="size-4" />
-            {showAdvanced ? "Ẩn nâng cao" : "Nâng cao"}
+            <SlidersHorizontal className="size-4" /> Nâng cao
           </button>
           <button
             type="button"
             onClick={onClearAll}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm hover:bg-slate-50"
-            title="Xoá bộ lọc"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded border text-sm text-slate-700 hover:bg-slate-50"
           >
-            <RotateCcw className="size-4" />
-            Xoá
+            <RotateCcw className="size-4" /> Xoá lọc
           </button>
         </div>
       </div>
 
-      {/* Cơ bản */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Tìm theo tiêu đề, mô tả..."
-          className="rounded border px-3 py-2 outline-none focus:ring-2 ring-emerald-500"
-        />
+      {/* Controls */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm tiêu đề hoặc slug"
+            className="h-9 w-56 rounded border pl-8 pr-3 text-sm outline-none focus:ring-2 ring-sky-500"
+          />
+        </div>
 
+        {/* Status */}
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as ApartmentStatus | "")}
-          className="rounded border px-3 py-2"
+          className="h-9 rounded border px-2 text-sm"
         >
-          <option value="">Tất cả trạng thái</option>
+          <option value="">Trạng thái</option>
           <option value="draft">Nháp</option>
           <option value="published">Đã đăng</option>
           <option value="archived">Đã ẩn</option>
         </select>
 
-        <LocationLookup
-          value={selectedLocation}
-          onChange={setSelectedLocation}
-          placeholder="Chọn khu vực"
-        />
+        {/* Location */}
+        <div className="min-w-[220px]">
+          <LocationLookup
+            value={selectedLocation}
+            onChange={setSelectedLocation}
+            placeholder="Khu vực"
+          />
+        </div>
 
+        {/* Sort */}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          className="rounded border px-3 py-2"
+          className="h-9 rounded border px-2 text-sm"
         >
           <option value="newest">Mới nhất</option>
-          <option value="price_asc">Giá tăng dần</option>
-          <option value="price_desc">Giá giảm dần</option>
-          <option value="area_desc">Diện tích lớn nhất</option>
+          <option value="price_asc">Giá ↑</option>
+          <option value="price_desc">Giá ↓</option>
+          <option value="area_desc">Diện tích lớn</option>
         </select>
-      </div>
 
-      {/* Số */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mt-3">
-        <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Giá tối thiểu" className="rounded border px-3 py-2" inputMode="numeric" />
-        <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Giá tối đa" className="rounded border px-3 py-2" inputMode="numeric" />
-        <input value={minArea} onChange={(e) => setMinArea(e.target.value)} placeholder="Diện tích min (m²)" className="rounded border px-3 py-2" inputMode="numeric" />
-        <input value={maxArea} onChange={(e) => setMaxArea(e.target.value)} placeholder="Diện tích max (m²)" className="rounded border px-3 py-2" inputMode="numeric" />
-        <input value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} placeholder="Phòng ngủ ≥" className="rounded border px-3 py-2" inputMode="numeric" />
-        <input value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} placeholder="Phòng tắm ≥" className="rounded border px-3 py-2" inputMode="numeric" />
+        {/* Giá */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Giá</span>
+          <input
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            placeholder="Từ"
+            className="h-9 w-28 rounded border px-2 text-sm"
+            inputMode="numeric"
+          />
+          <span className="text-slate-400">-</span>
+          <input
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            placeholder="Đến"
+            className="h-9 w-28 rounded border px-2 text-sm"
+            inputMode="numeric"
+          />
+        </div>
+
+        {/* Diện tích */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Diện tích</span>
+          <input
+            value={minArea}
+            onChange={(e) => setMinArea(e.target.value)}
+            placeholder="Từ"
+            className="h-9 w-24 rounded border px-2 text-sm"
+            inputMode="numeric"
+          />
+          <span className="text-slate-400">-</span>
+          <input
+            value={maxArea}
+            onChange={(e) => setMaxArea(e.target.value)}
+            placeholder="Đến"
+            className="h-9 w-24 rounded border px-2 text-sm"
+            inputMode="numeric"
+          />
+          <span className="text-xs text-slate-500">m²</span>
+        </div>
+
+        {/* Phòng ngủ/tắm */}
+        <input
+          value={bedrooms}
+          onChange={(e) => setBedrooms(e.target.value)}
+          placeholder="Ngủ ≥"
+          className="h-9 w-24 rounded border px-2 text-sm"
+          inputMode="numeric"
+        />
+        <input
+          value={bathrooms}
+          onChange={(e) => setBathrooms(e.target.value)}
+          placeholder="Tắm ≥"
+          className="h-9 w-24 rounded border px-2 text-sm"
+          inputMode="numeric"
+        />
       </div>
 
       {/* Nâng cao */}
       {showAdvanced && (
         <div className="mt-3 border-t pt-3">
-          <div className="text-sm text-slate-600 mb-2">Tiện nghi</div>
-          <div className="flex flex-wrap gap-2">
-            <ToggleChip active={hasPrivateBathroom} onToggle={() => setHasPrivateBathroom(!hasPrivateBathroom)}>VS khép kín</ToggleChip>
-            <ToggleChip active={hasMezzanine} onToggle={() => setHasMezzanine(!hasMezzanine)}>Gác xép</ToggleChip>
-            <ToggleChip active={noOwnerLiving} onToggle={() => setNoOwnerLiving(!noOwnerLiving)}>Không chung chủ</ToggleChip>
-            <ToggleChip active={hasAirConditioner} onToggle={() => setHasAirConditioner(!hasAirConditioner)}>Điều hoà</ToggleChip>
-            <ToggleChip active={hasWaterHeater} onToggle={() => setHasWaterHeater(!hasWaterHeater)}>Nóng lạnh</ToggleChip>
-            <ToggleChip active={hasWashingMachine} onToggle={() => setHasWashingMachine(!hasWashingMachine)}>Máy giặt</ToggleChip>
-            <ToggleChip active={hasWardrobe} onToggle={() => setHasWardrobe(!hasWardrobe)}>Tủ quần áo</ToggleChip>
-            <ToggleChip active={flexibleHours} onToggle={() => setFlexibleHours(!flexibleHours)}>Giờ linh hoạt</ToggleChip>
+          <div className="text-xs text-slate-600 mb-2">Tiện nghi</div>
+          <div className="flex flex-wrap gap-1.5">
+            <div className="text-[13px]"><ToggleChip active={hasPrivateBathroom} onToggle={() => setHasPrivateBathroom(!hasPrivateBathroom)}>VS khép kín</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasMezzanine} onToggle={() => setHasMezzanine(!hasMezzanine)}>Gác xép</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={noOwnerLiving} onToggle={() => setNoOwnerLiving(!noOwnerLiving)}>Không chung chủ</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasAirConditioner} onToggle={() => setHasAirConditioner(!hasAirConditioner)}>Điều hoà</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasWaterHeater} onToggle={() => setHasWaterHeater(!hasWaterHeater)}>Nóng lạnh</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasWashingMachine} onToggle={() => setHasWashingMachine(!hasWashingMachine)}>Máy giặt</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasWardrobe} onToggle={() => setHasWardrobe(!hasWardrobe)}>Tủ quần áo</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={flexibleHours} onToggle={() => setFlexibleHours(!flexibleHours)}>Giờ linh hoạt</ToggleChip></div>
           </div>
         </div>
       )}
@@ -255,11 +333,9 @@ export default function AdminApartmentsPage() {
     }
   };
 
-  // thay đổi filter “tức thời”
   useEffect(() => {
     setPage(1);
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     status,
     selectedLocation,
@@ -362,104 +438,94 @@ export default function AdminApartmentsPage() {
       />
 
       {/* Table */}
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden">
-          <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
-            <tr className="text-left text-slate-600">
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Tiêu đề</th>
-              <th className="px-4 py-3">Slug</th>
-              <th className="px-4 py-3">Giá thuê</th>
-              <th className="px-4 py-3">Diện tích</th>
-              <th className="px-4 py-3">Phòng</th>
-              <th className="px-4 py-3">Khu vực</th>
-              <th className="px-4 py-3">Trạng thái</th>
-              <th className="px-4 py-3">Cập nhật</th>
-              <th className="px-4 py-3 text-center">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 text-[15px]">
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="py-6 text-center text-slate-500">
-                  Chưa có dữ liệu
-                </td>
-              </tr>
-            ) : (
-              items.map((it) => {
-                const price = toNum(it.rentPrice);
-                const area = toNum(it.areaM2);
+      <AdminTable
+        headers={[
+          "ID",
+          "Tiêu đề",
+          "Slug",
+          "Giá thuê",
+          "Diện tích",
+          "Phòng",
+          "Khu vực",
+          "Trạng thái",
+          "Cập nhật",
+          "Thao tác",
+        ]}
+      >
+        {items.map((it) => {
+          const price = toNum(it.rentPrice);
+          const area = toNum(it.areaM2);
 
-                return (
-                  <tr key={it.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">{it.id}</td>
-                    <td className="px-4 py-3 font-medium">{it.title}</td>
-                    <td className="px-4 py-3 text-slate-600">{it.slug}</td>
-                    <td className="px-4 py-3">
-                      {price !== undefined ? price.toLocaleString("vi-VN") : "-"} {it.currency || "VND"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {area !== undefined ? `${area.toLocaleString("vi-VN")} m²` : "-"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {it.bedrooms} ngủ · {it.bathrooms} tắm
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-4 text-emerald-600" />
-                        {it.addressPath || it.location?.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-sm capitalize ${
-                          it.status === "published"
-                            ? "bg-green-100 text-green-700"
-                            : it.status === "draft"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {it.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">{formatDateTime(it.updatedAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => router.push(`/admin/apartment/${it.id}`)}
-                          className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
-                        >
-                          <Edit size={15} />
-                          Sửa
-                        </button>
-                        <button
-                          onClick={async () => {
-                            const ok = confirm(`Xoá "${it.title}"?`);
-                            if (!ok) return;
-                            try {
-                              await apartmentService.delete(it.id);
-                              toast.success("Đã xoá");
-                              setItems((prev) => prev.filter((x) => x.id !== it.id));
-                              setTotal((t) => Math.max(0, t - 1));
-                            } catch (e: any) {
-                              toast.error(e?.response?.data?.message || "Không xoá được");
-                            }
-                          }}
-                          className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
-                        >
-                          <Trash2 size={15} />
-                          Xoá
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+          return (
+            <tr key={it.id} className="hover:bg-slate-50 transition-colors text-[14px]">
+              <td className="px-4 py-3">{it.id}</td>
+              <td className="px-4 py-3 font-medium">{it.title}</td>
+              <td className="px-4 py-3 text-slate-600">{it.slug}</td>
+              <td className="px-4 py-3">
+                {price !== undefined ? price.toLocaleString("vi-VN") : "-"} {it.currency || "VND"}
+              </td>
+              <td className="px-4 py-3">{area !== undefined ? `${area.toLocaleString("vi-VN")} m²` : "-"}</td>
+              <td className="px-4 py-3">{it.bedrooms} ngủ · {it.bathrooms} tắm</td>
+              <td className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-4 text-sky-600" />
+                  {it.addressPath || it.location?.name}
+                </span>
+              </td>
+              <td className="px-4 py-3">
+                <span
+                  className={`px-2 py-0.5 rounded text-sm capitalize ${
+                    it.status === "published"
+                      ? "bg-green-100 text-green-700"
+                      : it.status === "draft"
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {it.status}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-slate-500">{formatDateTime(it.updatedAt)}</td>
+              <td className="px-4 py-3">
+                <div className="flex justify-center gap-2">
+                  <button
+                    onClick={() => router.push(`/admin/apartment/${it.id}`)}
+                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  >
+                    <Edit size={15} />
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => router.push(`/admin/viewings?apartmentId=${it.id}`)}
+                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
+                  >
+                    <CalendarDays size={15} />
+                    Lịch xem
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const ok = confirm(`Xoá "${it.title}"?`);
+                      if (!ok) return;
+                      try {
+                        await apartmentService.delete(it.id);
+                        toast.success("Đã xoá");
+                        setItems((prev) => prev.filter((x) => x.id !== it.id));
+                        setTotal((t) => Math.max(0, t - 1));
+                      } catch (e: any) {
+                        toast.error(e?.response?.data?.message || "Không xoá được");
+                      }
+                    }}
+                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  >
+                    <Trash2 size={15} />
+                    Xoá
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </AdminTable>
 
       {/* Pagination */}
       <div className="mt-4">

@@ -17,17 +17,69 @@ import {
   MapPin,
   Newspaper,
   Phone,
+  LogOut,
+  User as UserIcon,
 } from "lucide-react";
+import { User } from "@/type/user";
+import { toast } from "react-toastify";
 
 export default function Header() {
   const [openUser, setOpenUser] = useState(false);
   const [openNavMobile, setOpenNavMobile] = useState(false);
   const [openNavDesktop, setOpenNavDesktop] = useState(false);
 
+  const [auth, setAuth] = useState<User | null>(null);
+  const [avatarBroken, setAvatarBroken] = useState(false);
+
   const userBtnRef = useRef<HTMLButtonElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown & panels on outside/Esc
+  const readStoredUser = () => {
+    try {
+      const rawLocal = localStorage.getItem("auth_user");
+      const rawSession = sessionStorage.getItem("auth_user");
+      const raw = rawLocal ?? rawSession;
+      if (!raw) return null;
+      return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearAuthStorage = () => {
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("auth_user");
+    sessionStorage.removeItem("access_token");
+    document.cookie = "access_token=; Max-Age=0; Path=/; SameSite=Lax";
+  };
+
+  // Load auth on mount & subscribe to auth events
+  useEffect(() => {
+    setAuth(readStoredUser());
+
+    const onLogin = (e: Event) => {
+      const detail = (e as CustomEvent<User>).detail;
+      if (detail) {
+        setAvatarBroken(false);
+        setAuth(detail);
+      } else {
+        setAuth(readStoredUser());
+      }
+    };
+    const onLogout = () => {
+      setAuth(null);
+      setAvatarBroken(false);
+    };
+
+    window.addEventListener("auth:login", onLogin as EventListener);
+    window.addEventListener("auth:logout", onLogout as EventListener);
+    return () => {
+      window.removeEventListener("auth:login", onLogin as EventListener);
+      window.removeEventListener("auth:logout", onLogout as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     const outside = (e: MouseEvent) => {
       const t = e.target as Node;
@@ -70,6 +122,30 @@ export default function Header() {
     { label: "TÌM THỢ", href: "/" },
   ];
 
+  const AvatarButtonContent = () => {
+    const url = auth?.avatarUrl?.trim();
+    if (!auth || !url || avatarBroken) {
+      return <UserRound className="text-white w-5 h-5" />;
+    }
+    return (
+      <img
+        src={url}
+        alt={auth?.name || auth?.email || "user"}
+        className="w-6 h-6 rounded-full object-cover"
+        onError={() => setAvatarBroken(true)}
+      />
+    );
+  };
+
+  const handleLogout = () => {
+    clearAuthStorage();
+    setOpenUser(false);
+    setAuth(null);
+    setAvatarBroken(false);
+    window.dispatchEvent(new CustomEvent("auth:logout"));
+    toast.success("Đăng xuất thành công!");
+  };
+
   return (
     <>
       {/* Header */}
@@ -111,8 +187,9 @@ export default function Header() {
               aria-controls="user-menu"
               onClick={() => setOpenUser((v) => !v)}
               className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+              title={auth ? (auth.name || auth.email) : "Tài khoản"}
             >
-              <UserRound className="text-white w-5 h-5" />
+              <AvatarButtonContent />
             </button>
 
             {/* Menu Mobile trigger */}
@@ -140,34 +217,102 @@ export default function Header() {
               <div
                 id="user-menu"
                 ref={userMenuRef}
-                  role="menu"
-                className="absolute right-0 top-12 w-64 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden"
+                role="menu"
+                className="absolute right-0 top-12 w-72 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden"
               >
-                <div className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-500">
-                  Dành cho khách hàng
-                </div>
-                <Link href="/auth/register" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
-                  <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
-                </Link>
-                <Link href="/auth/login" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
-                  <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
-                </Link>
+                {auth ? (
+                  <>
+                    {/* Logged-in header */}
+                    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50">
+                      <div className="shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
+                          {auth.avatarUrl && !avatarBroken ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={auth.avatarUrl}
+                              alt="avatar"
+                              className="w-full h-full object-cover"
+                              onError={() => setAvatarBroken(true)}
+                            />
+                          ) : (
+                            <UserIcon className="w-5 h-5" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{auth.name || "Người dùng"}</div>
+                        <div className="text-xs text-slate-500 truncate">{auth.email}</div>
+                      </div>
+                    </div>
 
-                <div className="my-2 h-px bg-slate-200" />
+                    <Link
+                      href="/tai-khoan-cua-toi"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <UserIcon className="w-4 h-4 mr-3" /> Tài khoản của tôi
+                    </Link>
 
-                <div className="px-4 pb-2 text-sm font-semibold text-slate-500">Dành cho đối tác</div>
-                <Link href="/auth/register" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
-                  <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
-                </Link>
-                <Link href="/partner/login" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
-                  <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
-                </Link>
+                    <div className="my-2 h-px bg-slate-200" />
 
-                <div className="my-2 h-px bg-slate-200" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left flex items-center px-4 py-3 hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 mr-3" /> Đăng xuất
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-500">
+                      Dành cho khách hàng
+                    </div>
+                    <Link
+                      href="/dang-ky"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
+                    </Link>
+                    <Link
+                      href="/dang-nhap"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
+                    </Link>
 
-                <Link href="/help" className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setOpenUser(false)}>
-                  <LifeBuoy className="w-4 h-4 mr-3" /> Trợ giúp
-                </Link>
+                    <div className="my-2 h-px bg-slate-200" />
+
+                    <div className="px-4 pb-2 text-sm font-semibold text-slate-500">
+                      Dành cho đối tác
+                    </div>
+                    <Link
+                      href="/auth/register"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
+                    </Link>
+                    <Link
+                      href="/partner/login"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
+                    </Link>
+
+                    <div className="my-2 h-px bg-slate-200" />
+
+                    <Link
+                      href="/help"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <LifeBuoy className="w-4 h-4 mr-3" /> Trợ giúp
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -224,16 +369,51 @@ export default function Header() {
         <div className="mx-3 my-3 h-px bg-slate-200" />
 
         <div className="px-3">
-          <div className="text-xs font-semibold text-slate-500 px-1 mb-1">Tài khoản</div>
-          <Link href="/auth/register" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-            <UserPlus className="w-4 h-4 mr-3" /> Đăng ký khách hàng
-          </Link>
-          <Link href="/auth/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-            <LogIn className="w-4 h-4 mr-3" /> Đăng nhập khách hàng
-          </Link>
-          <Link href="/partner/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-            <LogIn className="w-4 h-4 mr-3" /> Đăng nhập đối tác
-          </Link>
+          {!auth ? (
+            <>
+              <div className="text-xs font-semibold text-slate-500 px-1 mb-1">Tài khoản</div>
+              <Link href="/auth/register" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <UserPlus className="w-4 h-4 mr-3" /> Đăng ký khách hàng
+              </Link>
+              <Link href="/auth/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <LogIn className="w-4 h-4 mr-3" /> Đăng nhập khách hàng
+              </Link>
+              <Link href="/partner/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <LogIn className="w-4 h-4 mr-3" /> Đăng nhập đối tác
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
+                  {auth.avatarUrl && !avatarBroken ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={auth.avatarUrl}
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                      onError={() => setAvatarBroken(true)}
+                    />
+                  ) : (
+                    <UserIcon className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold">{auth.name || "Người dùng"}</div>
+                  <div className="text-xs text-slate-500">{auth.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setOpenNavMobile(false);
+                  handleLogout();
+                }}
+                className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-rose-50 hover:text-rose-700"
+              >
+                <LogOut className="w-4 h-4 mr-3" /> Đăng xuất
+              </button>
+            </>
+          )}
 
           <div className="mx-1 my-3 h-px bg-slate-200" />
 

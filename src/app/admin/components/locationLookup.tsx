@@ -78,6 +78,17 @@ export default function LocationLookup({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(queryLevels), limit]);
 
+  // Đồng bộ ô nhập với giá trị đã chọn (khi mở form edit)
+  useEffect(() => {
+    if (value && value.id) {
+      setKeyword(value.name || value.slug || "");
+    } else if (!value) {
+      setKeyword("");
+    }
+    // chỉ phụ thuộc vào id để tránh set lại khi giá trị khác không đổi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value?.id]);
+
   // Debounce khi gõ
   useEffect(() => {
     const t = setTimeout(() => fetchLocations(keyword), 350);

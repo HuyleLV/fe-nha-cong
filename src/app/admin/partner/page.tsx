@@ -128,7 +128,7 @@ export default function PartnerAdminPage() {
             <th className="px-4 py-3">Vai trò</th>
             <th className="px-4 py-3">SĐT</th>
             <th className="px-4 py-3">Email</th>
-            <th className="px-4 py-3">Ghi chú</th>
+            <th className="px-4 py-3">Nhu cầu</th>
             <th className="px-4 py-3">Ngày tạo</th>
             <th className="px-4 py-3 text-center">Thao tác</th>
           </tr>
@@ -147,7 +147,7 @@ export default function PartnerAdminPage() {
               <td className="px-4 py-2 text-gray-700">{p.phone}</td>
               <td className="px-4 py-2 text-gray-700">{p.email}</td>
               <td className="px-4 py-2 text-gray-600 max-w-[280px]">
-                {p.note ? <span className="line-clamp-2">{p.note}</span> : <span className="text-gray-400">—</span>}
+                {p.need ? <span className="line-clamp-2">{p.need}</span> : <span className="text-gray-400">—</span>}
               </td>
               <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{formatDateTime(p.createdAt)}</td>
               <td className="px-4 py-2">

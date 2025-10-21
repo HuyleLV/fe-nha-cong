@@ -121,7 +121,7 @@ export default function BlogPage() {
                   <ArticleCardSmall
                     key={p.id}
                     title={p.title}
-                    slug={featured.slug}
+                    slug={p.slug}
                     excerpt={p.excerpt}
                     cover={p.coverImageUrl}
                   />

@@ -1,64 +1,94 @@
 import axiosClient from "@/utils/axiosClient";
 import { Blog, BlogForm } from "@/type/blog";
-import { PaginationMeta, ApiResponse, PaginatedResponse } from "@/type/common";
+import { PaginationMeta } from "@/type/common";
 
 export const blogService = {
-    async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Blog[]; meta: PaginationMeta }> {
-      const res = await axiosClient.get<PaginatedResponse<Blog>>("/api/blog", {
-          params, validateStatus: () => true,
-      });
-      if (res.status !== 200) throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
+  /**
+   * GET /api/blog → normalize to { items, meta }
+   * Supports payloads:
+   * - { items, meta }
+   * - { success, data: Blog[], meta }
+   * - Blog[] (fallback)
+   */
+  async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Blog[]; meta: PaginationMeta }>
+  {
+    try {
+      const payload = await axiosClient.get<any, any>("/api/blog", { params });
 
-      return { items: res.data.data, meta: res.data.meta }; // ✅ dùng items
-    },
+      const items: Blog[] = Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : Array.isArray(payload)
+            ? payload
+            : [];
 
-    async getBySlug(slug: string): Promise<Blog> {
-      const res = await axiosClient.get<ApiResponse<Blog>>(`/api/blog/slug/${slug}`, {
-        validateStatus: () => true,
-      });
-      if (res.status >= 400) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
-      }
-      return (res.data as any).data ?? (res.data as unknown as Blog);
-    },
+      const meta: PaginationMeta = payload?.meta ?? {
+        page: Number(params?.page ?? 1) || 1,
+        limit: Number(params?.limit ?? (items.length || 10)) || 10,
+        total: items.length,
+        totalPages: 1,
+      };
 
-    async getById(id: number | string): Promise<Blog> {
-      const res = await axiosClient.get<ApiResponse<Blog>>(`/api/blog/${id}`, {
-        validateStatus: () => true,
-      });
-      if (res.status !== 200) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
-      }
-      return (res.data as any).data ?? (res.data as unknown as Blog);
-    },
-    
-    async create(payload: BlogForm): Promise<Blog> {
-      const res = await axiosClient.post<ApiResponse<Blog>>(`/api/blog`, payload, {
-        validateStatus: () => true,
-      });
-      if (res.status !== 201 && res.status !== 200) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
-      }
-      return (res.data as any).data ?? (res.data as unknown as Blog);
-    },
-  
-    async update(id: number | string, payload: BlogForm): Promise<Blog> {
-      const res = await axiosClient.put<ApiResponse<Blog>>(`/api/blog/${id}`, payload, {
-        validateStatus: () => true,
-      });
-      if (res.status !== 200) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
-      }
-      return (res.data as any).data ?? (res.data as unknown as Blog);
-    },
-  
-    async delete(id: number | string): Promise<boolean> {
-      const res = await axiosClient.delete<ApiResponse<null>>(`/api/blog/${id}`, {
-        validateStatus: () => true,
-      });
-      if (res.status !== 200 && res.status !== 204) {
-        throw new Error((res.data as any)?.message ?? `HTTP ${res.status}`);
-      }
+      return { items, meta };
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách bài viết";
+      throw new Error(msg);
+    }
+  },
+
+  /** GET /api/blog/slug/:slug → entity or { data: entity } */
+  async getBySlug(slug: string): Promise<Blog> {
+    try {
+      const payload = await axiosClient.get<any, any>(`/api/blog/slug/${encodeURIComponent(slug)}`);
+      return (payload?.data ?? payload) as Blog;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải bài viết";
+      throw new Error(msg);
+    }
+  },
+
+  /** GET /api/blog/:id → entity or { data: entity } */
+  async getById(id: number | string): Promise<Blog> {
+    try {
+      const payload = await axiosClient.get<any, any>(`/api/blog/${encodeURIComponent(String(id))}`);
+      return (payload?.data ?? payload) as Blog;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tải bài viết";
+      throw new Error(msg);
+    }
+  },
+
+  /** POST /api/blog */
+  async create(body: BlogForm): Promise<Blog> {
+    try {
+      const payload = await axiosClient.post<any, any>(`/api/blog`, body);
+      return (payload?.data ?? payload) as Blog;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể tạo bài viết";
+      throw new Error(msg);
+    }
+  },
+
+  /** PUT /api/blog/:id */
+  async update(id: number | string, body: BlogForm): Promise<Blog> {
+    try {
+      const payload = await axiosClient.put<any, any>(`/api/blog/${encodeURIComponent(String(id))}`, body);
+      return (payload?.data ?? payload) as Blog;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật bài viết";
+      throw new Error(msg);
+    }
+  },
+
+  /** DELETE /api/blog/:id */
+  async delete(id: number | string): Promise<boolean> {
+    try {
+      await axiosClient.delete<any, any>(`/api/blog/${encodeURIComponent(String(id))}`);
       return true;
-    },
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể xóa bài viết";
+      throw new Error(msg);
+    }
+  },
 };
