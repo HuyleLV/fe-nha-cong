@@ -76,6 +76,7 @@ export default function ApartmentFormPage() {
       currency: "VND",
       status: "draft" as ApartmentStatus,
       coverImageUrl: "",
+  images: [],
 
       electricityPricePerKwh: null,
       waterPricePerM3: null,
@@ -100,6 +101,7 @@ export default function ApartmentFormPage() {
   const title = watch("title");
   const slug = watch("slug");
   const cover = watch("coverImageUrl") ?? "";
+  const images = watch("images") || [] as string[];
   const descriptionHtml = watch("description") || "";
   const focusKeyword = watch("focusKeyword") || ""; // ✅ theo dõi keyword
 
@@ -130,6 +132,7 @@ export default function ApartmentFormPage() {
           currency: ap.currency,
           status: ap.status,
           coverImageUrl: ap.coverImageUrl || "",
+          images: ap.images || [],
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
 
           electricityPricePerKwh: ap.electricityPricePerKwh ?? null,
@@ -186,6 +189,9 @@ export default function ApartmentFormPage() {
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
+      images: Array.isArray(values.images)
+        ? Array.from(new Set(values.images.filter(Boolean))).map((s) => s!.toString().trim())
+        : undefined,
       description: values.description || "",
 
       electricityPricePerKwh: toIntOrNull(values.electricityPricePerKwh),
@@ -413,6 +419,48 @@ export default function ApartmentFormPage() {
 
           <Section title="Ảnh cover (tuỳ chọn)">
             <UploadPicker value={cover || null} onChange={(val) => setValue("coverImageUrl", val || "", { shouldDirty: true })} />
+          </Section>
+
+          <Section title="Bộ ảnh (gallery)">
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(images as string[]).map((img, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <UploadPicker
+                      value={img || null}
+                      onChange={(val) => {
+                        const next = [...(images as string[])];
+                        next[idx] = val || "";
+                        setValue("images", next, { shouldDirty: true });
+                      }}
+                      aspectClass="aspect-[4/3]"
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="px-3 py-1.5 rounded border border-slate-200 text-sm hover:bg-slate-50 cursor-pointer"
+                        onClick={() => {
+                          const next = (images as string[]).filter((_, i) => i !== idx);
+                          setValue("images", next, { shouldDirty: true });
+                        }}
+                      >
+                        Xoá ảnh
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setValue("images", [...(images as string[]), ""], { shouldDirty: true })}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                >
+                  Thêm ảnh
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">Gợi ý: Không cần thêm ảnh cover vào gallery; hệ thống sẽ tự tách cover khỏi images.</p>
+            </div>
           </Section>
 
           <Section title="Kiểm tra nhanh">

@@ -600,13 +600,27 @@ export default function RoomPage({ slug }: { slug: string }) {
   }, [slug]);
 
   const images = useMemo(() => {
-    if (!data) return [];
-    const arr: string[] = [];
-    if (data.coverImageUrl) arr.push(data.coverImageUrl);
+    if (!data) return [] as string[];
+    const out: string[] = [];
+    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+    const norm = (s?: string | null) => {
+      if (!s) return "";
+      if (s.startsWith("http") && base && s.startsWith(base)) return s.slice(base.length);
+      return s;
+    };
+    const pushUnique = (val?: string | null) => {
+      if (!val) return;
+      const n = norm(val);
+      const exists = out.some((x) => norm(x) === n);
+      if (!exists) out.push(val);
+    };
+    // Always put cover first
+    pushUnique(data.coverImageUrl || null);
+    // Then gallery images
     if (Array.isArray((data as any).images)) {
-      for (const s of (data as any).images as string[]) if (s) arr.push(s);
+      for (const s of (data as any).images as string[]) pushUnique(s);
     }
-    return Array.from(new Set(arr.filter(Boolean)));
+    return out;
   }, [data]);
 
   // Tiện nghi suy ra từ các cờ boolean của BE
