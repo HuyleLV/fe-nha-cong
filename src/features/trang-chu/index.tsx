@@ -2,7 +2,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { Slide } from "react-slideshow-image";
+import "react-slideshow-image/dist/styles.css";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import SearchBar from "@/components/searchBar";
 import DistrictListingSection from "@/components/DistrictListingSection";
 import banner from "@/assets/banner-01.jpg";
@@ -11,6 +13,7 @@ import FaqCarousel, { FaqItem } from "@/components/faqCarousel";
 import { Apartment } from "@/type/apartment";
 import { useDevice } from "@/hooks/useDevice";
 import { apartmentService, ApiSectionHome, HomeSectionsResponse } from "@/services/apartmentService";
+import img1 from "@/assets/img-03.png"
 
 const PARTNERS: PartnerLogo[] = [
   { label: "20AGAIN" }, { label: "LIIN" }, { label: "FPT" },
@@ -44,12 +47,9 @@ export default function TrangChu() {
           limitPerDistrict: 4
         });
 
-        console.log("Home sections:", res);
-
         const rawCity = res?.city ?? null;
         const rawSections = (res?.sections ?? []) as ApiSectionHome[];
 
-        // Thêm addressPath để DistrictListingSection nhóm theo quận (nếu BE chưa có)
         const patchedSections: ApiSectionHome[] = rawSections.map((sec) => ({
           ...sec,
           apartments: (sec.apartments || []).map((a) => ({
@@ -90,13 +90,45 @@ export default function TrangChu() {
 
   return (
     <div className="w-full bg-gradient-to-b from-emerald-50 to-white">
-      {/* ===== Banner ===== */}
-      <Image
-        src={banner}
-        alt="nha-cong"
-        className={`w-full object-cover ${isMobile ? "h-60" : "h-200"}`}
-        priority
-      />
+      {/* ===== Banner (Slideshow) ===== */}
+      <div className="w-full">
+        <Slide
+          autoplay
+          indicators
+          arrows
+          infinite
+          prevArrow={
+            <button
+              aria-label="Slide trước"
+              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          }
+          nextArrow={
+            <button
+              aria-label="Slide tiếp"
+              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          }
+          duration={3500}
+          transitionDuration={600}
+          pauseOnHover
+        >
+          {[banner.src, banner.src, banner.src].map((src, idx) => (
+            <div key={idx} className="relative w-full">
+              <div
+                className={`w-full ${isMobile ? "h-60" : "h-200"} bg-center bg-cover`}
+                style={{ backgroundImage: `url(${src})` }}
+              >
+                <div className="h-full w-full bg-black/10" />
+              </div>
+            </div>
+          ))}
+        </Slide>
+      </div>
 
       {/* ===== Search ===== */}
       <div className="p-4">
@@ -139,9 +171,9 @@ export default function TrangChu() {
               </p>
             </div>
 
-            <div className="relative w-full h-64 md:h-96">
+            <div className="relative w-full">
               <img
-                src="https://khothietke.net/wp-content/uploads/2021/05/PNGKhothietke.net-03230.png"
+                src={img1.src}
                 alt="Ngôi nhà"
                 className="object-contain w-full h-full"
               />

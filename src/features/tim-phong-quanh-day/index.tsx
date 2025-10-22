@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  MapPinned, ChevronDown, ChevronRight, BadgePercent, Flame, Heart,
-  BedDouble, Bath, Ruler, FilterX, Map as MapIcon, List, RotateCcw
+  MapPinned, ChevronDown, ChevronRight, Flame,
+  FilterX, Map as MapIcon, List, RotateCcw
 } from "lucide-react";
 import SearchBar from "@/components/searchBar";
 import { Apartment, ApartmentStatus } from "@/type/apartment";
@@ -11,17 +11,13 @@ import { apartmentService } from "@/services/apartmentService";
 import Pagination from "@/components/Pagination";
 import { toSlug } from "@/utils/formatSlug";
 import LocationLookup from "@/app/admin/components/locationLookup";
+import RoomCardItem from "@/components/roomCardItem";
 
 // ================ Helpers =================
 const cx = (...arr: (string | false | undefined)[]) => arr.filter(Boolean).join(" ");
 const toVnd = (n?: number | string) => {
   const v = typeof n === "string" ? Number(n) : n ?? 0;
   return (Number.isFinite(v) ? v : 0).toLocaleString("vi-VN");
-};
-const toNum = (v?: string | number | null) => {
-  if (v === null || v === undefined) return undefined;
-  const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
-  return Number.isFinite(n) ? n : undefined;
 };
 const LIMIT = 10;
 
@@ -31,9 +27,8 @@ export default function TimPhongQuanhDayPage() {
   const [view, setView] = useState<"list" | "map">("list");
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "area_desc">("newest");
 
-  // search + yêu thích
+  // search
   const [query, setQuery] = useState("");
-  const [liked, setLiked] = useState<number[]>([]);
 
   // Filters ↔ QueryApartmentDto
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
@@ -344,16 +339,9 @@ export default function TimPhongQuanhDayPage() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
           ) : view === "list" ? (
             results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl-grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
                 {results.map((r) => (
-                  <RoomCard
-                    key={r.id}
-                    data={r}
-                    liked={liked.includes(r.id)}
-                    onLike={() =>
-                      setLiked((s) => (s.includes(r.id) ? s.filter((x) => x !== r.id) : [...s, r.id]))
-                    }
-                  />
+                  <RoomCardItem key={r.id} item={r as any} />
                 ))}
               </div>
             ) : (
@@ -503,46 +491,7 @@ function NumberChip({
   );
 }
 
-function RoomCard({ data, liked, onLike }: { data: Apartment; liked: boolean; onLike: () => void }) {
-  const price = toVnd(data.rentPrice);
-  const ward = data.addressPath || data.location?.name;
-  const imgRel = data.coverImageUrl || `/api/static/placeholder/apm-${data.id}.jpg`;
-  const src = imgRel?.startsWith("http") ? imgRel : `${process.env.NEXT_PUBLIC_API_URL || ""}${imgRel}`;
-
-  return (
-    <article className="group bg-white rounded-2xl overflow-hidden border border-green-200 shadow-sm hover:shadow-md transition">
-      <div className="relative">
-        <img src={src} alt={data.title} className="w-full h-48 object-cover" />
-        <div className="absolute top-3 left-3 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-white/90 text-green-700 px-2 py-1 rounded-full border border-green-200 shadow-sm">
-            <BadgePercent className="w-3 h-3" /> Ưu đãi
-          </span>
-        </div>
-        <button
-          onClick={onLike}
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 border border-green-200 text-green-700 hover:bg-green-50"
-        >
-          {liked ? <Heart className="w-4 h-4 fill-current" /> : <Heart className="w-4 h-4" />}
-        </button>
-      </div>
-      <div className="p-4">
-        <a href={`/room/${data.slug}`}>
-          <h3 className="font-bold text-green-900 group-hover:underline leading-snug line-clamp-2">{data.title}</h3>
-          <div className="mt-1 text-red-600 font-semibold">Từ {price} / tháng</div>
-          <div className="mt-1 text-sm text-gray-600">{ward}</div>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-600">
-            <span className="inline-flex items-center gap-1"><BedDouble className="w-4 h-4 text-green-700" /> {data.bedrooms ?? 0} ngủ</span>
-            <span className="inline-flex items-center gap-1"><Bath className="w-4 h-4 text-green-700" /> {data.bathrooms ?? 0} WC</span>
-            <span className="inline-flex items-center gap-1"><Ruler className="w-4 h-4 text-green-700" /> {toNum(data.areaM2) ?? 0} m²</span>
-          </div>
-          <div className="mt-4 flex items-center justify-end">
-            <button className="px-4 py-2 rounded-xl bg-green-600 text-white font-semibold hover:opacity-95 cursor-pointer">Xem chi tiết</button>
-          </div>
-        </a>
-      </div>
-    </article>
-  );
-}
+// Removed custom RoomCard in favor of shared RoomCardItem component
 
 // DualRange – thanh kéo 2 đầu cho min/max
 function DualRange({
