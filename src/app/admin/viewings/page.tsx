@@ -175,7 +175,7 @@ function AdminViewingsPage() {
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
                   <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> List</span>
                 </button>
-                <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Calendar">
+                <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Lịch">
                   <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Calendar</span>
                 </button>
               </div>
@@ -336,7 +336,7 @@ function AdminViewingsPage() {
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
                   <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> List</span>
                 </button>
-                <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Calendar">
+                <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Lịch">
                   <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Calendar</span>
                 </button>
               </div>

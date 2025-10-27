@@ -64,12 +64,12 @@ export default function RegisterPage() {
         password_hash: data.password_hash!,
       };
 
-      const res = await userService.postRegisterUser(payload as RegisterUserRequest);
-      // tuỳ API của bạn: có thể trả user hoặc message; mình chỉ báo thành công:
-      toast.success("Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
-      reset();
-      router.push("/dang-nhap");
-      return res;
+  const res = await userService.postRegisterUser(payload as RegisterUserRequest);
+  // Expecting backend to send OTP to email and return a message
+  toast.success(res?.message || "Đã gửi mã xác thực tới email. Vui lòng kiểm tra hộp thư của bạn.");
+  // Điều hướng tới trang nhập mã OTP, truyền kèm email
+  router.push(`/xac-thuc-email?email=${encodeURIComponent(payload.email!)}`);
+  return res;
     } catch (err: any) {
       const apiMsg =
         err?.response?.data?.message ||

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useId } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Mail, Lock } from "lucide-react";
@@ -15,6 +15,9 @@ import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [gisReady, setGisReady] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement | null>(null);
+  const codeClientRef = useRef<any>(null);
 
   const {
     register,
@@ -56,6 +59,153 @@ export default function LoginPage() {
     }
   };
 
+  // Handle Google credential (id_token) -> call backend
+  const handleGoogleCredential = async (response: any) => {
+    try {
+      const idToken = response?.credential;
+      if (!idToken) {
+        toast.error("Không nhận được token Google");
+        return;
+      }
+      const res = (await userService.postLoginGoogleIdToken(idToken)) as resLoginUser;
+      if (res?.accessToken && res?.user) {
+        localStorage.setItem("access_token", res.accessToken);
+        localStorage.setItem("auth_user", JSON.stringify(res.user));
+        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
+        toast.success(res?.message || "Đăng nhập thành công");
+        router.replace("/");
+      } else {
+        toast.error(res?.message || "Đăng nhập Google thất bại");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Đăng nhập Google thất bại");
+    }
+  };
+
+  const handleGoogleCode = async (resp: any) => {
+    try {
+      const code = resp?.code;
+      if (!code) {
+        toast.error("Không nhận được mã Google");
+        return;
+      }
+      const res = (await userService.postLoginGoogleCode({ code, redirectUri: "postmessage" })) as resLoginUser;
+      if (res?.accessToken && res?.user) {
+        localStorage.setItem("access_token", res.accessToken);
+        localStorage.setItem("auth_user", JSON.stringify(res.user));
+        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
+        toast.success(res?.message || "Đăng nhập thành công");
+        router.replace("/");
+      } else {
+        toast.error(res?.message || "Đăng nhập Google thất bại");
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Đăng nhập Google thất bại");
+    }
+  };
+
+  // Load Google Identity Services
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cid = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!cid) return; // Chưa cấu hình client id
+
+    const onLoad = () => {
+      try {
+        // @ts-ignore
+        window.google?.accounts.id.initialize({
+          client_id: cid,
+          callback: handleGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: false,
+          // Tránh dùng FedCM ở môi trường không đủ điều kiện khiến lỗi CORS/FedCM
+          use_fedcm_for_prompt: false,
+        });
+        setGisReady(true);
+
+        // Init OAuth Code client as fallback (popup)
+        // @ts-ignore
+        codeClientRef.current = window.google?.accounts.oauth2.initCodeClient({
+          client_id: cid,
+          scope: "openid email profile",
+          ux_mode: "popup",
+          // Use postmessage so we don't need to pre-register redirect URI
+          redirect_uri: "postmessage",
+          callback: handleGoogleCode,
+        });
+
+        // Render a hidden google button that we can trigger if needed
+        if (googleBtnRef.current) {
+          // @ts-ignore
+          window.google?.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            type: "standard",
+            text: "signin_with",
+            shape: "rectangular",
+          });
+        }
+      } catch {}
+    };
+
+    const scriptId = "google-gis-script";
+    if (document.getElementById(scriptId)) {
+      onLoad();
+      return;
+    }
+    const s = document.createElement("script");
+    s.id = scriptId;
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.defer = true;
+    s.onload = onLoad;
+    document.body.appendChild(s);
+
+    return () => {
+      // Không xoá script để tránh tải lại nhiều lần
+    };
+  }, [router]);
+
+  const onLoginWithGoogle = () => {
+    const cid = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!cid) {
+      toast.error("Thiếu cấu hình Google Client ID (NEXT_PUBLIC_GOOGLE_CLIENT_ID)");
+      return;
+    }
+    if (!gisReady) {
+      toast.info("Đang tải Google Sign-In. Vui lòng thử lại...");
+      // @ts-ignore
+      window.google?.accounts.id.prompt();
+      return;
+    }
+    // Hiển thị prompt (One Tap) hoặc fallback click vào nút chuẩn nếu cần
+    // @ts-ignore
+    window.google?.accounts.id.prompt((notification: any) => {
+      const notDisplayed = notification?.isNotDisplayed?.();
+      const skipped = notification?.isSkippedMoment?.();
+      const dismissed = notification?.isDismissedMoment?.();
+
+      if (notDisplayed || skipped || dismissed) {
+        // Fallback: trigger Code Flow popup
+        if (codeClientRef.current) {
+          try {
+            codeClientRef.current.requestCode();
+            return;
+          } catch {}
+        }
+        // As a last resort, click rendered button if available
+        const btn = googleBtnRef.current?.querySelector('div[role="button"], button') as HTMLDivElement | HTMLButtonElement | null;
+        btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+      if (notification?.isSkippedMoment()) {
+        console.debug('[GSI] prompt skipped:', notification.getSkippedReason?.());
+      }
+      if (notification?.isDismissedMoment()) {
+        console.debug('[GSI] prompt dismissed:', notification.getDismissedReason?.());
+      }
+    });
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -82,7 +232,7 @@ export default function LoginPage() {
             <div className="px-7 pt-7 pb-4 text-center">
               <div className="inline-flex items-center gap-3">
                 <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
-                  <Image src={logo} alt="logo" className="w-18 h-13 p-2" />
+                  <Image src={logo} alt="logo" className="w-22 h-10 p-2" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Đăng nhập</h1>
@@ -160,13 +310,37 @@ export default function LoginPage() {
                 type="button"
                 aria-label="Tiếp tục với Google"
                 className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm hover:bg-gray-50"
-                onClick={() => console.log("[LOGIN_GOOGLE_CLICK]")}
+                onClick={onLoginWithGoogle}
               >
                 <span className="absolute left-3 inline-flex items-center">
                   <Image src={google} alt="Google" width={18} height={18} className="inline-block" priority />
                 </span>
                 <span className="pointer-events-none">Tiếp tục với Google</span>
               </button>
+
+              {/* Hidden Google button container for fallback */}
+              <div ref={googleBtnRef} className="sr-only" aria-hidden="true" />
+
+              {/* Fallback explicit popup login if One Tap bị chặn */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!codeClientRef.current) {
+                      toast.info("Google đang tải. Vui lòng thử lại...");
+                      return;
+                    }
+                    try {
+                      codeClientRef.current.requestCode();
+                    } catch (e) {
+                      toast.error("Không mở được popup Google. Hãy tắt chặn popup hoặc thử lại.");
+                    }
+                  }}
+                  className="text-xs text-gray-600 hover:underline"
+                >
+                  Không thấy One Tap? Nhấn để đăng nhập bằng popup
+                </button>
+              </div>
 
               {/* Footer */}
               <div className="pt-3 text-center text-sm text-gray-600">

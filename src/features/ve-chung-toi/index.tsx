@@ -111,14 +111,14 @@ function TestimonialsCarousel() {
         <button
           onClick={prev}
           className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm transition hover:bg-emerald-50"
-          aria-label="Previous"
+          aria-label="Slide trước"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={next}
           className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm transition hover:bg-emerald-50"
-          aria-label="Next"
+          aria-label="Slide tiếp"
         >
           <ChevronRight className="h-5 w-5" />
         </button>

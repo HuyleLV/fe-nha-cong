@@ -159,7 +159,7 @@ export default function ParentPicker({
               type="button"
               onClick={() => onChange(null)}
               className="text-slate-500 hover:text-red-600"
-              aria-label="Xoá parent"
+              aria-label="Xoá mục cha"
             >
               <X className="size-4" />
             </button>

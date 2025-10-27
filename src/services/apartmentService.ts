@@ -112,6 +112,17 @@ export const apartmentService = {
     }
   },
 
+  /** PATCH /api/apartments/:id/video */
+  async updateVideo(id: number | string, videoUrl?: string | null): Promise<{ message?: string; images?: string[] }> {
+    try {
+      const payload = await axiosClient.patch<any, any>(`/api/apartments/${encodeURIComponent(String(id))}/video`, { videoUrl });
+      return (payload?.data ?? payload) as { message?: string; images?: string[] };
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật video";
+      throw new Error(msg);
+    }
+  },
+
   /** DELETE /api/apartments/:id */
   async delete(id: number | string): Promise<boolean> {
     try {

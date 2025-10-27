@@ -34,7 +34,9 @@ const hasLoginToken = () => {
   return !!(
     getCookie("access_token") ||
     window.localStorage.getItem("access_token") ||
-    window.sessionStorage.getItem("access_token")
+    window.sessionStorage.getItem("access_token") ||
+    window.localStorage.getItem("tokenAdmin") ||
+    window.localStorage.getItem("tokenUser")
   );
 };
 const parseNum = (v: any, fallback = 0): number => {
@@ -232,18 +234,27 @@ function Gallery({ images }: { images: string[] }) {
   const [open, setOpen] = useState(false);
   const big = images?.[active] ?? images?.[0];
   const bigSrc = withBase(big || undefined);
+  const isVideo = (u?: string | null) => {
+    if (!u) return false;
+    const s = String(u).toLowerCase();
+    return s.includes('/static/videos/') || s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.includes('youtube.com') || s.includes('youtu.be') || s.includes('vimeo.com');
+  };
 
   return (
     <>
       <div className="rounded-3xl border border-emerald-100 bg-white/80 p-2 backdrop-blur">
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
           {bigSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={bigSrc} alt="" className="h-full w-full object-cover transition-all duration-300 hover:scale-[1.01]" onClick={() => setOpen(true)} />
+            isVideo(big) ? (
+              <video src={bigSrc} controls className="h-full w-full object-contain bg-black" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={bigSrc} alt="" className="h-full w-full object-cover transition-all duration-300 hover:scale-[1.01]" onClick={() => setOpen(true)} />
+            )
           ) : (
             <div className="grid h-full w-full place-items-center text-sm text-emerald-800/70">Chưa có ảnh</div>
           )}
-          {bigSrc && (
+          {bigSrc && !isVideo(big) && (
             <button onClick={() => setOpen(true)} className="absolute bottom-3 right-3 rounded-xl bg-emerald-900/70 px-3 py-1.5 text-xs text-white backdrop-blur hover:bg-emerald-900">
               Xem lớn
             </button>
@@ -256,8 +267,12 @@ function Gallery({ images }: { images: string[] }) {
               if (!s) return null;
               return (
                 <button key={i} onClick={() => setActive(i)} className={clsx("relative aspect-[4/3] overflow-hidden rounded-xl border", i === active ? "border-emerald-600 ring-2 ring-emerald-600/50" : "border-emerald-100")}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={s} alt="" className="h-full w-full object-cover" />
+                  {isVideo(src) ? (
+                    <div className="h-full w-full bg-black grid place-items-center text-[10px] text-white/80">Video</div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s} alt="" className="h-full w-full object-cover" />
+                  )}
                 </button>
               );
             })}
@@ -265,7 +280,7 @@ function Gallery({ images }: { images: string[] }) {
         )}
       </div>
 
-      {open && bigSrc && (
+      {open && bigSrc && !isVideo(big) && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
           <button className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-emerald-900" onClick={() => setOpen(false)}>
             <X className="h-5 w-5" />
@@ -293,11 +308,11 @@ function MapBox({ lat, lng, address }: { lat?: number; lng?: number; address: st
         <MapPin className="h-5 w-5" />
         <span className="truncate">{address}</span>
         <button onClick={() => navigator.clipboard.writeText(address)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 px-2 py-1 text-xs text-emerald-800 hover:bg-emerald-50">
-          <Copy className="h-3.5 w-3.5" /> Copy
+          <Copy className="h-3.5 w-3.5" /> Sao chép
         </button>
       </div>
       <div className="h-[360px] w-full">
-        <iframe title="map" src={src} className="h-full w-full" loading="lazy" />
+        <iframe title="Bản đồ" src={src} className="h-full w-full" loading="lazy" />
       </div>
     </div>
   );
@@ -601,25 +616,43 @@ export default function RoomPage({ slug }: { slug: string }) {
 
   const images = useMemo(() => {
     if (!data) return [] as string[];
-    const out: string[] = [];
     const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
     const norm = (s?: string | null) => {
       if (!s) return "";
       if (s.startsWith("http") && base && s.startsWith(base)) return s.slice(base.length);
       return s;
     };
+    const isVideo = (u?: string | null) => {
+      if (!u) return false;
+      const s = String(u).toLowerCase();
+      return s.includes('/static/videos/') || s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.includes('youtube.com') || s.includes('youtu.be') || s.includes('vimeo.com');
+    };
+    const srcImages = Array.isArray((data as any).images) ? ((data as any).images as string[]) : [];
+    const cover = data.coverImageUrl || null;
+
+    // Find first video in images
+    const firstVideo = srcImages.find(isVideo) || null;
+    const rest = srcImages.filter((s) => s !== firstVideo);
+
+    const out: string[] = [];
     const pushUnique = (val?: string | null) => {
       if (!val) return;
       const n = norm(val);
       const exists = out.some((x) => norm(x) === n);
       if (!exists) out.push(val);
     };
-    // Always put cover first
-    pushUnique(data.coverImageUrl || null);
-    // Then gallery images
-    if (Array.isArray((data as any).images)) {
-      for (const s of (data as any).images as string[]) pushUnique(s);
+
+    if (firstVideo) {
+      // Order: video first, then cover, then the rest
+      pushUnique(firstVideo);
+      pushUnique(cover);
+      for (const s of rest) pushUnique(s);
+    } else {
+      // No video: put cover first, then images
+      pushUnique(cover);
+      for (const s of srcImages) pushUnique(s);
     }
+
     return out;
   }, [data]);
 
@@ -794,7 +827,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(typeof window !== "undefined" ? window.location.href : "");
-                        toast.success("Đã copy liên kết!");
+                        toast.success("Đã sao chép liên kết!");
                       }}
                       className="flex items-center gap-2 rounded-xl border border-emerald-200 px-3 py-2 text-emerald-800 hover:bg-emerald-50"
                     >

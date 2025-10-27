@@ -1,17 +1,19 @@
 "use client";
+// Note: constants module removed; this file intentionally uses literals/env.
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { User as UserIcon, Mail, Phone, Heart, Trash2, LogOut, CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink } from "lucide-react";
+import { User as UserIcon, Mail, Phone, Heart, Trash2, LogOut, CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, ShieldCheck, Sparkles, Calendar as CalendarIcon, Fingerprint } from "lucide-react";
 
 import logo from "@/assets/logo-trang.png";
-import { Me } from "@/type/user";
+import { Me, User } from "@/type/user";
 import { Apartment } from "@/type/apartment";
 import { favoriteService } from "@/services/favoriteService";
 import RoomCardItem from "@/components/roomCardItem";
 import { viewingService, Viewing } from "@/services/viewingService";
+import CompleteProfileSheet from "@/features/dang-nhap/CompleteProfileSheet";
 
 /* ========= Cookie helpers ========= */
 function getCookie(name: string) {
@@ -36,7 +38,10 @@ const hasToken = () =>
   !!(
     getCookie("access_token") ||
     (typeof window !== "undefined" &&
-      (localStorage.getItem("access_token") || sessionStorage.getItem("access_token")))
+      (localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token") ||
+        localStorage.getItem("tokenAdmin") ||
+        localStorage.getItem("tokenUser")))
   );
 
 /* ========= Type cho Favorite item ========= */
@@ -49,7 +54,7 @@ type FavoriteItem = {
 /* ========= Main ========= */
 export default function AccountPage() {
   const router = useRouter();
-  const [auth, setAuth] = useState<Me | null>(null);
+  const [auth, setAuth] = useState<(Me & Partial<User>) | null>(null);
   const [avatarBroken, setAvatarBroken] = useState(false);
   const [saved, setSaved] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,21 +64,34 @@ export default function AccountPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().slice(0,10));
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
+  const [editing, setEditing] = useState(false);
 
   /* ---------- AUTH: đọc JWT ---------- */
-  const readAuth = (): Me | null => {
+  const readAuth = (): (Me & Partial<User>) | null => {
     try {
       const cu = getCookie("auth_user");
-      if (cu) return JSON.parse(cu) as Me;
+      if (cu) return JSON.parse(cu) as any;
 
       const raw = localStorage.getItem("auth_user") ?? sessionStorage.getItem("auth_user");
-      if (raw) return JSON.parse(raw) as Me;
+      if (raw) return JSON.parse(raw) as any;
+
+      // Ưu tiên đọc thông tin admin nếu có
+      const rawAdmin = localStorage.getItem("adminInfo");
+      if (rawAdmin) return JSON.parse(rawAdmin) as any;
 
       const token =
         getCookie("access_token") ||
         localStorage.getItem("access_token") ||
-        sessionStorage.getItem("access_token");
+        sessionStorage.getItem("access_token") ||
+        localStorage.getItem("tokenAdmin") ||
+        localStorage.getItem("tokenUser");
       if (token) {
         const [, payload] = token.split(".");
         if (payload) {
@@ -99,6 +117,9 @@ export default function AccountPage() {
     delCookie("access_token");
     localStorage.removeItem("auth_user");
     localStorage.removeItem("access_token");
+    localStorage.removeItem("tokenAdmin");
+    localStorage.removeItem("tokenUser");
+    localStorage.removeItem("adminInfo");
     sessionStorage.removeItem("auth_user");
     sessionStorage.removeItem("access_token");
   };
@@ -125,10 +146,18 @@ export default function AccountPage() {
     const u = readAuth();
     if (!u) {
       toast.info("Vui lòng đăng nhập để xem tài khoản");
-      router.replace("/auth/login");
+  router.replace("/dang-nhap");
       return;
     }
     setAuth(u);
+    // Listen for auth updates (e.g., after profile edit)
+    const onAuthUpdate = (e: any) => {
+      const next = readAuth();
+      setAuth(next);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:update', onAuthUpdate as any);
+    }
 
     (async () => {
       try {
@@ -150,6 +179,12 @@ export default function AccountPage() {
         setLoading(false);
       }
     })();
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth:update', onAuthUpdate as any);
+      }
+    };
   }, [router]);
 
   // Fetch my viewings
@@ -169,7 +204,13 @@ export default function AccountPage() {
   }, []);
 
   // Helpers for calendar
-  const fmtDate = (d: Date) => d.toISOString().slice(0,10);
+  // Định dạng YYYY-MM-DD theo múi giờ local để tránh lệch ngày khi so sánh
+  const fmtDate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
   const monthLabel = useMemo(() => month.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }), [month]);
   const startOfMonth = useMemo(() => new Date(month.getFullYear(), month.getMonth(), 1), [month]);
   const endOfMonth = useMemo(() => new Date(month.getFullYear(), month.getMonth()+1, 0), [month]);
@@ -189,7 +230,7 @@ export default function AccountPage() {
   const eventsByDate = useMemo(() => {
     const m: Record<string, Viewing[]> = {};
     for (const v of viewings) {
-      const key = new Date(v.preferredAt).toISOString().slice(0,10);
+      const key = fmtDate(new Date(v.preferredAt));
       (m[key] ||= []).push(v);
     }
     // sort each day by time
@@ -198,6 +239,18 @@ export default function AccountPage() {
   }, [viewings]);
 
   const selectedEvents = eventsByDate[selectedDate] || [];
+
+  const statusLabel = (st: string) => {
+    switch (st) {
+      case 'confirmed':
+        return 'Đã xác nhận';
+      case 'cancelled':
+        return 'Đã huỷ';
+      case 'pending':
+      default:
+        return 'Đang chờ';
+    }
+  };
 
   const goPrevMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()-1, 1));
   const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()+1, 1));
@@ -243,13 +296,13 @@ export default function AccountPage() {
       {/* ===== Header user ===== */}
       <section className="relative">
         <div className="max-w-screen-xl mx-auto px-4 pt-24 pb-10">
-          <div className="rounded-3xl bg-white shadow-lg p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+          <div className="rounded-3xl bg-white shadow-lg p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="h-20 w-20 rounded-2xl bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
               {auth.avatarUrl && !avatarBroken ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={auth.avatarUrl}
-                  alt="avatar"
+                  src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
+                  alt="Ảnh đại diện"
                   className="h-full w-full object-cover"
                   onError={() => setAvatarBroken(true)}
                 />
@@ -260,7 +313,24 @@ export default function AccountPage() {
 
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-2xl font-bold text-slate-900">{auth.name || "Người dùng"}</h1>
-              <p className="text-sm text-slate-600 mt-1 flex flex-col sm:flex-row sm:gap-4 justify-center md:justify-start">
+              <div className="mt-1 flex flex-wrap items-center gap-2 justify-center md:justify-start">
+                {typeof auth.emailVerified !== 'undefined' && (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${auth.emailVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    <Sparkles className="w-3.5 h-3.5" /> {auth.emailVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}
+                  </span>
+                )}
+                {auth.provider && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-700">
+                    <Fingerprint className="w-3.5 h-3.5" /> Đăng nhập: {auth.provider}
+                  </span>
+                )}
+                {typeof auth.rewardBalance === 'number' && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 px-2 py-0.5 text-xs text-amber-700">
+                    <Sparkles className="w-3.5 h-3.5" /> Điểm thưởng: {auth.rewardBalance}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-600 mt-2 flex flex-col sm:flex-row sm:gap-4 justify-center md:justify-start">
                 <span className="inline-flex items-center gap-2">
                   <Mail className="w-4 h-4" /> {auth.email}
                 </span>
@@ -270,18 +340,64 @@ export default function AccountPage() {
                   </span>
                 )}
               </p>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-600">
+                {auth.address && (
+                  <div className="inline-flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Địa chỉ: {auth.address}</div>
+                )}
+                {auth.gender && (
+                  <div className="inline-flex items-center gap-2"><UserIcon className="w-3.5 h-3.5" /> Giới tính: {auth.gender === 'male' ? 'Nam' : auth.gender === 'female' ? 'Nữ' : 'Khác'}</div>
+                )}
+                {auth.dateOfBirth && (
+                  <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Ngày sinh: {new Date(auth.dateOfBirth as any).toLocaleDateString('vi-VN')}</div>
+                )}
+                {auth.createdAt && (
+                  <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Tham gia: {new Date(auth.createdAt as any).toLocaleDateString('vi-VN')}</div>
+                )}
+                {auth.referralCode && (
+                  <div className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5" /> Mã giới thiệu: {auth.referralCode}</div>
+                )}
+              </div>
+            </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEditing((v) => !v)}
+                  className="rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 flex items-center gap-2"
+                >
+                  {editing ? 'Đóng sửa' : 'Sửa thông tin'}
+                </button>
+                <button
+                  onClick={() => {
+                    clearAuth();
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('auth:logout'));
+                    }
+                    toast.info("Đã đăng xuất");
+                    router.replace("/dang-nhap");
+                  }}
+                  className="rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" /> Đăng xuất
+                </button>
+              </div>
             </div>
 
-            <button
-              onClick={() => {
-                clearAuth();
-                toast.info("Đã đăng xuất");
-                router.replace("/");
-              }}
-              className="rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" /> Đăng xuất
-            </button>
+            {editing && (
+              <div className="mt-6 border-t border-slate-100 pt-4">
+                <CompleteProfileSheet
+                  initialName={auth?.name || ''}
+                  initialPhone={auth?.phone || ''}
+                  email={auth?.email || ''}
+                  initialGender={(auth as any)?.gender || null}
+                  initialDateOfBirth={auth?.dateOfBirth ? new Date(auth.dateOfBirth as any).toISOString().slice(0,10) : ''}
+                  initialAvatarUrl={auth?.avatarUrl || ''}
+                  initialAddress={auth?.address || ''}
+                  onDone={() => {
+                  const next = readAuth();
+                  setAuth(next);
+                  setEditing(false);
+                }} />
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -346,7 +462,11 @@ export default function AccountPage() {
           {/* Day details */}
           <div className="rounded-2xl bg-white border shadow-sm p-3">
             <div className="mb-2 text-sm font-semibold text-slate-800">
-              Sự kiện ngày {new Date(selectedDate).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
+              {(() => {
+                const [y, m, d] = selectedDate.split('-').map(Number);
+                const localDate = new Date(y, (m || 1) - 1, d || 1);
+                return `Sự kiện ngày ${localDate.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+              })()}
             </div>
             {selectedEvents.length === 0 ? (
               <div className="text-sm text-slate-500">Không có lịch trong ngày này.</div>
@@ -365,7 +485,7 @@ export default function AccountPage() {
                           v.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                           v.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                           'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>{v.status}</span>
+                        }`}>{statusLabel(v.status)}</span>
                       </div>
                       {v.note && <div className="mt-0.5 text-xs text-slate-600">{v.note}</div>}
                       <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
@@ -416,7 +536,7 @@ export default function AccountPage() {
                 item={{ ...fav.apartment, favorited: true }}
                 isFav={true}
                 onToggleFav={handleRemoveFav}
-                onBook={() => router.push(`/rooms/${fav.apartment.slug}`)}
+                onBook={() => router.push(`/room/${fav.apartment.slug}`)}
               />
             ))}
           </div>
@@ -425,7 +545,7 @@ export default function AccountPage() {
 
       {/* ===== Footer logo ===== */}
       <div className="pointer-events-none fixed bottom-6 right-6 opacity-20">
-        <Image src={logo} alt="brand" width={72} height={72} />
+        <Image src={logo} alt="Thương hiệu" width={72} height={72} />
       </div>
     </main>
   );

@@ -8,6 +8,7 @@ import { Save, ChevronRight, Link as LinkIcon, CheckCircle2, Info } from "lucide
 
 import Spinner from "@/components/spinner";
 import UploadPicker from "@/components/UploadPicker";
+import VideoUploadPicker from "@/components/VideoUploadPicker";
 import LocationLookup from "../../components/locationLookup";
 import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
@@ -15,6 +16,8 @@ import { Apartment, ApartmentForm, ApartmentStatus } from "@/type/apartment";
 import { Location } from "@/type/location";
 import CustomSunEditor from "../../components/customSunEditor";
 import SeoScoreCard from "@/components/SeoScoreCard";
+import { buildingService } from "@/services/buildingService";
+import type { Building } from "@/type/building";
 
 /* ---------- helpers ---------- */
 const inputCls =
@@ -47,6 +50,7 @@ export default function ApartmentFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = useMemo(() => id !== "create", [id]);
   const router = useRouter();
+  const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
 
   const [loadingDetail, setLoadingDetail] = useState<boolean>(isEdit);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -65,7 +69,9 @@ export default function ApartmentFormPage() {
       slug: "",
       excerpt: "",
       description: "",
+      videoUrl: "",
       locationId: undefined as unknown as number,
+      buildingId: null,
       streetAddress: "",
       lat: "",
       lng: "",
@@ -103,7 +109,9 @@ export default function ApartmentFormPage() {
   const cover = watch("coverImageUrl") ?? "";
   const images = watch("images") || [] as string[];
   const descriptionHtml = watch("description") || "";
+  const videoUrl = watch("videoUrl") || "";
   const focusKeyword = watch("focusKeyword") || ""; // ✅ theo dõi keyword
+  const [buildings, setBuildings] = useState<Building[]>([]);
 
   // auto slug
   useEffect(() => {
@@ -117,11 +125,24 @@ export default function ApartmentFormPage() {
     (async () => {
       try {
         const ap: Apartment = await apartmentService.getById(Number(id));
+        // Detect saved video from images array (first media if video-like)
+        const detectVideo = (arr?: string[] | null): string => {
+          if (!Array.isArray(arr) || !arr.length) return "";
+          const isVideo = (u?: string | null) => {
+            if (!u) return false;
+            const s = String(u).toLowerCase();
+            return s.includes('/static/videos/') || s.endsWith('.mp4') || s.endsWith('.webm') || s.endsWith('.ogg') || s.endsWith('.mov') || s.includes('youtube.com') || s.includes('youtu.be') || s.includes('vimeo.com');
+          };
+          const first = arr.find(isVideo);
+          return first || "";
+        };
+        const savedVideo = detectVideo((ap as any).images as string[]);
         reset({
           title: ap.title,
           slug: ap.slug,
           excerpt: ap.excerpt || "",
           description: ap.description || "",
+          videoUrl: savedVideo,
           streetAddress: ap.streetAddress || "",
           lat: ap.lat || "",
           lng: ap.lng || "",
@@ -134,6 +155,7 @@ export default function ApartmentFormPage() {
           coverImageUrl: ap.coverImageUrl || "",
           images: ap.images || [],
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
+          buildingId: ap.buildingId ?? null,
 
           electricityPricePerKwh: ap.electricityPricePerKwh ?? null,
           waterPricePerM3: ap.waterPricePerM3 ?? null,
@@ -163,6 +185,31 @@ export default function ApartmentFormPage() {
     })();
   }, [id, isEdit, reset, router]);
 
+  // Load building options for selection
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await buildingService.getAll({ page: 1, limit: 200 });
+        setBuildings(res.items || []);
+      } catch {
+        setBuildings([]);
+      }
+    })();
+  }, []);
+
+  // Prefill buildingId from query if provided
+  useEffect(() => {
+    if (!isEdit && search?.get('buildingId')) {
+      const bid = Number(search.get('buildingId'));
+      if (!Number.isNaN(bid)) {
+        // we don't have buildingId field explicitly; pass via description note or keep for future if form includes buildingId
+        // If the ApartmentForm supports buildingId, set it here:
+        setValue('buildingId' as any, bid as any, { shouldDirty: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit]);
+
   // Đảm bảo locationId trong form luôn sync với selectedLocation để qua validation
   useEffect(() => {
     if (selectedLocation?.id) {
@@ -181,6 +228,15 @@ export default function ApartmentFormPage() {
   };
 
   const onSubmit = async (values: ApartmentForm) => {
+    // Build gallery images and ensure video (if provided) goes first
+    const rawImages = Array.isArray(values.images)
+      ? Array.from(new Set(values.images.filter(Boolean))).map((s) => s!.toString().trim())
+      : [] as string[];
+    const vUrl = (values.videoUrl || "").trim();
+    const imagesOrdered = vUrl
+      ? [vUrl, ...rawImages.filter((u) => u !== vUrl)]
+      : rawImages;
+
     const payload: ApartmentForm = {
       ...values,
       title: values.title.trim(),
@@ -189,9 +245,7 @@ export default function ApartmentFormPage() {
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
-      images: Array.isArray(values.images)
-        ? Array.from(new Set(values.images.filter(Boolean))).map((s) => s!.toString().trim())
-        : undefined,
+      images: imagesOrdered.length ? imagesOrdered : undefined,
       description: values.description || "",
 
       electricityPricePerKwh: toIntOrNull(values.electricityPricePerKwh),
@@ -200,14 +254,23 @@ export default function ApartmentFormPage() {
       commonServiceFeePerPerson: toIntOrNull(values.commonServiceFeePerPerson),
     };
 
-    delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
+  // Remove local-only fields
+  delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
+  delete (payload as any).videoUrl; // ✅ chỉ dùng để sắp xếp, không gửi riêng
 
     try {
       if (isEdit) {
-        await apartmentService.update(Number(id), payload);
+        // First update core fields/images
+        const updated = await apartmentService.update(Number(id), payload);
+        // Then update video through dedicated endpoint to ensure ordering first
+        const v = (values.videoUrl || "").trim();
+        await apartmentService.updateVideo(Number(id), v || null);
         toast.success("Cập nhật căn hộ thành công!");
       } else {
-        await apartmentService.create(payload);
+        // Create then optionally set video after we have an id
+        const created = await apartmentService.create(payload);
+        const v = (values.videoUrl || "").trim();
+        if (v) await apartmentService.updateVideo(created.id, v);
         toast.success("Tạo căn hộ thành công!");
       }
       router.push("/admin/apartment");
@@ -383,6 +446,21 @@ export default function ApartmentFormPage() {
               />
               {errors.locationId && <p className="text-red-600 text-sm">{String(errors.locationId.message)}</p>}
 
+              {/* Building selection (optional) */}
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Tòa nhà (tuỳ chọn)</label>
+                <select
+                  className={inputCls}
+                  value={(watch("buildingId") ?? "").toString()}
+                  onChange={(e) => setValue("buildingId" as any, e.target.value ? Number(e.target.value) : null, { shouldDirty: true })}
+                >
+                  <option value="">Không thuộc tòa</option>
+                  {buildings.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Trạng thái</label>
@@ -423,6 +501,23 @@ export default function ApartmentFormPage() {
 
           <Section title="Bộ ảnh (gallery)">
             <div className="space-y-3">
+              {/* Video URL (optional) */}
+              <div className="space-y-2">
+                <label className="block text-sm text-slate-600">Video (tuỳ chọn)</label>
+                <VideoUploadPicker
+                  value={videoUrl || null}
+                  onChange={(val) => setValue("videoUrl", val || "", { shouldDirty: true })}
+                />
+                <input
+                  className={inputCls}
+                  placeholder="Hoặc dán link YouTube/Vimeo hoặc URL .mp4/.webm"
+                  {...register("videoUrl")}
+                />
+                {videoUrl && (
+                  <p className="text-xs text-emerald-700">Video sẽ được ưu tiên hiển thị đầu tiên trong gallery.</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(images as string[]).map((img, idx) => (
                   <div key={idx} className="space-y-2">

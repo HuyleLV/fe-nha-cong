@@ -75,6 +75,8 @@ export type ApartmentForm = {
   slug?: string;                  // để BE tự sinh nếu không truyền
   excerpt?: string;
   description?: string;
+  /** Video URL (YouTube/Vimeo/mp4). Will be placed first in images on submit */
+  videoUrl?: string | null;
 
   locationId: number;
   buildingId?: number | null;

@@ -31,7 +31,7 @@ function ToggleChip({ active, onToggle, children }: { active: boolean; onToggle:
       type="button"
       onClick={onToggle}
       className={`px-3 py-1 rounded-full border text-sm transition
-  ${active ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
+        ${active ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-slate-700 hover:bg-slate-50"}`}
     >
       {children}
     </button>
@@ -114,7 +114,7 @@ function FiltersSection(props: {
           <Filter className="size-4" />
           <span className="font-medium">Bộ lọc</span>
           {activeCount > 0 && (
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 text-xs">{activeCount}</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs">{activeCount}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ function FiltersSection(props: {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm tiêu đề hoặc slug"
-            className="h-9 w-56 rounded border pl-8 pr-3 text-sm outline-none focus:ring-2 ring-sky-500"
+            className="h-9 w-56 rounded border pl-8 pr-3 text-sm outline-none focus:ring-2 ring-emerald-500"
           />
         </div>
 
@@ -468,7 +468,7 @@ export default function AdminApartmentsPage() {
               <td className="px-4 py-3">{it.bedrooms} ngủ · {it.bathrooms} tắm</td>
               <td className="px-4 py-3">
                 <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-4 text-sky-600" />
+                  <MapPin className="size-4 text-emerald-600" />
                   {it.addressPath || it.location?.name}
                 </span>
               </td>
@@ -497,7 +497,7 @@ export default function AdminApartmentsPage() {
                   </button>
                   <button
                     onClick={() => router.push(`/admin/viewings?apartmentId=${it.id}`)}
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
+                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
                   >
                     <CalendarDays size={15} />
                     Lịch xem

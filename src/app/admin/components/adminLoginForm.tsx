@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
 import axiosClient from "@/utils/axiosClient";
 import { toast } from "react-toastify";
-import { Me } from "@/type/user";
+import { User } from "@/type/user";
 
 export default function AdminLoginForm() {
   const [username, setUsername] = useState("");
@@ -29,29 +29,31 @@ export default function AdminLoginForm() {
     try {
       const res = await userService.postLoginAdmin(payload);
       const token = res?.accessToken;
+      const user = res?.user as User | undefined;
 
-      if (!token) {
+      if (!token || !user) {
         toast.error("Tài khoản không hợp lệ");
         router.replace("/admin/login");
         return;
       }
-  
-      localStorage.setItem("tokenAdmin", token);
-      axiosClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  
-      let me: Me;
-      me = await userService.getMe(); 
-  
-      // 4) Không phải admin → out
-      if (me.role !== "admin") {
+
+      // Check role from response payload
+      if (user.role !== "admin") {
         cleanupToken();
         toast.error("Tài khoản không hợp lệ");
         router.replace("/admin/login");
         return;
       }
 
-      localStorage.setItem("adminInfo", JSON.stringify(me));
-      toast.success("Đăng nhập thành công");
+      // Persist token for admin endpoints and set axios header
+      localStorage.setItem("tokenAdmin", token);
+      axiosClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      // Store admin info (flat user object) for UI/guards
+      localStorage.setItem("adminInfo", JSON.stringify(user));
+
+      // Show backend message if provided
+      toast.success(res?.message || "Đăng nhập thành công");
       router.push("/admin/dashboard");
     } catch (err) {
       cleanupToken();
@@ -63,18 +65,18 @@ export default function AdminLoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <div>
-        <label className="block mb-1 text-sm font-medium">Username</label>
+        <label className="block mb-1 text-sm font-medium">Email</label>
         <input
           type="text"
           className="w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-500"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Nhập tài khoản..."
+          placeholder="Nhập email quản trị..."
         />
       </div>
 
       <div>
-        <label className="block mb-1 text-sm font-medium">Password</label>
+        <label className="block mb-1 text-sm font-medium">Mật khẩu</label>
         <input
           type="password"
           className="w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-500"

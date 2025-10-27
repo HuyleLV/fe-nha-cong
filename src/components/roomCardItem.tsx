@@ -58,6 +58,8 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
       typeof window !== "undefined" &&
       (localStorage.getItem("access_token") ||
         sessionStorage.getItem("access_token") ||
+        localStorage.getItem("tokenAdmin") ||
+        localStorage.getItem("tokenUser") ||
         document.cookie.includes("access_token="));
 
     if (!hasToken) return;
@@ -82,6 +84,8 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
         typeof window !== "undefined" &&
         (localStorage.getItem("access_token") ||
           sessionStorage.getItem("access_token") ||
+          localStorage.getItem("tokenAdmin") ||
+          localStorage.getItem("tokenUser") ||
           document.cookie.includes("access_token="));
       if (!hasToken) return;
 
@@ -114,6 +118,8 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
       typeof window !== "undefined" &&
       (localStorage.getItem("access_token") ||
         sessionStorage.getItem("access_token") ||
+        localStorage.getItem("tokenAdmin") ||
+        localStorage.getItem("tokenUser") ||
         document.cookie.includes("access_token="));
     return !!token;
   };
@@ -122,7 +128,7 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
     if (loadingFav) return;
     if (!requireAuth()) {
       toast.info("Vui lòng đăng nhập để sử dụng tính năng yêu thích.");
-      router.push("/auth/login");
+  router.push("/dang-nhap");
       return;
     }
 
@@ -228,12 +234,14 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
           <div className="font-extrabold text-emerald-700">
             {formatMoneyVND(toNumber(item.rentPrice))}
           </div>
-          <button
-            onClick={() => onBook?.(item)}
+          <Link
+            href={detailHref}
+            aria-label={`Xem chi tiết ${item.title}`}
             className="rounded-full border border-emerald-600 px-3 py-1.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+            prefetch={false}
           >
             ĐẶT PHÒNG
-          </button>
+          </Link>
         </div>
       </div>
     </article>

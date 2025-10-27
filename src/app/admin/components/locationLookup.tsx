@@ -183,8 +183,8 @@ export default function LocationLookup({
                 type="button"
                 onClick={() => onChange(null)}
                 className="text-slate-500 hover:text-red-600"
-                aria-label="Xoá location"
-                title="Xoá location"
+                aria-label="Xoá khu vực"
+                title="Xoá khu vực"
               >
                 <X className="size-4" />
               </button>

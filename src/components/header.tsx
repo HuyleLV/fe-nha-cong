@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "../assets/logo-trang.png";
@@ -19,11 +20,13 @@ import {
   Phone,
   LogOut,
   User as UserIcon,
+  Map,
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
 
 export default function Header() {
+  const router = useRouter();
   const [openUser, setOpenUser] = useState(false);
   const [openNavMobile, setOpenNavMobile] = useState(false);
   const [openNavDesktop, setOpenNavDesktop] = useState(false);
@@ -36,11 +39,37 @@ export default function Header() {
 
   const readStoredUser = () => {
     try {
+      // Ưu tiên người dùng thường từ storage
       const rawLocal = localStorage.getItem("auth_user");
       const rawSession = sessionStorage.getItem("auth_user");
       const raw = rawLocal ?? rawSession;
-      if (!raw) return null;
-      return JSON.parse(raw) as User;
+      if (raw) return JSON.parse(raw) as User;
+
+      // Sau đó đến adminInfo nếu có
+      const adminInfo = localStorage.getItem("adminInfo");
+      if (adminInfo) return JSON.parse(adminInfo) as User;
+
+      // Cuối cùng decode JWT nếu chỉ có token
+      const token = localStorage.getItem("tokenAdmin") || localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
+      if (token) {
+        try {
+          const [, payload] = token.split(".");
+          if (payload) {
+            const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+            return {
+              id: Number(json.sub),
+              email: json.email,
+              role: json.role,
+              name: json.name,
+              avatarUrl: json.avatarUrl,
+              phone: json.phone,
+            } as User;
+          }
+        } catch {
+          // ignore
+        }
+      }
+      return null;
     } catch {
       return null;
     }
@@ -49,6 +78,9 @@ export default function Header() {
   const clearAuthStorage = () => {
     localStorage.removeItem("auth_user");
     localStorage.removeItem("access_token");
+    localStorage.removeItem("tokenAdmin");
+    localStorage.removeItem("tokenUser");
+    localStorage.removeItem("adminInfo");
     sessionStorage.removeItem("auth_user");
     sessionStorage.removeItem("access_token");
     document.cookie = "access_token=; Max-Age=0; Path=/; SameSite=Lax";
@@ -125,13 +157,13 @@ export default function Header() {
   const AvatarButtonContent = () => {
     const url = auth?.avatarUrl?.trim();
     if (!auth || !url || avatarBroken) {
-      return <UserRound className="text-white w-5 h-5" />;
+      return <UserRound className="text-white w-9 h-9 p-2" />;
     }
     return (
       <img
-        src={url}
+        src={process.env.NEXT_PUBLIC_API_URL + url}
         alt={auth?.name || auth?.email || "user"}
-        className="w-6 h-6 rounded-full object-cover"
+        className="w-9 h-9 rounded-full object-cover"
         onError={() => setAvatarBroken(true)}
       />
     );
@@ -144,6 +176,10 @@ export default function Header() {
     setAvatarBroken(false);
     window.dispatchEvent(new CustomEvent("auth:logout"));
     toast.success("Đăng xuất thành công!");
+    // Always go to login page after logout
+    try {
+      router.replace("/dang-nhap");
+    } catch {}
   };
 
   return (
@@ -171,13 +207,13 @@ export default function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2 md:gap-3">
-            <button
+            {/* <button
               type="button"
               aria-label="Yêu thích"
               className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
             >
               <Heart className="text-white w-5 h-5" />
-            </button>
+            </button> */}
 
             <button
               ref={userBtnRef}
@@ -186,7 +222,7 @@ export default function Header() {
               aria-expanded={openUser}
               aria-controls="user-menu"
               onClick={() => setOpenUser((v) => !v)}
-              className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+              className="rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
               title={auth ? (auth.name || auth.email) : "Tài khoản"}
             >
               <AvatarButtonContent />
@@ -227,9 +263,8 @@ export default function Header() {
                       <div className="shrink-0">
                         <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                           {auth.avatarUrl && !avatarBroken ? (
-                            // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={auth.avatarUrl}
+                              src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
                               alt="avatar"
                               className="w-full h-full object-cover"
                               onError={() => setAvatarBroken(true)}
@@ -375,7 +410,7 @@ export default function Header() {
               <Link href="/auth/register" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
                 <UserPlus className="w-4 h-4 mr-3" /> Đăng ký khách hàng
               </Link>
-              <Link href="/auth/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+              <Link href="/dang-nhap" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
                 <LogIn className="w-4 h-4 mr-3" /> Đăng nhập khách hàng
               </Link>
               <Link href="/partner/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
@@ -387,9 +422,8 @@ export default function Header() {
               <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
                 <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                   {auth.avatarUrl && !avatarBroken ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={auth.avatarUrl}
+                      src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
                       alt="avatar"
                       className="w-full h-full object-cover"
                       onError={() => setAvatarBroken(true)}
@@ -510,6 +544,13 @@ export default function Header() {
 
           {/* Blog & Hỗ trợ */}
           <div className="px-5 mt-6 space-y-3">
+            <Link
+              href="/blog"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <Map className="w-5 h-5" /> Tìm phòng quanh đây
+            </Link>
             <Link
               href="/blog"
               onClick={() => setOpenNavDesktop(false)}

@@ -44,12 +44,12 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <nav className="flex justify-center items-center mt-6 gap-2 select-none">
-      {/* Prev Button */}
+      {/* Nút trang trước */}
       <button
         className="w-9 h-9 flex items-center justify-center border rounded-full bg-white hover:bg-blue-100 text-blue-500 cursor-pointer border-blue-300 shadow-sm transition disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400"
         onClick={onPrev}
         disabled={page === 1}
-        aria-label="Previous page"
+        aria-label="Trang trước"
       >
         <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
           <path
@@ -85,12 +85,12 @@ const Pagination: React.FC<PaginationProps> = ({
         )
       )}
 
-      {/* Next Button */}
+      {/* Nút trang sau */}
       <button
         className="w-9 h-9 flex items-center justify-center border rounded-full bg-white hover:bg-blue-100 text-blue-500 cursor-pointer border-blue-300 shadow-sm transition disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400"
         onClick={onNext}
         disabled={page === totalPages || totalPages === 0}
-        aria-label="Next page"
+        aria-label="Trang sau"
       >
         <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
           <path

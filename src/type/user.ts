@@ -17,6 +17,10 @@ export interface User {
     role: Role;                   
     createdAt: Date;       
     updatedAt: Date;               
+    // Optional social/verification fields (may be provided by backend)
+    provider?: string | null;
+    providerId?: string | null;
+    emailVerified?: boolean;
 }
 
 export interface LoginAdminRequest {
@@ -31,6 +35,10 @@ export type Me = {
     role: string; 
     avatarUrl?: string;
     phone?: string;
+    // Optional fields mirrored for richer UI
+    provider?: string | null;
+    providerId?: string | null;
+    emailVerified?: boolean;
 };
 
 export interface LoginUserRequest {

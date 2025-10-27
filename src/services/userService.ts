@@ -4,9 +4,10 @@ import { Me, User, resLoginUser } from "@/type/user";
 import { LoginAdminRequest, LoginUserRequest, RegisterUserRequest, resRegisterUser } from "@/type/user";
 
 export interface TokenAdmin {
-    message: string,
-    accessToken: string,
-    expiresIn: string
+    message: string;
+    accessToken: string;
+    expiresIn: string | number;
+    user?: User; // backend now returns the logged-in user object
 }
 
 export const userService = {
@@ -16,6 +17,30 @@ export const userService = {
             `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-admin`,
             data
         ) as unknown as TokenAdmin;
+        return res;
+    },
+    
+    async postLoginGoogleIdToken(idToken: string): Promise<resLoginUser> {
+        const res = await axiosClient.post<resLoginUser>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-google`,
+            { idToken }
+        ) as unknown as resLoginUser;
+        return res;
+    },
+
+    async postLoginGoogleCode(data: { code: string; redirectUri: string }): Promise<resLoginUser> {
+        const res = await axiosClient.post<resLoginUser>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-google-code`,
+            data
+        ) as unknown as resLoginUser;
+        return res;
+    },
+
+    async postCompleteProfile(data: { name?: string; phone?: string; password_hash?: string; gender?: 'male' | 'female' | 'other'; dateOfBirth?: string; avatarUrl?: string; address?: string; }): Promise<{ message: string; user: any }> {
+        const res = await axiosClient.post<{ message: string; user: any }>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/complete-profile`,
+            data
+        ) as unknown as { message: string; user: any };
         return res;
     },
 
@@ -33,6 +58,14 @@ export const userService = {
             data
         ) as unknown as resRegisterUser;
         return res; 
+    },
+    
+    async postVerifyEmail(data: { email: string; code: string }): Promise<{ message: string }> {
+        const res = await axiosClient.post<{ message: string }>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email`,
+            data
+        ) as unknown as { message: string };
+        return res;
     },
         
     async getMe(): Promise<Me> {

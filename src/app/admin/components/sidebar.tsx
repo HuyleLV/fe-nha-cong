@@ -33,6 +33,7 @@ export default function Sidebar() {
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
+    { href: "/admin/building", label: "Quản lý Tòa Nhà", icon: House },
     { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
   ];
