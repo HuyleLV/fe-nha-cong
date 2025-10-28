@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Save, ChevronRight, CheckCircle2, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { Save, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Building, BuildingForm } from "@/type/building";
@@ -15,9 +15,10 @@ import UploadPicker from "@/components/UploadPicker";
 import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
 import type { Apartment } from "@/type/apartment";
-import { viewingService, type Viewing } from "@/services/viewingService";
+// Viewings calendar moved to dedicated page
 import LocationLookup from "../../components/locationLookup";
 import type { Location } from "@/type/location";
+// Calendar UI moved to /admin/building/[id]/calendar
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
@@ -48,15 +49,12 @@ function BuildingAdminDetailInner() {
   const aPage = Number(sp.get("aPage") || 1);
   const aLimit = Number(sp.get("aLimit") || 10);
 
-  // Viewings pagination/state
-  const vPage = Number(sp.get("vPage") || 1);
-  const vLimit = Number(sp.get("vLimit") || 10);
+  // Viewings calendar removed from this page
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [aMeta, setAMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
 
-  const [viewings, setViewings] = useState<Viewing[]>([]);
-  const [vMeta, setVMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
+  // const [viewings, setViewings] = useState<Viewing[]>([]);
 
   // Form state
   const [form, setForm] = useState<BuildingForm>({
@@ -136,20 +134,7 @@ function BuildingAdminDetailInner() {
     })();
   }, [id, isEdit, aPage, aLimit]);
 
-  // Load aggregated viewings for building
-  useEffect(() => {
-    if (!isEdit) return;
-    (async () => {
-      try {
-        // reuse viewing admin list with filter by buildingId via apartmentId list if BE supports; fallback: per building endpoint in BE is ideal
-        // Here we attempt with custom endpoint /api/viewings/admin?buildingId=... if supported; if not, this can be adjusted
-        const data = await viewingService.adminList({ page: vPage, limit: vLimit, /*buildingId: Number(id)*/ });
-        // If API doesn't support buildingId directly, you can fetch all apartments in building then filter by apartmentIds on client or through backend change.
-        setViewings(data.items);
-        setVMeta(data.meta || { total: data.items.length, page: vPage, limit: vLimit, pageCount: Math.ceil(data.items.length / vLimit) });
-      } catch {}
-    })();
-  }, [id, isEdit, vPage, vLimit]);
+  // Viewings calendar moved to dedicated page
 
   const onSave = async () => {
     try {
@@ -168,6 +153,8 @@ function BuildingAdminDetailInner() {
       toast.error(e?.message || "Lưu tòa nhà thất bại");
     }
   };
+
+  // Status localization is handled in calendar page
 
   const onDelete = async () => {
     if (!isEdit) return;
@@ -367,36 +354,7 @@ function BuildingAdminDetailInner() {
         }} />
       )}
 
-      {/* Viewings list */}
-      {isEdit && (
-        <div className="p-4">
-          <Section title="Lịch đặt phòng của cả tòa nhà">
-            <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-              <CalendarIcon className="w-4 h-4" />
-              <span>Danh sách lịch xem phòng được đặt cho các căn hộ thuộc tòa này.</span>
-            </div>
-            <AdminTable headers={["ID", "Căn hộ", "Khách", "SĐT", "Thời gian", "Trạng thái"]}>
-              {viewings.map((v) => (
-                <tr key={v.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{v.id}</td>
-                  <td className="px-4 py-3">#{v.apartmentId}</td>
-                  <td className="px-4 py-3">{v.name}</td>
-                  <td className="px-4 py-3">{v.phone}</td>
-                  <td className="px-4 py-3">{new Date(v.preferredAt).toLocaleString()}</td>
-                  <td className="px-4 py-3 capitalize">{v.status}</td>
-                </tr>
-              ))}
-            </AdminTable>
-            <Pagination
-              page={vMeta.page}
-              totalPages={vMeta.pageCount}
-              onPrev={() => setParam("vPage", Math.max(1, vMeta.page - 1))}
-              onNext={() => setParam("vPage", Math.min(vMeta.pageCount, vMeta.page + 1))}
-              onPageChange={(p) => setParam("vPage", p)}
-            />
-          </Section>
-        </div>
-      )}
+      {/* Lịch đặt phòng đã được chuyển sang trang riêng: /admin/building/[id]/calendar */}
     </div>
   );
 }

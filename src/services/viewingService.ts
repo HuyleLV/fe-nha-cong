@@ -21,6 +21,7 @@ export type Viewing = {
   status: "pending" | "confirmed" | "cancelled" | "done";
   name: string;
   phone: string;
+  email?: string | null;
   note?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -41,7 +42,7 @@ export const viewingService = {
   },
 
   // Admin
-  async adminList(params?: { q?: string; status?: string; apartmentId?: number; page?: number; limit?: number }): Promise<{ items: Viewing[]; meta: any }>{
+  async adminList(params?: { q?: string; status?: string; apartmentId?: number; buildingId?: number; page?: number; limit?: number }): Promise<{ items: Viewing[]; meta: any }>{
     const data = await axiosClient.get<{ items: Viewing[]; meta: any } | Viewing[]>(`/api/viewings/admin`, { params }) as unknown as { items: Viewing[]; meta: any } | Viewing[];
     if (Array.isArray(data)) return { items: data, meta: null };
     return data as { items: Viewing[]; meta: any };
@@ -54,4 +55,8 @@ export const viewingService = {
     const data = await axiosClient.delete(`/api/viewings/admin/${id}`);
     return data;
   },
+  async adminGet(id: number): Promise<Viewing> {
+    const data = await axiosClient.get(`/api/viewings/admin/${id}`) as unknown as Viewing;
+    return data;
+  }
 };

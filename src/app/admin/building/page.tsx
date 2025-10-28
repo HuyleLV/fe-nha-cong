@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, Eye } from "lucide-react";
 import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import { buildingService } from "@/services/buildingService";
@@ -130,7 +130,24 @@ function BuildingAdminListInner() {
             <td className="px-4 py-3">{b.units}</td>
             <td className="px-4 py-3"><span className="px-2 py-1 rounded text-xs bg-slate-100">{b.status}</span></td>
             <td className="px-4 py-3">
-              <Link href={`/admin/building/${b.id}`} className="text-emerald-700 hover:underline">Chi tiết</Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/building/${b.id}`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs"
+                  title="Xem chi tiết tòa nhà"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Chi tiết</span>
+                </Link>
+                <Link
+                  href={`/admin/building/${b.id}/calendar`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs"
+                  title="Xem lịch đặt phòng của tòa nhà"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <span>Xem lịch</span>
+                </Link>
+              </div>
             </td>
           </tr>
         ))}
