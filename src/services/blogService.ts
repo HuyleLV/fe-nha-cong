@@ -3,13 +3,7 @@ import { Blog, BlogForm } from "@/type/blog";
 import { PaginationMeta } from "@/type/common";
 
 export const blogService = {
-  /**
-   * GET /api/blog → normalize to { items, meta }
-   * Supports payloads:
-   * - { items, meta }
-   * - { success, data: Blog[], meta }
-   * - Blog[] (fallback)
-   */
+
   async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Blog[]; meta: PaginationMeta }>
   {
     try {

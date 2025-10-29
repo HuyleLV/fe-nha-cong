@@ -1,79 +1,57 @@
 "use client";
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import logo from "../assets/logo-trang.png";
-import Image from "next/image";
-import { toSlug } from "@/utils/formatSlug";
-import { capitalizeWords } from "@/utils/capitalizeWords";
+import { ShieldCheck } from "lucide-react";
 
 export default function Footer() {
-  
+  const year = new Date().getFullYear();
   return (
-    <footer className="bg-[#222] text-gray-300 py-10 px-4">
-      <div className="max-w-screen-xl mx-auto px-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Cột trái */}
-        <div>
-            <a href="/">
-                <Image src={logo} alt="Logo" width={150} priority />
-            </a>
-
-          <div className="mt-3 space-y-1 text-sm">
-            <p>
-              <Link href="#" className="hover:underline">
-                Giới thiệu
-              </Link>{" "}
-              |{" "}
-              <Link href="#" className="hover:underline">
-                Liên hệ
-              </Link>
+    <footer className="bg-emerald-900 py-10 text-emerald-50">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-2 font-semibold">
+              <ShieldCheck className="h-6 w-6" /> NHÀ CỘNG
+            </div>
+            <p className="mt-2 text-sm text-emerald-100/80">
+              Địa chỉ: Tầng 18, Tòa nhà UOA, số 6 đường Tân Trào, Quận 7, TP.HCM
             </p>
-            <p>
-              <Link href="#" className="hover:underline">
-                Điều Khoản
-              </Link>{" "}
-              |{" "}
-              <Link href="#" className="hover:underline">
-                Chính Sách Bảo Mật
-              </Link>
-            </p>
+            <p className="mt-1 text-sm">CSKH: 1900.2031 (1000đ/phút)</p>
           </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-100">
-              Liên hệ đặt quảng cáo
-            </h3>
-            <p className="text-sm mt-2">Email: info@nettruyenonline.com</p>
-            <p className="text-sm">Telegram: @nettruyenonline</p>
-            <p className="text-sm mt-2">Copyright © 2025 <a href="https://nhacong.com/"><b>nhacong.com</b></a></p>
+          <div>
+            <p className="font-semibold">Về Nhà Cộng</p>
+            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
+              <li>
+                <Link href="/ve-chung-toi" className="hover:underline">Giới thiệu</Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:underline">Quy chế hoạt động sàn</Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:underline">Chính sách bảo mật</Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:underline">Giải quyết tranh chấp</Link>
+              </li>
+              <li>
+                <Link href="#" className="hover:underline">Điều khoản sử dụng</Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold">Kênh</p>
+            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
+              <li><a href="#" className="hover:underline">Facebook</a></li>
+              <li><a href="#" className="hover:underline">Zalo</a></li>
+              <li><a href="#" className="hover:underline">Instagram</a></li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold">Liên hệ</p>
+            <p className="mt-2 text-sm text-emerald-100/80">Email: trogiup@nhacong.vn</p>
           </div>
         </div>
-
-        {/* Cột phải */}
-        <div className="col-span-2">
-
-          <div className="pt-5">
-            <h3 className="text-lg font-semibold text-gray-100">
-              Miễn trừ trách nhiệm
-            </h3>
-            <p className="text-sm mt-2 leading-relaxed">
-              Trang web của chúng tôi chỉ cung cấp dịch vụ đọc <a href="https://nhacong.com/"><b>nhacong.com </b></a>
-              với mục đích giải trí và chia sẻ nội dung. Toàn bộ các
-              truyện trên <a href="https://nhacong.com/"><b>nhacong.com</b></a> được đăng tải trên trang web được sưu tầm từ nhiều
-              nguồn trên internet và chúng tôi không chịu trách nhiệm về bản quyền
-              hoặc quyền sở hữu đối với bất kỳ nội dung nào. Nếu bạn là chủ sở hữu
-              bản quyền và cho rằng nội dung trên trang vi phạm quyền của bạn, vui
-              lòng liên hệ với chúng tôi để chúng tôi tiến hành gỡ bỏ nội dung vi
-              phạm một cách kịp thời.
-            </p>
-            <p className="text-sm mt-3 leading-relaxed">
-              Ngoài ra, chúng tôi không chịu trách nhiệm về các nội dung quảng cáo
-              hiển thị trên trang web <a href="https://nhacong.com/"><b>nhacong.com</b></a>, bao gồm nhưng không giới hạn ở việc quảng
-              cáo sản phẩm hoặc dịch vụ của bên thứ ba. Bất kỳ giao dịch nào xảy
-              ra giữa bạn và các bên quảng cáo đều không phải là trách nhiệm của
-              chúng tôi. Người sử dụng nên cân nhắc và chịu trách nhiệm khi tương
-              tác với các quảng cáo đó.
-            </p>
-          </div>
+        <div className="mt-8 border-t border-white/10 pt-4 text-center text-xs text-emerald-100/70">
+          © {year} Nhà Cộng. All rights reserved.
         </div>
       </div>
     </footer>

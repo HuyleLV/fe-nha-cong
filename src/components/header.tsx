@@ -501,47 +501,6 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Lối tắt */}
-          <div className="px-5">
-            <div className="text-xs font-semibold text-slate-500 mb-2">Lối tắt</div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { t: "Tin mới đăng", href: "/new" },
-                { t: "Ưu đãi hôm nay", href: "/deal" },
-                { t: "Đã lưu", href: "/saved" },
-                { t: "So sánh", href: "/compare" },
-              ].map((i) => (
-                <Link
-                  key={i.t}
-                  href={i.href}
-                  onClick={() => setOpenNavDesktop(false)}
-                  className="rounded-xl border px-3 py-2 hover:bg-emerald-50 hover:text-emerald-700"
-                >
-                  {i.t}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Khu vực phổ biến */}
-          <div className="px-5 mt-5">
-            <div className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Khu vực phổ biến
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {["Hà Nội", "TP.HCM", "Đà Nẵng", "Hải Phòng", "Cần Thơ"].map((loc) => (
-                <Link
-                  key={loc}
-                  href={`/search?city=${encodeURIComponent(loc)}`}
-                  onClick={() => setOpenNavDesktop(false)}
-                  className="rounded-full border px-3 py-1.5 text-sm hover:bg-emerald-50 hover:text-emerald-700"
-                >
-                  {loc}
-                </Link>
-              ))}
-            </div>
-          </div>
-
           {/* Blog & Hỗ trợ */}
           <div className="px-5 mt-6 space-y-3">
             <Link
