@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push("/dang-ky")}
+          onClick={() => router.push("/dang-nhap?mode=register&role=customer")}
           className="w-full rounded-xl border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
         >
           Quay lại đăng ký

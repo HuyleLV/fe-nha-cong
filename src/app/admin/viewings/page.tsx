@@ -241,8 +241,7 @@ function AdminViewingsPage() {
                       const events = d ? (eventsByDate[d] || []) : [];
                       const dayNum = d ? Number(d.slice(-2)) : '';
                       const isSelected = d === selectedDate;
-                      const colors = events.slice(0,3).map(e => e.status === 'confirmed' ? 'bg-emerald-600' : e.status === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500');
-                      const more = Math.max(0, events.length - 3);
+                      const hasEvents = events.length > 0;
                       return (
                         <button
                           key={idx}
@@ -252,10 +251,16 @@ function AdminViewingsPage() {
                           } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                         >
                             <span className="leading-none">{dayNum}</span>
-                          <div className="mt-0.5 flex items-center gap-0.5">
-                            {colors.map((c,i) => <span key={i} className={`h-1.5 w-1.5 rounded-full ${c}`} />)}
-                            {more > 0 && <span className="ml-0.5 text-[10px] text-slate-500">+{more}</span>}
-                          </div>
+                          {hasEvents && (
+                            <span className="mt-0.5 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                              Lịch xem phòng
+                              {events.length >= 2 && (
+                                <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                                  {events.length}
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </button>
                       )
                     })}
@@ -401,8 +406,7 @@ function AdminViewingsPage() {
                       const events = d ? (eventsByDate[d] || []) : [];
                       const dayNum = d ? Number(d.slice(-2)) : '';
                       const isSelected = d === selectedDate;
-                      const colors = events.slice(0,3).map(e => e.status === 'confirmed' ? 'bg-emerald-600' : e.status === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500');
-                      const more = Math.max(0, events.length - 3);
+                      const hasEvents = events.length > 0;
                       return (
                         <button
                           key={idx}
@@ -412,10 +416,16 @@ function AdminViewingsPage() {
                           } ${isSelected ? 'border-emerald-400 ring-1 ring-emerald-200' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                         >
                           <span className="font-medium text-slate-700 leading-none">{dayNum}</span>
-                          <div className="mt-0.5 flex items-center gap-0.5">
-                            {colors.map((c,i) => <span key={i} className={`h-1.5 w-1.5 rounded-full ${c}`} />)}
-                            {more > 0 && <span className="ml-0.5 text-[10px] text-slate-500">+{more}</span>}
-                          </div>
+                          {hasEvents && (
+                            <span className="mt-0.5 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                              Lịch xem phòng
+                              {events.length >= 2 && (
+                                <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                                  {events.length}
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </button>
                       )
                     })}

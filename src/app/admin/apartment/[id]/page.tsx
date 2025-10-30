@@ -58,6 +58,7 @@ export default function ApartmentFormPage() {
   const {
     register,
     handleSubmit,
+    trigger,
     watch,
     setValue,
     reset,
@@ -103,6 +104,57 @@ export default function ApartmentFormPage() {
       focusKeyword: "", // ✅ chỉ để chấm điểm SEO, không gửi lên API
     },
   });
+
+  // Map technical field names to friendly Vietnamese labels for toast messages
+  const fieldLabelMap: Record<string, string> = {
+    title: 'Tiêu đề',
+    locationId: 'Khu vực',
+    rentPrice: 'Giá thuê',
+    description: 'Mô tả chi tiết',
+    images: 'Ảnh',
+    coverImageUrl: 'Ảnh bìa',
+    status: 'Trạng thái',
+  };
+
+  // Called by header Save button. Runs validation, shows toast errors if invalid,
+  // or proceeds to submit when valid.
+  async function handleSave() {
+    try {
+      const valid = await trigger();
+      if (valid) {
+        // perform normal submit
+        await handleSubmit(onSubmit)();
+        return;
+      }
+
+      // collect error messages
+      const msgs: string[] = [];
+      const collect = (obj: any) => {
+        if (!obj) return;
+        for (const k of Object.keys(obj)) {
+          const v = obj[k];
+          if (!v) continue;
+          if (typeof v.message === 'string' && v.message) {
+            msgs.push(v.message);
+          } else if (v.types && typeof v.types === 'object') {
+            msgs.push(...Object.values(v.types).map((x: any) => String(x)).filter(Boolean));
+          } else if (v.type === 'required') {
+            msgs.push(fieldLabelMap[k] ?? `Trường ${k} bắt buộc`);
+          } else if (typeof v === 'object') {
+            // nested errors (e.g., array/object)
+            collect(v);
+          }
+        }
+      };
+
+      collect(errors as any);
+      const unique = Array.from(new Set(msgs));
+      if (!unique.length) unique.push('Vui lòng kiểm tra lại thông tin nhập');
+      unique.forEach((m) => toast.error(m));
+    } catch (e) {
+      toast.error('Có lỗi khi kiểm tra dữ liệu. Vui lòng thử lại.');
+    }
+  }
 
   const title = watch("title");
   const slug = watch("slug");
@@ -308,8 +360,8 @@ export default function ApartmentFormPage() {
               </span>
             )}
             <button
-              form="apartment-form"
-              type="submit"
+              type="button"
+              onClick={async () => await handleSave()}
               disabled={isSubmitting}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 cursor-pointer"
             >

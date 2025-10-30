@@ -59,6 +59,23 @@ export const userService = {
         ) as unknown as resRegisterUser;
         return res; 
     },
+
+    async postStartRegisterPhone(data: { phone: string }): Promise<{ message: string; expiresAt?: string }>
+    {
+        const res = await axiosClient.post<{ message: string; expiresAt?: string }>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/start-register-phone`,
+            data
+        ) as unknown as { message: string; expiresAt?: string };
+        return res;
+    },
+
+    async postVerifyPhone(data: { phone: string; code: string }): Promise<resLoginUser> {
+        const res = await axiosClient.post<resLoginUser>(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-phone`,
+            data
+        ) as unknown as resLoginUser;
+        return res;
+    },
     
     async postVerifyEmail(data: { email: string; code: string }): Promise<{ message: string }> {
         const res = await axiosClient.post<{ message: string }>(
@@ -75,20 +92,25 @@ export const userService = {
         return res; 
     },
 
-    async getById(id: string): Promise<User> {
-        const payload = await axiosClient.get<any, any>(`/users/${id}`);
-        return (payload?.data ?? payload) as User;
+    // ===== Admin Users Management =====
+    async listAdminUsers(params?: { page?: number; limit?: number }): Promise<{ data: User[]; meta: any }> {
+        const payload = await axiosClient.get<any, any>(`/admin/users`, { params });
+        return { data: payload?.data ?? [], meta: payload?.meta ?? {} };
     },
-    async create(data: Partial<User>): Promise<User> {
-        const payload = await axiosClient.post<any, any>("/users", data);
-        return (payload?.data ?? payload) as User;
+    async getAdminUser(id: number): Promise<User> {
+        const res = await axiosClient.get<any>(`/admin/users/${id}`);
+        return (res?.data ?? res) as User;
     },
-    async update(id: string, data: Partial<User>): Promise<User> {
-        const payload = await axiosClient.put<any, any>(`/users/${id}`, data);
-        return (payload?.data ?? payload) as User;
+    async createAdminUser(data: { email: string; password?: string; role?: 'customer'|'host'|'admin' }): Promise<User> {
+        const res = await axiosClient.post<any>(`/admin/users`, data);
+        return (res?.data ?? res) as User;
     },
-    async delete(id: string): Promise<{ success?: boolean } | null> {
-        const payload = await axiosClient.delete<any, any>(`/users/${id}`);
-        return (payload?.data ?? payload) ?? null;
+    async updateAdminUser(id: number, data: { email?: string; password?: string; role?: 'customer'|'host'|'admin' }): Promise<User> {
+        const res = await axiosClient.patch<any>(`/admin/users/${id}`, data);
+        return (res?.data ?? res) as User;
+    },
+    async deleteAdminUser(id: number): Promise<{ deleted: boolean }> {
+        const res = await axiosClient.delete<any>(`/admin/users/${id}`);
+        return (res?.data ?? res) as { deleted: boolean };
     },
 };

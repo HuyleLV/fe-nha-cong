@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight, Heart, Share2, MapPin, Home, ShowerHead, BedDouble, Ruler, Lock,
   Zap, Wifi, Car, ShieldCheck, Phone, CalendarDays, Copy, X, Sparkles, User,
@@ -12,6 +13,7 @@ import clsx from "clsx";
 import { toast } from "react-toastify";
 import { apartmentService } from "@/services/apartmentService";
 import { viewingService } from "@/services/viewingService";
+import { favoriteService } from "@/services/favoriteService";
 import { Apartment } from "@/type/apartment";
 import { formatMoneyVND } from "@/utils/format-number";
 
@@ -586,11 +588,13 @@ function BookingModal({
 
 /* ===================== PAGE ===================== */
 export default function RoomPage({ slug }: { slug: string }) {
+  const router = useRouter();
   const [data, setData] = useState<Apartment | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [fav, setFav] = useState<boolean>(false);
+  const [loadingFav, setLoadingFav] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -813,13 +817,40 @@ export default function RoomPage({ slug }: { slug: string }) {
                 <div className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.6)] backdrop-blur">
                   <div className="mb-3 flex items-center justify-between">
                     <button
-                      onClick={() => {
-                        setFav((v) => !v);
-                        toast.info(!fav ? "Đã thêm vào yêu thích" : "Đã bỏ khỏi yêu thích");
+                      onClick={async () => {
+                        if (loadingFav || !data) return;
+                        if (!hasLoginToken()) {
+                          toast.info("Vui lòng đăng nhập để sử dụng tính năng yêu thích.");
+                          router.push("/dang-nhap");
+                          return;
+                        }
+                        try {
+                          setLoadingFav(true);
+                          const next = !fav;
+                          setFav(next);
+                          if (next) {
+                            await favoriteService.addFavorite({ apartmentId: data.id });
+                            toast.success("Đã thêm vào yêu thích ❤️");
+                          } else {
+                            await favoriteService.removeFavorite(data.id);
+                            toast.info("Đã bỏ khỏi yêu thích 💔");
+                          }
+                          // Sync các component khác
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new CustomEvent("fav:changed"));
+                          }
+                        } catch (e: any) {
+                          setFav((v) => !v);
+                          toast.error(e?.message || "Không thể cập nhật yêu thích");
+                        } finally {
+                          setLoadingFav(false);
+                        }
                       }}
+                      disabled={loadingFav}
                       className={clsx(
                         "flex items-center gap-2 rounded-xl border px-3 py-2 text-emerald-800 hover:bg-emerald-50",
-                        fav ? "border-rose-300 text-rose-700 bg-rose-50/40" : "border-emerald-200"
+                        fav ? "border-rose-300 text-rose-700 bg-rose-50/40" : "border-emerald-200",
+                        loadingFav && "opacity-60 cursor-not-allowed"
                       )}
                     >
                       <Heart className={clsx("h-5 w-5", fav && "fill-rose-500 text-rose-500")} /> {fav ? "Đã lưu" : "Lưu tin"}

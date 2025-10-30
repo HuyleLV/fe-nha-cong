@@ -21,6 +21,7 @@ export interface User {
     provider?: string | null;
     providerId?: string | null;
     emailVerified?: boolean;
+    phoneVerified?: boolean;
 }
 
 export interface LoginAdminRequest {
@@ -39,6 +40,7 @@ export type Me = {
     provider?: string | null;
     providerId?: string | null;
     emailVerified?: boolean;
+    phoneVerified?: boolean;
 };
 
 export interface LoginUserRequest {

@@ -431,11 +431,6 @@ export default function AccountPage() {
                 const events = d ? (eventsByDate[d] || []) : [];
                 const dayNum = d ? Number(d.slice(-2)) : '';
                 const isSelected = d === selectedDate;
-                const dotColors = (evs: Viewing[]) => evs.map(e => (
-                  e.status === 'confirmed' ? 'bg-emerald-600' : e.status === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500'
-                ));
-                const colors = dotColors(events.slice(0,3));
-                const more = Math.max(0, events.length - 3);
                 return (
                   <button
                     key={idx}
@@ -445,13 +440,15 @@ export default function AccountPage() {
                     } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                   >
                     <span className="leading-none">{dayNum}</span>
-                    {d && (
-                      <div className="mt-1 flex items-center gap-1">
-                        {colors.map((c, i) => (
-                          <span key={i} className={`h-2 w-2 rounded-full ${c}`} />
-                        ))}
-                        {more > 0 && <span className="ml-0.5 text-[10px] text-slate-500">+{more}</span>}
-                      </div>
+                    {d && events.length > 0 && (
+                      <span className="mt-1 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                        Lịch xem phòng
+                        {events.length >= 2 && (
+                          <span className="absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                            {events.length}
+                          </span>
+                        )}
+                      </span>
                     )}
                   </button>
                 )

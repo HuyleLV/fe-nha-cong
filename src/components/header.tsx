@@ -299,9 +299,6 @@ export default function Header() {
                   </>
                 ) : (
                   <>
-                    <div className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-500">
-                      Dành cho khách hàng
-                    </div>
                     <Link
                       href="/dang-ky"
                       className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
@@ -311,26 +308,6 @@ export default function Header() {
                     </Link>
                     <Link
                       href="/dang-nhap"
-                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
-                      onClick={() => setOpenUser(false)}
-                    >
-                      <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
-                    </Link>
-
-                    <div className="my-2 h-px bg-slate-200" />
-
-                    <div className="px-4 pb-2 text-sm font-semibold text-slate-500">
-                      Dành cho đối tác
-                    </div>
-                    <Link
-                      href="/auth/register"
-                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
-                      onClick={() => setOpenUser(false)}
-                    >
-                      <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
-                    </Link>
-                    <Link
-                      href="/partner/login"
                       className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
                       onClick={() => setOpenUser(false)}
                     >
@@ -407,14 +384,11 @@ export default function Header() {
           {!auth ? (
             <>
               <div className="text-xs font-semibold text-slate-500 px-1 mb-1">Tài khoản</div>
-              <Link href="/auth/register" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-                <UserPlus className="w-4 h-4 mr-3" /> Đăng ký khách hàng
+              <Link href="/dang-ky" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <UserPlus className="w-4 h-4 mr-3" /> Đăng ký
               </Link>
               <Link href="/dang-nhap" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-                <LogIn className="w-4 h-4 mr-3" /> Đăng nhập khách hàng
-              </Link>
-              <Link href="/partner/login" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-                <LogIn className="w-4 h-4 mr-3" /> Đăng nhập đối tác
+                <LogIn className="w-4 h-4 mr-3" /> Đăng nhập
               </Link>
             </>
           ) : (
@@ -504,7 +478,7 @@ export default function Header() {
           {/* Blog & Hỗ trợ */}
           <div className="px-5 mt-6 space-y-3">
             <Link
-              href="/blog"
+              href="/tim-phong-quanh-day"
               onClick={() => setOpenNavDesktop(false)}
               className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
             >

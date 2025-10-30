@@ -339,7 +339,7 @@ export default function TimPhongQuanhDayPage() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
           ) : view === "list" ? (
             results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-3 gap-5">
                 {results.map((r) => (
                   <RoomCardItem key={r.id} item={r as any} />
                 ))}

@@ -4,19 +4,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState, useId } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { Mail, Lock } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, Phone, User as UserIcon, CheckCircle2, Sparkles, ShieldCheck, Star } from "lucide-react";
 import google from "@/assets/google.png";
 import banner from "@/assets/banner-01.jpg";
 import logo from "@/assets/logo-trang.png";
 import { userService } from "@/services/userService";
-import { LoginUserRequest, resLoginUser } from "@/type/user";
+import { LoginUserRequest, RegisterUserRequest, resLoginUser } from "@/type/user";
+import { partnerService } from "@/services/partnerService";
+import type { PartnerForm } from "@/type/partners";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [gisReady, setGisReady] = useState(false);
-  const googleBtnRef = useRef<HTMLDivElement | null>(null);
+  const search = useSearchParams();
+  const initialMode = (search?.get("mode") === "register" ? "register" : "login") as "login" | "register";
+  const initialRole = (search?.get("role") === "partner" ? "partner" : "customer") as "customer" | "partner";
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [role, setRole] = useState<"customer" | "partner">(initialRole);
   const codeClientRef = useRef<any>(null);
 
   const {
@@ -59,26 +64,65 @@ export default function LoginPage() {
     }
   };
 
-  // Handle Google credential (id_token) -> call backend
-  const handleGoogleCredential = async (response: any) => {
+  // Register form state (when mode = register)
+  const {
+    register: reg,
+    handleSubmit: handleRegisterSubmit,
+    formState: { isSubmitting: isSubmittingRegister },
+    watch: watchRegister,
+    getValues: getRegisterValues,
+    reset: resetRegister,
+  } = useForm<RegisterUserRequest & { confirmPassword?: string; agree?: boolean; need?: string }>(
+    {
+      defaultValues: {
+        name: "",
+        phone: "",
+        email: "",
+        password_hash: "",
+        confirmPassword: "",
+        agree: false,
+        need: "",
+      },
+    }
+  );
+
+  const submitRegister = async (data: RegisterUserRequest & { confirmPassword?: string; agree?: boolean; need?: string }) => {
     try {
-      const idToken = response?.credential;
-      if (!idToken) {
-        toast.error("Không nhận được token Google");
-        return;
-      }
-      const res = (await userService.postLoginGoogleIdToken(idToken)) as resLoginUser;
-      if (res?.accessToken && res?.user) {
-        localStorage.setItem("access_token", res.accessToken);
-        localStorage.setItem("auth_user", JSON.stringify(res.user));
-        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
-        toast.success(res?.message || "Đăng nhập thành công");
-        router.replace("/");
+      if (role === "customer") {
+        if (data.password_hash !== data.confirmPassword) {
+          toast.warning("Mật khẩu xác nhận không khớp");
+          return;
+        }
+        if (!data.agree) {
+          toast.warning("Bạn cần đồng ý điều khoản để tiếp tục");
+          return;
+        }
+        const payload: RegisterUserRequest = {
+          name: String(data.name || "").trim(),
+          phone: String(data.phone || "").trim(),
+          email: String(data.email || "").trim(),
+          password_hash: String(data.password_hash || ""),
+        };
+        const res = await userService.postRegisterUser(payload);
+        toast.success(res?.message || "Đã gửi mã xác thực tới email. Vui lòng kiểm tra hộp thư của bạn.");
+        router.push(`/xac-thuc-email?email=${encodeURIComponent(payload.email || "")}`);
       } else {
-        toast.error(res?.message || "Đăng nhập Google thất bại");
+        // Đối tác: tạo lead
+        const payload: PartnerForm = {
+          role: "landlord",
+          fullName: String(data.name || "").trim(),
+          phone: String(data.phone || "").trim(),
+          email: String(data.email || "").trim(),
+          need: String((data as any).need || "").trim(),
+        };
+        await partnerService.create(payload);
+        toast.success("Đã ghi nhận đăng ký đối tác. Chúng tôi sẽ liên hệ sớm!");
+        resetRegister();
+        setMode("login");
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Đăng nhập Google thất bại");
+      const apiMsg = err?.response?.data?.message || err?.message || "Thao tác thất bại. Vui lòng thử lại!";
+      toast.error(apiMsg);
     }
   };
 
@@ -112,39 +156,15 @@ export default function LoginPage() {
 
     const onLoad = () => {
       try {
-        // @ts-ignore
-        window.google?.accounts.id.initialize({
-          client_id: cid,
-          callback: handleGoogleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: false,
-          // Tránh dùng FedCM ở môi trường không đủ điều kiện khiến lỗi CORS/FedCM
-          use_fedcm_for_prompt: false,
-        });
-        setGisReady(true);
-
-        // Init OAuth Code client as fallback (popup)
+        // Init OAuth Code client (single method via popup)
         // @ts-ignore
         codeClientRef.current = window.google?.accounts.oauth2.initCodeClient({
           client_id: cid,
           scope: "openid email profile",
           ux_mode: "popup",
-          // Use postmessage so we don't need to pre-register redirect URI
           redirect_uri: "postmessage",
           callback: handleGoogleCode,
         });
-
-        // Render a hidden google button that we can trigger if needed
-        if (googleBtnRef.current) {
-          // @ts-ignore
-          window.google?.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "outline",
-            size: "large",
-            type: "standard",
-            text: "signin_with",
-            shape: "rectangular",
-          });
-        }
       } catch {}
     };
 
@@ -172,76 +192,105 @@ export default function LoginPage() {
       toast.error("Thiếu cấu hình Google Client ID (NEXT_PUBLIC_GOOGLE_CLIENT_ID)");
       return;
     }
-    if (!gisReady) {
+    if (!codeClientRef.current) {
       toast.info("Đang tải Google Sign-In. Vui lòng thử lại...");
-      // @ts-ignore
-      window.google?.accounts.id.prompt();
       return;
     }
-    // Hiển thị prompt (One Tap) hoặc fallback click vào nút chuẩn nếu cần
-    // @ts-ignore
-    window.google?.accounts.id.prompt((notification: any) => {
-      const notDisplayed = notification?.isNotDisplayed?.();
-      const skipped = notification?.isSkippedMoment?.();
-      const dismissed = notification?.isDismissedMoment?.();
-
-      if (notDisplayed || skipped || dismissed) {
-        // Fallback: trigger Code Flow popup
-        if (codeClientRef.current) {
-          try {
-            codeClientRef.current.requestCode();
-            return;
-          } catch {}
-        }
-        // As a last resort, click rendered button if available
-        const btn = googleBtnRef.current?.querySelector('div[role="button"], button') as HTMLDivElement | HTMLButtonElement | null;
-        btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      }
-      if (notification?.isSkippedMoment()) {
-        console.debug('[GSI] prompt skipped:', notification.getSkippedReason?.());
-      }
-      if (notification?.isDismissedMoment()) {
-        console.debug('[GSI] prompt dismissed:', notification.getDismissedReason?.());
-      }
-    });
+    try {
+      codeClientRef.current.requestCode();
+    } catch (e) {
+      toast.error("Không mở được popup Google. Hãy tắt chặn popup hoặc thử lại.");
+    }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Backdrop */}
       <div className="absolute inset-0 z-0">
         <div className="relative h-full w-full">
-          <Image
-            src={banner}
-            alt="background"
-            fill
-            className="object-cover brightness-[1] blur-[2px]"
-            priority
-          />
+          <Image src={banner} alt="background" fill className="object-cover brightness-[1] blur-[2px]" priority />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-white/30" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[440px] px-4">
-        <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-20" />
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Left: brand/benefits panel */}
+          <div className="hidden md:flex relative rounded-3xl overflow-hidden ring-1 ring-white/40 backdrop-blur-xl bg-white/70">
+            <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/50 blur-2xl" />
+            <div className="absolute -bottom-12 -right-8 h-44 w-44 rounded-full bg-teal-300/50 blur-2xl" />
+            <div className="relative p-8 lg:p-10 flex flex-col justify-center">
+              <div className="inline-flex items-center gap-3">
+                <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
+                  <Image src={logo} alt="logo" className="w-28 h-12 p-2" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Nền tảng thuê trọ dễ dàng</h2>
+                  <p className="text-sm text-gray-600">Nhanh chóng • Minh bạch • Hỗ trợ tận tâm</p>
+                </div>
+              </div>
+
+              <ul className="mt-6 space-y-3 text-sm text-gray-700">
+                <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" /> Tài khoản miễn phí, bảo mật <b className="ml-1">Shield</b></li>
+                <li className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 text-amber-500" /> Tìm phòng nhanh với bộ lọc thông minh</li>
+                <li className="flex items-start gap-2"><Star className="mt-0.5 h-4 w-4 text-rose-500" /> Yêu thích, đặt lịch xem phòng ngay</li>
+              </ul>
+
+              <div className="mt-6 text-xs text-gray-600">
+                Bằng việc tiếp tục, bạn đồng ý với <a href="#" onClick={(e)=>e.preventDefault()} className="underline decoration-emerald-400 decoration-2 underline-offset-2">Điều khoản</a> & <a href="#" onClick={(e)=>e.preventDefault()} className="underline decoration-emerald-400 decoration-2 underline-offset-2">Chính sách</a> của chúng tôi.
+              </div>
+            </div>
           </div>
 
-          <div className="relative">
-            {/* Header */}
-            <div className="px-7 pt-7 pb-4 text-center">
+          {/* Right: form card */}
+          <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-20" />
+            </div>
+
+            <div className="relative">
+            {/* Header + Tabs */}
+            <div className="px-7 pt-7 pb-2 text-center">
               <div className="inline-flex items-center gap-3">
                 <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
                   <Image src={logo} alt="logo" className="w-22 h-10 p-2" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Đăng nhập</h1>
-                  <p className="text-sm text-gray-600">Chào mừng quay lại 👋</p>
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+                    {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    {mode === "login" ? "Chào mừng quay lại 👋" : "Nhập thông tin để bắt đầu ✨"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tabs removed per request; mode is set via route params */}
+
+              {/* Role selector (bigger) */}
+              <div className="mt-4 text-center">
+                <div className="text-sm md:text-base font-medium text-slate-700 mb-2">Tôi là</div>
+                <div className="inline-flex rounded-2xl border border-emerald-300 bg-white p-1">
+                  <button
+                    type="button"
+                    onClick={() => setRole("customer")}
+                    className={`px-4 py-2 rounded-xl text-sm md:text-base font-semibold transition ${role === "customer" ? "bg-emerald-600 text-white shadow" : "text-emerald-700 hover:bg-emerald-50"}`}
+                  >
+                    Khách hàng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("partner")}
+                    className={`px-4 py-2 rounded-xl text-sm md:text-base font-semibold transition ${role === "partner" ? "bg-emerald-600 text-white shadow" : "text-emerald-700 hover:bg-emerald-50"}`}
+                  >
+                    Đối tác
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Form */}
+            {/* Forms */}
+            {mode === "login" ? (
             <form id={formId} onSubmit={handleSubmit(onSubmit)} className="px-7 pb-7 space-y-4">
               {/* Email */}
               <label className="block">
@@ -257,6 +306,8 @@ export default function LoginPage() {
                   />
                 </div>
               </label>
+
+              {/* Removed top-right CTA per request */}
 
               {/* Password */}
               <label className="block">
@@ -305,7 +356,7 @@ export default function LoginPage() {
                 <div className="h-px flex-1 bg-gray-200" />
               </div>
 
-              {/* Google */}
+              {/* Google: single button */}
               <button
                 type="button"
                 aria-label="Tiếp tục với Google"
@@ -315,46 +366,122 @@ export default function LoginPage() {
                 <span className="absolute left-3 inline-flex items-center">
                   <Image src={google} alt="Google" width={18} height={18} className="inline-block" priority />
                 </span>
-                <span className="pointer-events-none">Tiếp tục với Google</span>
+                <span className="pointer-events-none">Đăng nhập bằng Google</span>
               </button>
+              
 
-              {/* Hidden Google button container for fallback */}
-              <div ref={googleBtnRef} className="sr-only" aria-hidden="true" />
-
-              {/* Fallback explicit popup login if One Tap bị chặn */}
-              <div className="pt-2 text-center">
+              {/* Footer text: prompt to register */}
+              <div className="pt-3 text-center text-sm text-gray-600">
+                Chưa có tài khoản? {" "}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!codeClientRef.current) {
-                      toast.info("Google đang tải. Vui lòng thử lại...");
-                      return;
-                    }
-                    try {
-                      codeClientRef.current.requestCode();
-                    } catch (e) {
-                      toast.error("Không mở được popup Google. Hãy tắt chặn popup hoặc thử lại.");
-                    }
-                  }}
-                  className="text-xs text-gray-600 hover:underline"
+                  onClick={() => router.push(`/dang-ky`)}
+                  className="text-emerald-700 font-medium hover:underline"
                 >
-                  Không thấy One Tap? Nhấn để đăng nhập bằng popup
+                  Tạo tài khoản miễn phí
                 </button>
               </div>
 
-              {/* Footer */}
-              <div className="pt-3 text-center text-sm text-gray-600">
-                Chưa có tài khoản?{" "}
-                <Link href="/dang-ky" className="text-emerald-700 font-medium hover:underline">
-                  Đăng ký
-                </Link>
-              </div>
+              {/* Removed in-form switch to register */}
             </form>
+            ) : (
+            <form onSubmit={handleRegisterSubmit(submitRegister)} className="px-7 pb-7 space-y-4" noValidate>
+              {role === "customer" ? (
+                <>
+                  {/* Họ và tên */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Họ và tên</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <UserIcon className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("name", { required: true, minLength: 2 })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  {/* Số điện thoại */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Số điện thoại</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <Phone className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("phone", { required: true })} type="tel" inputMode="tel" placeholder="090..." className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  {/* Email */}
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Email</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <Mail className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("email", { required: true })} type="email" placeholder="you@example.com" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  {/* PW + confirm */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="block">
+                      <span className="block text-sm font-medium text-gray-700">Mật khẩu</span>
+                      <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                        <Lock className="size-4 shrink-0 text-gray-400" />
+                        <input {...reg("password_hash", { required: true, minLength: 6 })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                      </div>
+                    </label>
+                    <label className="block">
+                      <span className="block text-sm font-medium text-gray-700">Xác nhận</span>
+                      <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                        <Lock className="size-4 shrink-0 text-gray-400" />
+                        <input {...reg("confirmPassword", { required: true })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                      </div>
+                    </label>
+                  </div>
+                  {/* Agree */}
+                  <label className="mt-1 inline-flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" {...reg("agree", { required: true })} className="mt-1 rounded border-gray-300" />
+                    <span>
+                      Tôi đồng ý với <a className="text-emerald-700 underline" href="#" onClick={(e) => e.preventDefault()}>Điều khoản</a> & <a className="text-emerald-700 underline" href="#" onClick={(e) => e.preventDefault()}>Chính sách</a>.
+                    </span>
+                  </label>
+                  <button type="submit" disabled={isSubmittingRegister} className="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow hover:bg-emerald-700 transition disabled:opacity-60">
+                    <span className="relative z-10">{isSubmittingRegister ? "Đang xử lý..." : "Đăng ký"}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Partner form */}
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-xs text-emerald-800 inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Đăng ký đối tác: để lại thông tin, chúng tôi sẽ liên hệ tư vấn.</div>
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Họ và tên</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <UserIcon className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("name", { required: true })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Số điện thoại</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <Phone className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("phone", { required: true })} type="tel" inputMode="tel" placeholder="090..." className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Email</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                      <Mail className="size-4 shrink-0 text-gray-400" />
+                      <input {...reg("email", { required: true })} type="email" placeholder="you@example.com" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="block text-sm font-medium text-gray-700">Nhu cầu</span>
+                    <textarea {...reg("need")} rows={3} placeholder="Mô tả nhanh về nhu cầu, số lượng phòng/căn hộ..." className="mt-1 w-full rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-300" />
+                  </label>
+                  <button type="submit" disabled={isSubmittingRegister} className="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow hover:bg-emerald-700 transition disabled:opacity-60">
+                    <span className="relative z-10">{isSubmittingRegister ? "Đang gửi..." : "Gửi đăng ký đối tác"}</span>
+                  </button>
+                </>
+              )}
+
+              {/* Removed in-form switch to login */}
+            </form>
+            )}
           </div>
         </div>
-
-        <div className="mx-auto mt-6 h-2 w-40 rounded-full bg-emerald-200/50 blur-md" />
       </div>
     </div>
+  </div>
   );
 }
