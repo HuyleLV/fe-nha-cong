@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { userService } from "@/services/userService";
 import type { User } from "@/type/user";
@@ -11,7 +11,7 @@ import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import { formatDateTime } from "@/utils/format-time";
 
-export default function AdminUsersPage() {
+function AdminUsersPage() {
   const router = useRouter();
   const search = useSearchParams();
   const [loading, setLoading] = useState<boolean>(true);
@@ -158,5 +158,13 @@ export default function AdminUsersPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-4">Đang tải…</div>}>
+      <AdminUsersPage />
+    </Suspense>
   );
 }
