@@ -14,7 +14,7 @@ export const userService = {
     async postLoginAdmin(data: LoginAdminRequest): Promise<TokenAdmin> {
         // axiosClient returns data directly via interceptor
         const res = await axiosClient.post<TokenAdmin>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-admin`,
+            `/auth/login-admin`,
             data
         ) as unknown as TokenAdmin;
         return res;
@@ -22,7 +22,7 @@ export const userService = {
     
     async postLoginGoogleIdToken(idToken: string): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-google`,
+            `/auth/login-google`,
             { idToken }
         ) as unknown as resLoginUser;
         return res;
@@ -30,7 +30,7 @@ export const userService = {
 
     async postLoginGoogleCode(data: { code: string; redirectUri: string }): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login-google-code`,
+            `/auth/login-google-code`,
             data
         ) as unknown as resLoginUser;
         return res;
@@ -38,7 +38,7 @@ export const userService = {
 
     async postCompleteProfile(data: { name?: string; phone?: string; password_hash?: string; gender?: 'male' | 'female' | 'other'; dateOfBirth?: string; avatarUrl?: string; address?: string; }): Promise<{ message: string; user: any }> {
         const res = await axiosClient.post<{ message: string; user: any }>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/complete-profile`,
+            `/auth/complete-profile`,
             data
         ) as unknown as { message: string; user: any };
         return res;
@@ -46,7 +46,7 @@ export const userService = {
 
     async postLoginUser(data: LoginUserRequest): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+            `/auth/login`,
             data
         ) as unknown as resLoginUser;
         return res;
@@ -54,7 +54,7 @@ export const userService = {
 
     async postRegisterUser(data: RegisterUserRequest): Promise<resRegisterUser> {
         const res = await axiosClient.post<resRegisterUser>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`,
+            `/auth/register`,
             data
         ) as unknown as resRegisterUser;
         return res; 
@@ -63,7 +63,7 @@ export const userService = {
     async postStartRegisterPhone(data: { phone: string }): Promise<{ message: string; expiresAt?: string }>
     {
         const res = await axiosClient.post<{ message: string; expiresAt?: string }>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/start-register-phone`,
+            `/auth/start-register-phone`,
             data
         ) as unknown as { message: string; expiresAt?: string };
         return res;
@@ -71,7 +71,7 @@ export const userService = {
 
     async postVerifyPhone(data: { phone: string; code: string }): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-phone`,
+            `/auth/verify-phone`,
             data
         ) as unknown as resLoginUser;
         return res;
@@ -79,7 +79,7 @@ export const userService = {
     
     async postVerifyEmail(data: { email: string; code: string }): Promise<{ message: string }> {
         const res = await axiosClient.post<{ message: string }>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email`,
+            `/auth/verify-email`,
             data
         ) as unknown as { message: string };
         return res;
@@ -87,7 +87,7 @@ export const userService = {
         
     async getMe(): Promise<Me> {
         const res = await axiosClient.get<Me>(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`
+            `/auth/me`
         ) as unknown as Me;
         return res; 
     },
