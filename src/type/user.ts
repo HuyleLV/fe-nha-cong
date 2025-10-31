@@ -44,7 +44,8 @@ export type Me = {
 };
 
 export interface LoginUserRequest {
-    email: string;
+    // email hoặc số điện thoại
+    identifier: string;
     password_hash: string;
 }
 

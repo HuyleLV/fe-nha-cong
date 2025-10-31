@@ -30,7 +30,7 @@ export default function LoginPage() {
     formState: { isSubmitting },
     getValues,
   } = useForm<LoginUserRequest & { remember: boolean }>({
-    defaultValues: { email: "", password_hash: "", remember: true },
+    defaultValues: { identifier: "", password_hash: "", remember: true },
   });
   const formId = useId();
 
@@ -292,15 +292,15 @@ export default function LoginPage() {
             {/* Forms */}
             {mode === "login" ? (
             <form id={formId} onSubmit={handleSubmit(onSubmit)} className="px-7 pb-7 space-y-4">
-              {/* Email */}
+              {/* Email hoặc số điện thoại */}
               <label className="block">
-                <span className="block text-sm font-medium text-gray-700">Email</span>
+                <span className="block text-sm font-medium text-gray-700">Email hoặc số điện thoại</span>
                 <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
                   <Mail className="size-4 shrink-0 text-gray-400" />
                   <input
-                    {...register("email", { required: true })}
-                    type="email"
-                    placeholder="you@example.com"
+                    {...register("identifier", { required: true })}
+                    type="text"
+                    placeholder="you@example.com hoặc 0912345678"
                     className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
                     required
                   />

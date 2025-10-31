@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
+import { asImageSrc } from "@/utils/imageUrl";
 
 export default function Header() {
   const router = useRouter();
@@ -161,7 +162,7 @@ export default function Header() {
     }
     return (
       <img
-        src={process.env.NEXT_PUBLIC_API_URL + url}
+        src={asImageSrc(url)}
         alt={auth?.name || auth?.email || "user"}
         className="w-9 h-9 rounded-full object-cover"
         onError={() => setAvatarBroken(true)}
@@ -264,7 +265,7 @@ export default function Header() {
                         <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                           {auth.avatarUrl && !avatarBroken ? (
                             <img
-                              src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
+                              src={asImageSrc(auth.avatarUrl)}
                               alt="avatar"
                               className="w-full h-full object-cover"
                               onError={() => setAvatarBroken(true)}
@@ -397,7 +398,7 @@ export default function Header() {
                 <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                   {auth.avatarUrl && !avatarBroken ? (
                     <img
-                      src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
+                      src={asImageSrc(auth.avatarUrl)}
                       alt="avatar"
                       className="w-full h-full object-cover"
                       onError={() => setAvatarBroken(true)}
@@ -441,13 +442,14 @@ export default function Header() {
         aria-label="Menu mở rộng (desktop)"
       >
         <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b">
+          <div className="flex items-center justify-between px-5 py-4 border-b bg-emerald-700">
             <div className="flex items-center gap-2">
-              <Image src={logo} alt="Logo" width={28} height={28} />
-              <span className="font-semibold text-slate-700">Bảng điều hướng</span>
+              <div className="inline-flex items-center">
+                <Image src={logo} alt="Logo" width={100} />
+              </div>
             </div>
-            <button onClick={() => setOpenNavDesktop(false)} className="p-2 rounded-full hover:bg-slate-100" aria-label="Đóng">
-              <X className="w-5 h-5 text-slate-600" />
+            <button onClick={() => setOpenNavDesktop(false)} className="p-2 rounded-full cursor-pointer" aria-label="Đóng">
+              <X className="w-5 h-5 text-white" />
             </button>
           </div>
 
@@ -471,6 +473,40 @@ export default function Header() {
                 className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
               >
                 Bắt đầu ngay <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick items (2 columns) */}
+          <div className="px-5 pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/new"
+                onClick={() => setOpenNavDesktop(false)}
+                className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                Tin mới đăng
+              </Link>
+              <Link
+                href="#"
+                onClick={() => setOpenNavDesktop(false)}
+                className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                Ưu đãi hôm nay
+              </Link>
+              <Link
+                href="#"
+                onClick={() => setOpenNavDesktop(false)}
+                className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                Đã lưu
+              </Link>
+              <Link
+                href="#"
+                onClick={() => setOpenNavDesktop(false)}
+                className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                So sánh
               </Link>
             </div>
           </div>

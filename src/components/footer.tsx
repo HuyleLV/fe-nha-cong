@@ -13,9 +13,9 @@ export default function Footer() {
               <ShieldCheck className="h-6 w-6" /> NHÀ CỘNG
             </div>
             <p className="mt-2 text-sm text-emerald-100/80">
-              Địa chỉ: Tầng 18, Tòa nhà UOA, số 6 đường Tân Trào, Quận 7, TP.HCM
+              Địa chỉ: số 27 liền kề 7, KĐT Văn Khê, La Khê, Hà Đông, Hà Nội
             </p>
-            <p className="mt-1 text-sm">CSKH: 1900.2031 (1000đ/phút)</p>
+            <p className="mt-1 text-sm">CSKH: 0968.345.486</p>
           </div>
           <div>
             <p className="font-semibold">Về Nhà Cộng</p>
@@ -47,7 +47,7 @@ export default function Footer() {
           </div>
           <div>
             <p className="font-semibold">Liên hệ</p>
-            <p className="mt-2 text-sm text-emerald-100/80">Email: trogiup@nhacong.vn</p>
+            <p className="mt-2 text-sm text-emerald-100/80">Email: hotro.nhacong@gmail.com</p>
           </div>
         </div>
         <div className="mt-8 border-t border-white/10 pt-4 text-center text-xs text-emerald-100/70">

@@ -3,6 +3,7 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ClientLayout from "@/components/layoutClient";
+import FloatingChatButtons from "@/components/FloatingChatButtons";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <ClientLayout>
           {children}
           <ToastContainer position="top-right" autoClose={3000} />
+          <FloatingChatButtons />
         </ClientLayout>
       </body>
     </html>

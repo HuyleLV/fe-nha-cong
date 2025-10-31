@@ -14,6 +14,7 @@ import { Apartment } from "@/type/apartment";
 import { useDevice } from "@/hooks/useDevice";
 import { apartmentService, ApiSectionHome, HomeSectionsResponse } from "@/services/apartmentService";
 import img1 from "@/assets/img-03.png"
+import PromoSection from "@/components/PromoSection";
 
 const PARTNERS: PartnerLogo[] = [
   { label: "20AGAIN" }, { label: "LIIN" }, { label: "FPT" },
@@ -120,7 +121,7 @@ export default function TrangChu() {
           {[banner.src, banner.src, banner.src].map((src, idx) => (
             <div key={idx} className="relative w-full">
               <div
-                className={`w-full ${isMobile ? "h-60" : "h-200"} bg-center bg-cover`}
+                className={`w-full ${isMobile ? "h-60" : "h-150"} bg-center bg-cover`}
                 style={{ backgroundImage: `url(${src})` }}
               >
                 <div className="h-full w-full bg-black/10" />
@@ -197,7 +198,10 @@ export default function TrangChu() {
         )}
       </div>
 
-      {/* ===== Partners & FAQ ===== */}
+    {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
+    <PromoSection />
+
+    
       <PartnersCarousel items={PARTNERS} perSlide={6} />
       <FaqCarousel items={FAQS} />
 

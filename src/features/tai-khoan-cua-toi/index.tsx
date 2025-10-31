@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { asImageSrc } from "@/utils/imageUrl";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { User as UserIcon, Mail, Phone, Heart, Trash2, LogOut, CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, ExternalLink, ShieldCheck, Sparkles, Calendar as CalendarIcon, Fingerprint } from "lucide-react";
@@ -301,7 +302,7 @@ export default function AccountPage() {
             <div className="h-20 w-20 rounded-2xl bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
               {auth.avatarUrl && !avatarBroken ? (
                 <img
-                  src={process.env.NEXT_PUBLIC_API_URL + auth.avatarUrl}
+                  src={asImageSrc(auth.avatarUrl)}
                   alt="Ảnh đại diện"
                   className="h-full w-full object-cover"
                   onError={() => setAvatarBroken(true)}
