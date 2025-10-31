@@ -123,7 +123,9 @@ export default function AdminUserEditPage() {
     try {
       const backendRole = (values.role === "owner" ? "host" : values.role) as "customer" | "host" | "admin" | undefined;
       const payload = {
+        name: values.name?.trim() || undefined,
         email: values.email.trim(),
+        phone: values.phone?.trim() || undefined,
         password: values.password?.trim() || undefined,
         role: backendRole,
       };
