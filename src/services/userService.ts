@@ -1,5 +1,6 @@
 // services/userService.ts
 import axiosClient from "@/utils/axiosClient";
+import { apiUrl } from "@/utils/apiUrl";
 import { Me, User, resLoginUser } from "@/type/user";
 import { LoginAdminRequest, LoginUserRequest, RegisterUserRequest, resRegisterUser } from "@/type/user";
 
@@ -14,7 +15,7 @@ export const userService = {
     async postLoginAdmin(data: LoginAdminRequest): Promise<TokenAdmin> {
         // axiosClient returns data directly via interceptor
         const res = await axiosClient.post<TokenAdmin>(
-            `/auth/login-admin`,
+            apiUrl(`/api/auth/login-admin`),
             data
         ) as unknown as TokenAdmin;
         return res;
@@ -22,7 +23,7 @@ export const userService = {
     
     async postLoginGoogleIdToken(idToken: string): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `/auth/login-google`,
+            apiUrl(`/api/auth/login-google`),
             { idToken }
         ) as unknown as resLoginUser;
         return res;
@@ -30,7 +31,7 @@ export const userService = {
 
     async postLoginGoogleCode(data: { code: string; redirectUri: string }): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `/auth/login-google-code`,
+            apiUrl(`/api/auth/login-google-code`),
             data
         ) as unknown as resLoginUser;
         return res;
@@ -38,7 +39,7 @@ export const userService = {
 
     async postCompleteProfile(data: { name?: string; phone?: string; password_hash?: string; gender?: 'male' | 'female' | 'other'; dateOfBirth?: string; avatarUrl?: string; address?: string; }): Promise<{ message: string; user: any }> {
         const res = await axiosClient.post<{ message: string; user: any }>(
-            `/auth/complete-profile`,
+            apiUrl(`/api/auth/complete-profile`),
             data
         ) as unknown as { message: string; user: any };
         return res;
@@ -46,7 +47,7 @@ export const userService = {
 
     async postLoginUser(data: LoginUserRequest): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `/auth/login`,
+            apiUrl(`/api/auth/login`),
             data
         ) as unknown as resLoginUser;
         return res;
@@ -54,7 +55,7 @@ export const userService = {
 
     async postRegisterUser(data: RegisterUserRequest): Promise<resRegisterUser> {
         const res = await axiosClient.post<resRegisterUser>(
-            `/auth/register`,
+            apiUrl(`/api/auth/register`),
             data
         ) as unknown as resRegisterUser;
         return res; 
@@ -63,7 +64,7 @@ export const userService = {
     async postStartRegisterPhone(data: { phone: string }): Promise<{ message: string; expiresAt?: string }>
     {
         const res = await axiosClient.post<{ message: string; expiresAt?: string }>(
-            `/auth/start-register-phone`,
+            apiUrl(`/api/auth/start-register-phone`),
             data
         ) as unknown as { message: string; expiresAt?: string };
         return res;
@@ -71,7 +72,7 @@ export const userService = {
 
     async postVerifyPhone(data: { phone: string; code: string }): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(
-            `/auth/verify-phone`,
+            apiUrl(`/api/auth/verify-phone`),
             data
         ) as unknown as resLoginUser;
         return res;
@@ -79,7 +80,7 @@ export const userService = {
     
     async postVerifyEmail(data: { email: string; code: string }): Promise<{ message: string }> {
         const res = await axiosClient.post<{ message: string }>(
-            `/auth/verify-email`,
+            apiUrl(`/api/auth/verify-email`),
             data
         ) as unknown as { message: string };
         return res;
@@ -87,30 +88,30 @@ export const userService = {
         
     async getMe(): Promise<Me> {
         const res = await axiosClient.get<Me>(
-            `/auth/me`
+            apiUrl(`/api/auth/me`)
         ) as unknown as Me;
         return res; 
     },
 
     // ===== Admin Users Management =====
     async listAdminUsers(params?: { page?: number; limit?: number }): Promise<{ data: User[]; meta: any }> {
-        const payload = await axiosClient.get<any, any>(`/admin/users`, { params });
+        const payload = await axiosClient.get<any, any>(`/api/admin/users`, { params });
         return { data: payload?.data ?? [], meta: payload?.meta ?? {} };
     },
     async getAdminUser(id: number): Promise<User> {
-        const res = await axiosClient.get<any>(`/admin/users/${id}`);
+        const res = await axiosClient.get<any>(`/api/admin/users/${id}`);
         return (res?.data ?? res) as User;
     },
     async createAdminUser(data: { email: string; password?: string; role?: 'customer'|'host'|'admin' }): Promise<User> {
-        const res = await axiosClient.post<any>(`/admin/users`, data);
+        const res = await axiosClient.post<any>(`/api/admin/users`, data);
         return (res?.data ?? res) as User;
     },
     async updateAdminUser(id: number, data: { email?: string; password?: string; role?: 'customer'|'host'|'admin' }): Promise<User> {
-        const res = await axiosClient.patch<any>(`/admin/users/${id}`, data);
+        const res = await axiosClient.patch<any>(`/api/admin/users/${id}`, data);
         return (res?.data ?? res) as User;
     },
     async deleteAdminUser(id: number): Promise<{ deleted: boolean }> {
-        const res = await axiosClient.delete<any>(`/admin/users/${id}`);
+        const res = await axiosClient.delete<any>(`/api/admin/users/${id}`);
         return (res?.data ?? res) as { deleted: boolean };
     },
 };

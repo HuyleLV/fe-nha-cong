@@ -26,7 +26,7 @@ export default function UploadPicker({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:5000";
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "https://api.nhacong.com.vn";
   const ENDPOINT = uploadUrl || `${API_BASE}/api/upload/image`;
 
   const pickFile = () => inputRef.current?.click();

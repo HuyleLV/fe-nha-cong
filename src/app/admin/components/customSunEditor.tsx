@@ -66,7 +66,7 @@ class CustomSunEditor extends React.Component<Props, State> {
         const API_BASE =
           this.props.uploadBaseUrl ||
           process.env.NEXT_PUBLIC_API_URL ||
-          "http://localhost:5000";
+          "https://api.nhacong.com.vn";
 
         const ENDPOINT = `${API_BASE.replace(/\/+$/, "")}/api/upload/image`;
 

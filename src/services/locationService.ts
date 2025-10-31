@@ -1,5 +1,6 @@
 // services/locationService.ts
 import axiosClient from "@/utils/axiosClient";
+import { apiUrl } from "@/utils/apiUrl";
 import { PaginationMeta } from "@/type/common";
 import { Location, LocationForm, LocationLevel } from "@/type/location";
 
@@ -26,7 +27,7 @@ export const locationService = {
     async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Location[]; meta: PaginationMeta }>
     {
         try {
-            const payload = await axiosClient.get<any, any>("/api/locations", { params });
+            const payload = await axiosClient.get<any, any>(apiUrl("/api/locations"), { params });
             return normalizeList<Location>(payload, params);
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách khu vực";
@@ -36,7 +37,7 @@ export const locationService = {
 
     async getById(id: number | string): Promise<Location> {
         try {
-            const payload = await axiosClient.get<any, any>(`/api/locations/${encodeURIComponent(String(id))}`);
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/${encodeURIComponent(String(id))}`));
             return (payload?.data ?? payload) as Location;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải khu vực";
@@ -46,7 +47,7 @@ export const locationService = {
 
     async getBySlug(slug: string): Promise<Location> {
         try {
-            const payload = await axiosClient.get<any, any>(`/api/locations/slug/${encodeURIComponent(slug)}`);
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/slug/${encodeURIComponent(slug)}`));
             return (payload?.data ?? payload) as Location;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải khu vực";
@@ -56,7 +57,7 @@ export const locationService = {
 
     async create(payload: LocationForm): Promise<Location> {
         try {
-            const res = await axiosClient.post<any, any>(`/api/locations`, payload);
+            const res = await axiosClient.post<any, any>(apiUrl(`/api/locations`), payload);
             return (res?.data ?? res) as Location;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tạo khu vực";
@@ -66,7 +67,7 @@ export const locationService = {
 
     async update(id: number | string, payload: Partial<LocationForm>): Promise<Location> {
         try {
-            const res = await axiosClient.put<any, any>(`/api/locations/${encodeURIComponent(String(id))}`, payload);
+            const res = await axiosClient.put<any, any>(apiUrl(`/api/locations/${encodeURIComponent(String(id))}`), payload);
             return (res?.data ?? res) as Location;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật khu vực";
@@ -76,7 +77,7 @@ export const locationService = {
 
     async delete(id: number | string): Promise<boolean> {
         try {
-            await axiosClient.delete<any, any>(`/api/locations/${encodeURIComponent(String(id))}`);
+            await axiosClient.delete<any, any>(apiUrl(`/api/locations/${encodeURIComponent(String(id))}`));
             return true;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể xoá khu vực";
@@ -87,7 +88,7 @@ export const locationService = {
     /** Lấy danh sách parent hợp lệ cho một level con (nếu BE có endpoint này) */
     async getParents(params: { levelBelow: LocationLevel; keyword?: string; page?: number; limit?: number }) {
         try {
-            const payload = await axiosClient.get<any, any>(`/api/locations/parents`, { params });
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/parents`), { params });
             return normalizeList<Location>(payload, params);
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách parent";
@@ -98,7 +99,7 @@ export const locationService = {
     /** Lấy cây khu vực (nếu BE có endpoint này) */
     async getTree<T = any>() {
         try {
-            const payload = await axiosClient.get<any, any>(`/api/locations/tree`);
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/tree`));
             return (payload?.data ?? payload) as T;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải cây khu vực";

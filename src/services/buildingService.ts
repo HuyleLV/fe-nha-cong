@@ -1,4 +1,5 @@
 import axiosClient from "@/utils/axiosClient";
+import { apiUrl } from "@/utils/apiUrl";
 import { Building, BuildingForm, BuildingQuery } from "@/type/building";
 
 export type BuildingListMeta = { total: number; page: number; limit: number; pageCount: number };
@@ -18,7 +19,7 @@ export const buildingService = {
     const payload = await axiosClient.get<
       { items: Building[]; meta: BuildingListMeta },
       { items: Building[]; meta: BuildingListMeta }
-    >("/api/buildings", { params: cleanParams(params) });
+  >(apiUrl("/api/buildings"), { params: cleanParams(params) });
     return {
       items: payload?.items ?? [],
       meta: payload?.meta ?? { total: 0, page: 1, limit: 10, pageCount: 1 },
@@ -26,22 +27,22 @@ export const buildingService = {
   },
 
   async getById(idOrSlug: number | string): Promise<Building> {
-    const payload = await axiosClient.get<any, any>(`/api/buildings/${encodeURIComponent(String(idOrSlug))}`);
+  const payload = await axiosClient.get<any, any>(apiUrl(`/api/buildings/${encodeURIComponent(String(idOrSlug))}`));
     return (payload?.data ?? payload) as Building;
   },
 
   async create(body: BuildingForm): Promise<Building> {
-    const payload = await axiosClient.post<any, any>(`/api/buildings`, body);
+  const payload = await axiosClient.post<any, any>(apiUrl(`/api/buildings`), body);
     return (payload?.data ?? payload) as Building;
   },
 
   async update(id: number | string, body: BuildingForm): Promise<Building> {
-    const payload = await axiosClient.patch<any, any>(`/api/buildings/${encodeURIComponent(String(id))}`, body);
+  const payload = await axiosClient.patch<any, any>(apiUrl(`/api/buildings/${encodeURIComponent(String(id))}`), body);
     return (payload?.data ?? payload) as Building;
   },
 
   async remove(id: number | string): Promise<boolean> {
-    const payload = await axiosClient.delete<any, any>(`/api/buildings/${encodeURIComponent(String(id))}`);
+  const payload = await axiosClient.delete<any, any>(apiUrl(`/api/buildings/${encodeURIComponent(String(id))}`));
     return (payload as any)?.success ?? true;
   },
 };

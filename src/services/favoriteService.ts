@@ -1,5 +1,6 @@
 // services/favoriteService.ts
 import axiosClient from "@/utils/axiosClient";
+import { apiUrl } from "@/utils/apiUrl";
 import { FavoriteItem } from "@/type/favorite";
 import { PaginationMeta } from "@/type/common";
 
@@ -23,7 +24,7 @@ export const favoriteService = {
     async getMyFavorites(page: number = 1, limit: number = 12): Promise<{ items: FavoriteItem[]; meta: PaginationMeta }> {
         try {
             const payload = await axiosClient.get<{ items: FavoriteItem[]; meta: PaginationMeta }, any>(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+                apiUrl(`/api/favorites`),
                 { params: { page, limit } }
             );
             return {
@@ -40,7 +41,7 @@ export const favoriteService = {
     async addFavorite(data: CreateFavoriteRequest): Promise<FavoriteItem> {
         try {
             const payload = await axiosClient.post<any, any>(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites`,
+                apiUrl(`/api/favorites`),
                 data
             );
             return (payload?.data ?? payload) as FavoriteItem;
@@ -54,7 +55,7 @@ export const favoriteService = {
     async removeFavorite(apartmentId: number): Promise<RemoveFavoriteResponse> {
         try {
             const payload = await axiosClient.delete<any, any>(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${apartmentId}`
+                apiUrl(`/api/favorites/${apartmentId}`)
             );
             return (payload?.data ?? payload) as RemoveFavoriteResponse;
         } catch (err: any) {
@@ -67,7 +68,7 @@ export const favoriteService = {
     async toggleFavorite(data: CreateFavoriteRequest): Promise<ToggleFavoriteResponse> {
         try {
             const payload = await axiosClient.post<any, any>(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/toggle`,
+                apiUrl(`/api/favorites/toggle`),
                 data
             );
             return (payload?.data ?? payload) as ToggleFavoriteResponse;
@@ -81,7 +82,7 @@ export const favoriteService = {
     async isFavorited(apartmentId: number): Promise<IsFavoritedResponse> {
         try {
             const payload = await axiosClient.get<any, any>(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/favorites/${apartmentId}`
+                apiUrl(`/api/favorites/${apartmentId}`)
             );
             return (payload?.data ?? payload) as IsFavoritedResponse;
         } catch (err: any) {

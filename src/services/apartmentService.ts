@@ -2,6 +2,7 @@
 import { Apartment, ApartmentQuery, ApartmentForm } from "@/type/apartment";
 import { ApiResponse, PaginationMeta } from "@/type/common";
 import axiosClient from "@/utils/axiosClient";
+import { apiUrl } from "@/utils/apiUrl";
 
 /** Kiểu dữ liệu cho trang chủ (home-sections) */
 export type ApiSectionHome = {
@@ -32,10 +33,7 @@ export const apartmentService = {
       const payload = await axiosClient.get<
         { items: Apartment[]; meta: PaginationMeta },
         { items: Apartment[]; meta: PaginationMeta }
-      >(
-        "/api/apartments",
-        { params: cleanParams(params) }
-      );
+      >(apiUrl("/api/apartments"), { params: cleanParams(params) });
 
       return {
         items: payload?.items ?? [],
@@ -51,11 +49,8 @@ export const apartmentService = {
     limitPerDistrict?: number;
     signal?: AbortSignal;
   }): Promise<HomeSectionsResponse> {
-    const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
-    const url = `${base}/api/apartments/home-sections`;
-
     try {
-      const payload = await axiosClient.get<HomeSectionsResponse, HomeSectionsResponse>(url, {
+      const payload = await axiosClient.get<HomeSectionsResponse, HomeSectionsResponse>(apiUrl('/api/apartments/home-sections'), {
         params: {
           citySlug: params.citySlug,
           limitPerDistrict: params.limitPerDistrict ?? 4,
@@ -72,7 +67,7 @@ export const apartmentService = {
   /** GET /api/apartments/:idOrSlug → hỗ trợ trả trực tiếp entity hoặc { data: entity } */
   async getById(idOrSlug: number | string): Promise<Apartment> {
     try {
-      const payload = await axiosClient.get<any, any>(`/api/apartments/${encodeURIComponent(String(idOrSlug))}`);
+  const payload = await axiosClient.get<any, any>(apiUrl(`/api/apartments/${encodeURIComponent(String(idOrSlug))}`));
       return (payload?.data ?? payload) as Apartment;
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Không thể tải căn hộ";
@@ -88,7 +83,7 @@ export const apartmentService = {
   /** POST /api/apartments */
   async create(body: ApartmentForm): Promise<Apartment> {
     try {
-      const payload = await axiosClient.post<any, any>(`/api/apartments`, body);
+  const payload = await axiosClient.post<any, any>(apiUrl(`/api/apartments`), body);
       return (payload?.data ?? payload) as Apartment;
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Không thể tạo căn hộ";
@@ -102,7 +97,7 @@ export const apartmentService = {
   ): Promise<Apartment> {
     try {
       const response = await axiosClient.patch<any, any>(
-        `/api/apartments/${encodeURIComponent(String(id))}`,
+        apiUrl(`/api/apartments/${encodeURIComponent(String(id))}`),
         payload
       );
       return (response?.data ?? response) as Apartment;
@@ -115,7 +110,7 @@ export const apartmentService = {
   /** PATCH /api/apartments/:id/video */
   async updateVideo(id: number | string, videoUrl?: string | null): Promise<{ message?: string; images?: string[] }> {
     try {
-      const payload = await axiosClient.patch<any, any>(`/api/apartments/${encodeURIComponent(String(id))}/video`, { videoUrl });
+  const payload = await axiosClient.patch<any, any>(apiUrl(`/api/apartments/${encodeURIComponent(String(id))}/video`), { videoUrl });
       return (payload?.data ?? payload) as { message?: string; images?: string[] };
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Không thể cập nhật video";
@@ -127,7 +122,7 @@ export const apartmentService = {
   async delete(id: number | string): Promise<boolean> {
     try {
       const payload = await axiosClient.delete<any, any>(
-        `/api/apartments/${encodeURIComponent(String(id))}`
+        apiUrl(`/api/apartments/${encodeURIComponent(String(id))}`)
       );
       return (payload as any)?.success ?? true;
     } catch (err: any) {
