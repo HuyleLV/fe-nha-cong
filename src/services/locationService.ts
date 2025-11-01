@@ -24,7 +24,7 @@ function normalizeList<T = any>(payload: any, params?: { page?: number; limit?: 
 }
 
 export const locationService = {
-    async getAll(params?: { page?: number; limit?: number }): Promise<{ items: Location[]; meta: PaginationMeta }>
+    async getAll(params?: { page?: number; limit?: number; q?: string; level?: LocationLevel; parentId?: number }): Promise<{ items: Location[]; meta: PaginationMeta }>
     {
         try {
             const payload = await axiosClient.get<any, any>(apiUrl("/api/locations"), { params });
@@ -47,7 +47,8 @@ export const locationService = {
 
     async getBySlug(slug: string): Promise<Location> {
         try {
-            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/slug/${encodeURIComponent(slug)}`));
+            // Align with backend route @Get('by-slug/:slug')
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/locations/by-slug/${encodeURIComponent(slug)}`));
             return (payload?.data ?? payload) as Location;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải khu vực";

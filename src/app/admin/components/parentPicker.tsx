@@ -6,10 +6,13 @@ import { locationService } from "@/services/locationService";
 import { Location, LocationLevel } from "@/type/location";
 
 // Quan hệ parent hợp lệ cho từng child level
+// - Province: không có parent
+// - City: không có parent (theo ràng buộc hiện tại ở trang form)
+// - District: parent phải là Province
 const allowedParents: Record<LocationLevel, LocationLevel[]> = {
-  Province: ["Province"],
-  City: ["City"],
-  District: ["District"],
+  Province: [],
+  City: [],
+  District: ["Province"],
 };
 
 type ParentPickerProps = {
@@ -37,33 +40,25 @@ export default function ParentPicker({
   const parentLevels = useMemo<LocationLevel[]>(() => allowedParents[childLevel] ?? [], [childLevel]);
 
   const fetchParents = async (kw: string) => {
-    if (parentLevels.length === 0) {
+    // Nếu level hiện tại không cần parent hoặc component bị vô hiệu hoá, không fetch
+    if (parentLevels.length === 0 || disabled) {
       setItems([]);
       return;
     }
     setLoading(true);
     try {
-      // Ưu tiên endpoint chuyên dụng:
-      try {
-        const res = await locationService.getParents({
-          levelBelow: childLevel,
-          keyword: kw || undefined,
+      // Hiện chưa có endpoint BE /locations/parents → dùng getAll lọc theo level hợp lệ
+      const results: Location[] = [];
+      for (const lv of parentLevels) {
+        const r = await locationService.getAll({
           page: 1,
           limit: 20,
+          level: lv,
+          q: kw || undefined,
         });
-        setItems(res.items || []);
-      } catch (e) {
-        // Fallback: gom nhiều call getAll theo từng level cho đơn giản
-        const results: Location[] = [];
-        for (const lv of parentLevels) {
-          const r = await locationService.getAll({
-            page: 1,
-            limit: 20
-          });
-          results.push(...(r.items || []));
-        }
-        setItems(results);
+        results.push(...(r.items || []));
       }
+      setItems(results);
     } finally {
       setLoading(false);
     }
@@ -73,7 +68,7 @@ export default function ParentPicker({
   useEffect(() => {
     setKeyword("");
     fetchParents("");
-  }, [childLevel]);
+  }, [childLevel, disabled]);
 
   // debounce khi gõ
   useEffect(() => {

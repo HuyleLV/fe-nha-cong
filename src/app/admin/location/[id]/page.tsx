@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import {
@@ -28,8 +28,10 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 export default function LocationFormPage() {
   const { id } = useParams<{ id: string }>();
-  const isEdit = useMemo(() => id !== 'create', [id]);
+  // Edit mode only if id is a numeric string; any other value (e.g., 'create') is treated as create mode
+  const isEdit = useMemo(() => /^\d+$/.test(String(id)), [id]);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [loadingDetail, setLoadingDetail] = useState<boolean>(isEdit);
   const [selectedParent, setSelectedParent] = useState<Location | null>(null);
@@ -77,7 +79,9 @@ export default function LocationFormPage() {
     if (!isEdit) return;
     (async () => {
       try {
-        const loc: Location = await locationService.getById(Number(id));
+        const numericId = parseInt(String(id), 10);
+        if (!Number.isFinite(numericId)) throw new Error('ID không hợp lệ');
+        const loc: Location = await locationService.getById(numericId);
         reset({
           name: loc.name ?? '',
           slug: loc.slug ?? '',
@@ -94,6 +98,15 @@ export default function LocationFormPage() {
       }
     })();
   }, [id, isEdit, reset, router]);
+
+  // Nếu tạo mới, preset level từ query (?level=Province|City|District)
+  useEffect(() => {
+    if (isEdit) return;
+    const lv = searchParams.get('level');
+    if (lv && (lv === 'Province' || lv === 'City' || lv === 'District')) {
+      setValue('level', lv as any, { shouldDirty: true });
+    }
+  }, [isEdit, searchParams, setValue]);
 
   // Ràng buộc parent theo level (Province/City: null; District: required & parent phải là Province/City)
   useEffect(() => {

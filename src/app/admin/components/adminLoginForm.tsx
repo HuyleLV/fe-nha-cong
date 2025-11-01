@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { User } from "@/type/user";
 
 export default function AdminLoginForm() {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -22,7 +22,7 @@ export default function AdminLoginForm() {
     e.preventDefault();
   
     const payload = { 
-      email: username.trim(), 
+      identifier: identifier.trim(), 
       password_hash: password 
     };
 
@@ -65,13 +65,13 @@ export default function AdminLoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <div>
-        <label className="block mb-1 text-sm font-medium">Email</label>
+        <label className="block mb-1 text-sm font-medium">Email hoặc số điện thoại</label>
         <input
           type="text"
           className="w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-500"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Nhập email quản trị..."
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="Nhập email hoặc số điện thoại quản trị..."
         />
       </div>
 

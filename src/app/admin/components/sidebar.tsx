@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2 } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -11,6 +11,7 @@ export default function Sidebar() {
   const router = useRouter();
   const [info, setInfo] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
 
   useEffect(() => {
     setReady(true);
@@ -21,6 +22,12 @@ export default function Sidebar() {
       setInfo(null);
     }
   }, []);
+
+  // Mặc định mở submenu khi đang đứng trong bất kỳ route con của location
+  useEffect(() => {
+    if (!ready) return;
+    setLocationOpen(pathname.startsWith("/admin/location"));
+  }, [pathname, ready]);
 
   const initials = useMemo(() => {
     const name = (info?.name || "A").trim();
@@ -82,22 +89,85 @@ export default function Sidebar() {
       <nav className="mt-3 px-3 space-y-1.5">
         {menuItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
+          const isLocation = href === "/admin/location";
+
+          if (!isLocation) {
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
+                  active
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                }`}
+              >
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                )}
+                <Icon className="w-4.5 h-4.5" />
+                <span className="truncate">{label}</span>
+              </Link>
+            );
+          }
+
+          // Fancy group for Location with a prettier submenu
+          const subLinks = [
+            { href: "/admin/location/province", label: "Tỉnh", Icon: Landmark },
+            { href: "/admin/location/city", label: "Thành phố", Icon: Building2 },
+            { href: "/admin/location/district", label: "Quận", Icon: MapPin },
+          ];
+          const groupActive = pathname.startsWith("/admin/location");
+
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                active
-                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                  : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-              }`}
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+            <div key={href} className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setLocationOpen((v) => !v)}
+                className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
+                  locationOpen || groupActive
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                }`}
+              >
+                <span className="flex items-center gap-3">
+                  {(locationOpen || groupActive) && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                  )}
+                  <Icon className="w-4.5 h-4.5" />
+                  <span className="truncate">{label}</span>
+                </span>
+                {locationOpen ? (
+                  <ChevronDown className="w-4 h-4 opacity-80" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 opacity-80" />
+                )}
+              </button>
+
+              {locationOpen && (
+                <div className="ml-4 border-l border-emerald-100 pl-3">
+                  <div className="rounded-md bg-emerald-50/60 p-1.5">
+                    {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
+                      const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
+                      return (
+                        <Link
+                          key={shref}
+                          href={shref}
+                          className={`flex items-center gap-2 px-2 py-2 rounded transition text-sm ${
+                            subActive
+                              ? "text-emerald-700 bg-white shadow-sm ring-1 ring-emerald-100"
+                              : "text-emerald-800/80 hover:bg-white hover:text-emerald-700"
+                          }`}
+                        >
+                          <SIcon className="w-4 h-4" />
+                          <span>{slabel}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-              <Icon className="w-4.5 h-4.5" />
-              <span className="truncate">{label}</span>
-            </Link>
+            </div>
           );
         })}
       </nav>

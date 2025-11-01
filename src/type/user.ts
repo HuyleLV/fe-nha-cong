@@ -25,7 +25,8 @@ export interface User {
 }
 
 export interface LoginAdminRequest {
-    email: string;
+    // email hoặc số điện thoại cho đăng nhập admin
+    identifier: string;
     password_hash: string;
 }
 

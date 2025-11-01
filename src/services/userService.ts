@@ -111,7 +111,7 @@ export const userService = {
         return (res?.data ?? res) as User;
     },
     async deleteAdminUser(id: number): Promise<{ deleted: boolean }> {
-        const res = await axiosClient.delete<any>(`/api/admin/users/${id}`);
+        const res = await axiosClient.delete<any>(apiUrl(`/api/admin/users/${id}`));
         return (res?.data ?? res) as { deleted: boolean };
     },
 };
