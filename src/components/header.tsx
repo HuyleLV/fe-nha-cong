@@ -463,7 +463,7 @@ export default function Header() {
                 <div className="flex-1">
                   <div className="font-semibold text-emerald-800">Trở thành đối tác</div>
                   <p className="text-sm text-emerald-700/80 mt-1">
-                    Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt.
+                    Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt
                   </p>
                 </div>
               </div>
