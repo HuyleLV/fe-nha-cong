@@ -163,7 +163,7 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
   };
 
   return (
-    <article className="group overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
+    <article className="group h-full flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* Ảnh (click mở chi tiết) */}
       <div className="relative">
         <Link href={detailHref} aria-label={`Xem chi tiết ${item.title}`}>
@@ -204,8 +204,8 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
       </div>
 
       {/* Nội dung */}
-      <div className="p-3 md:p-4">
-        <h3 className="line-clamp-2 font-semibold text-slate-800">
+      <div className="p-3 md:p-4 flex-1 flex flex-col">
+        <h3 className="line-clamp-2 min-h-[3.25rem] font-semibold text-slate-800">
           <Link href={detailHref} className="hover:underline">
             {item.title}
           </Link>
@@ -230,7 +230,7 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
           )}
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-auto pt-3 flex items-center justify-between">
           <div className="font-extrabold text-emerald-700">
             {formatMoneyVND(toNumber(item.rentPrice))}
           </div>

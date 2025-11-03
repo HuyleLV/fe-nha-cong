@@ -7,7 +7,9 @@ import "react-slideshow-image/dist/styles.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SearchBar from "@/components/searchBar";
 import DistrictListingSection from "@/components/DistrictListingSection";
-import banner from "@/assets/banner-01.jpg";
+import banner1 from "@/assets/banner-01.jpg";
+import banner2 from "@/assets/banner-02.jpg";
+import banner3 from "@/assets/banner-03.jpg";
 import PartnersCarousel, { PartnerLogo } from "@/components/partnersCarousel";
 import FaqCarousel, { FaqItem } from "@/components/faqCarousel";
 import { Apartment } from "@/type/apartment";
@@ -118,10 +120,10 @@ export default function TrangChu() {
           transitionDuration={600}
           pauseOnHover
         >
-          {[banner.src, banner.src, banner.src].map((src, idx) => (
+          {[banner1.src, banner2.src, banner3.src].map((src, idx) => (
             <div key={idx} className="relative w-full">
               <div
-                className={`w-full ${isMobile ? "h-60" : "h-150"} bg-center bg-cover`}
+                className={`w-full ${isMobile ? "h-60" : "h-120"} bg-center bg-cover`}
                 style={{ backgroundImage: `url(${src})` }}
               >
                 <div className="h-full w-full bg-black/10" />
@@ -141,7 +143,7 @@ export default function TrangChu() {
       </div>
 
       {/* ===== Section nhiều quận (có tabs) ===== */}
-      <div className="max-w-screen-xl mx-auto mt-6 px-4 md:px-0">
+      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
         {loading ? (
           <div className="h-40 rounded-2xl bg-emerald-100 animate-pulse" />
         ) : err ? (
@@ -150,20 +152,20 @@ export default function TrangChu() {
           </div>
         ) : (
           <DistrictListingSection
-          data={dataAll}
-          districtsOrder={districtsOrder}
-          onBook={(apt) => console.log("book:", apt)}
-          onSeeAll={(district) => console.log("see all:", district)}
+            data={dataAll}
+            districtsOrder={districtsOrder}
+            onBook={(apt) => console.log("book:", apt)}
+            onSeeAll={(district) => console.log("see all:", district)}
           />
         )}
       </div>
 
       {/* ===== Intro Section ===== */}
-      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
-        <section className="w-full bg-emerald-900 rounded-xl px-6 md:px-12 py-10 md:py-16 text-white my-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
-            <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-bold leading-tight">Tìm kiếm dễ dàng</h2>
+      <div className="mt-6 px-4 md:px-0">
+        <section className="w-full bg-emerald-800 px-6 md:px-12 py-2 md:py-4 text-white my-10">
+          <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold leading-tight">Tìm kiếm dễ dàng</h2>
               <p className="text-white/90 text-sm md:text-base leading-relaxed">
                 Hệ thống giúp bạn tìm phòng nhanh, chính xác và tiết kiệm thời gian nhất.
               </p>
@@ -176,7 +178,7 @@ export default function TrangChu() {
               <img
                 src={img1.src}
                 alt="Ngôi nhà"
-                className="object-contain w-full h-full"
+                className="object-contain w-full h-100"
               />
             </div>
           </div>
@@ -184,7 +186,7 @@ export default function TrangChu() {
       </div>
 
       {/* ===== Section tái dùng (ẩn tabs) ===== */}
-      <div className="max-w-screen-xl mx-auto mt-6 px-4 md:px-0">
+      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
         {!loading && !err && (
           <DistrictListingSection
             title="Khu vực nổi bật"
@@ -198,17 +200,19 @@ export default function TrangChu() {
         )}
       </div>
 
-    {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
-    <PromoSection />
-
-    
+      {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
+      <PromoSection />
+      
+      {/* ===== Đối tác & FAQ ===== */}
       <PartnersCarousel items={PARTNERS} perSlide={6} />
+
+      {/* ===== FAQ ===== */}
       <FaqCarousel items={FAQS} />
 
       {/* ===== Bản đồ ===== */}
       <section className="py-10">
         <div className="mx-auto max-w-screen-2xl rounded-3xl bg-emerald-900 p-5 text-white md:p-8">
-          <h3 className="text-lg font-bold md:text-xl">Khám phá khu vực trên bản đồ</h3>
+          <h3 className="text-2xl md:text-3xl font-bold">Khám phá khu vực trên bản đồ</h3>
           <div className="mt-4 grid grid-cols-1 items-center gap-6 md:grid-cols-2">
             <div>
               <p className="text-white/90 text-sm md:text-base mb-4">

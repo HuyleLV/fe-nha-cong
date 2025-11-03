@@ -47,7 +47,7 @@ export default function PromoSection({
     <section className="max-w-screen-2xl mx-auto px-4 md:px-0 mt-6">
       <div className="rounded-3xl bg-emerald-900 text-white p-5 md:p-8">
         <div className="mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-semibold">{title}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         </div>
 
         <Slide

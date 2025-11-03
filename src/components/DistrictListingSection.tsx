@@ -78,7 +78,7 @@ export default function DistrictListingSection({
     <section className="w-full rounded-3xl bg-emerald-900 px-4 py-6 sm:px-6 md:px-8 md:py-8">
       {/* Header */}
       <div className="text-center text-white">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{title}</h2>
+        <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         {subtitle && <p className="mt-1 text-white/80 text-sm md:text-base">{subtitle}</p>}
       </div>
 
@@ -127,7 +127,7 @@ export default function DistrictListingSection({
         </div>
       ) : variant === "grid" ? (
         // GRID
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
+        <div className="mt-6 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-4">
           {filtered.map((apt) => (
             <RoomCardItem
               key={apt.id}
@@ -139,8 +139,8 @@ export default function DistrictListingSection({
         </div>
       ) : (
         // SCROLL: 1 hàng, cuộn ngang
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
-          <div className="flex gap-4 md:gap-6">
+        <div className="mt-6 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-4">
+          <div className="flex gap-3 md:gap-4">
             {filtered.map((apt) => (
               <div
                 key={apt.id}

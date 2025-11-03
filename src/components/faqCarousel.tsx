@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { Slide } from "react-slideshow-image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import "react-slideshow-image/dist/styles.css";
 
 export interface FaqItem {
@@ -24,7 +25,7 @@ export default function FaqCarousel({
   return (
     <section className={clsx("py-10", className)}>
       <div className="text-center mb-6">
-        <h3 className="text-xl md:text-2xl font-bold text-emerald-900">
+        <h3 className="text-2xl md:text-3xl font-bold text-emerald-900">
           {title}
         </h3>
       </div>
@@ -35,7 +36,23 @@ export default function FaqCarousel({
           transitionDuration={500}
           autoplay
           infinite
-          arrows={false}
+          arrows
+          prevArrow={
+            <button
+              aria-label="Slide trước"
+              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          }
+          nextArrow={
+            <button
+              aria-label="Slide tiếp"
+              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          }
           indicators
           pauseOnHover
         >
