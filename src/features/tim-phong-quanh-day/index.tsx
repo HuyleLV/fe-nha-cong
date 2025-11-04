@@ -158,9 +158,9 @@ export default function TimPhongQuanhDayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Topbar */}
-      <div className="max-w-7xl mx-auto mt-10">
+      <div className="max-w-screen-2xl mx-auto mt-10">
         <div className="px-4 py-4 flex items-center gap-3">
           <MapPinned />
           <h1 className="font-bold text-xl md:text-2xl">Tìm phòng quanh đây</h1>
@@ -168,7 +168,7 @@ export default function TimPhongQuanhDayPage() {
       </div>
 
       {/* Layout */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 py-8 px-4">
+      <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 py-8 px-4">
         {/* Sidebar */}
         <aside className="md:col-span-1">
           <div className="sticky top-4 bg-white rounded-2xl border border-emerald-200 shadow-sm p-4">
@@ -339,7 +339,7 @@ export default function TimPhongQuanhDayPage() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
           ) : view === "list" ? (
             results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-4 xl:grid-cols-4 gap-5">
                 {results.map((r) => (
                   <RoomCardItem key={r.id} item={r as any} />
                 ))}

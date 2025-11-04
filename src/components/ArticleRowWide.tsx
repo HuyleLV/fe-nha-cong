@@ -1,3 +1,5 @@
+import { fDate, formatStr } from "@/utils/format-time";
+
 export default function ArticleRowWide({
     title,
     slug,
@@ -11,6 +13,7 @@ export default function ArticleRowWide({
     cover?: string | null;
     date?: string;
   }) {
+    const displayDate = date ? fDate(date, formatStr.split.date) : null;
     return (
       <a href={`/blog/` + slug}>
         <article
@@ -42,13 +45,9 @@ export default function ArticleRowWide({
               </p>
       
               {/* Meta (ẩn nếu không có date) */}
-              {date ? (
+              {displayDate && displayDate !== "Invalid time value" ? (
                 <div className="mt-3 text-sm text-emerald-800/70">
-                  {new Date(date).toLocaleDateString("vi-VN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
+                  {displayDate}
                 </div>
               ) : null}
             </div>

@@ -187,7 +187,7 @@ export default function Header() {
     <>
       {/* Header */}
       <header className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white shadow-md">
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-2">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between px-4 py-2">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center">
             <Image src={logo} alt="Logo" className="h-10 w-auto" priority />
