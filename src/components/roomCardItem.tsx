@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MapPin, BedDouble, Bath } from "lucide-react";
+import { Heart, MapPin, BedDouble, Bath, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { formatMoneyVND } from "@/utils/format-number";
@@ -180,6 +180,17 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
             </div>
           )}
         </Link>
+
+        {/* Verified badge over image (top-left) */}
+        {item.isVerified && (
+          <span
+            title="Đã xác minh"
+            className="absolute left-3 top-3 inline-flex items-center justify-center rounded-full bg-white/90 p-1 shadow-lg"
+            style={{ zIndex: 20 }}
+          >
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+          </span>
+        )}
 
         <button
           onClick={(e) => {

@@ -16,6 +16,8 @@ import { viewingService } from "@/services/viewingService";
 import { favoriteService } from "@/services/favoriteService";
 import { Apartment } from "@/type/apartment";
 import { formatMoneyVND } from "@/utils/format-number";
+import CommentList from "@/components/CommentList";
+import CommentForm from "@/components/CommentForm";
 
 /* ===================== Helpers ===================== */
 const withBase = (u?: string | null) => {
@@ -116,10 +118,10 @@ function Breadcrumb({ title, district }: { title: string; district?: string }) {
 }
 
 function FancyHeader({
-  title, address, priceVnd, depositVnd, rating, reviewsCount, excerpt, updatedAt, noOwnerLiving, flexibleHours,
+  title, address, priceVnd, depositVnd, rating, reviewsCount, excerpt, updatedAt, noOwnerLiving, flexibleHours, isVerified,
 }: {
   title: string; address: string; priceVnd: number; depositVnd?: number; rating?: number; reviewsCount?: number;
-  excerpt?: string | null; updatedAt?: string | Date; noOwnerLiving?: boolean; flexibleHours?: boolean;
+  excerpt?: string | null; updatedAt?: string | Date; noOwnerLiving?: boolean; flexibleHours?: boolean; isVerified?: boolean;
 }) {
   // Tính số ngày kể từ khi cập nhật
   const daysSinceUpdate = updatedAt ? Math.floor((Date.now() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24)) : 999;
@@ -144,6 +146,12 @@ function FancyHeader({
               {flexibleHours && (
                 <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" /> Giờ giấc tự do
+                </span>
+              )}
+              {/* Verified badge (admin-verified) */}
+              {isVerified && (
+                <span className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Đã xác minh
                 </span>
               )}
               <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1">
@@ -595,6 +603,8 @@ export default function RoomPage({ slug }: { slug: string }) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [fav, setFav] = useState<boolean>(false);
   const [loadingFav, setLoadingFav] = useState(false);
+  const [related, setRelated] = useState<Apartment[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -617,6 +627,34 @@ export default function RoomPage({ slug }: { slug: string }) {
     })();
     return () => { mounted = false; };
   }, [slug]);
+
+  // Fetch related apartments when data loaded
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!data) return;
+      try {
+        setLoadingRelated(true);
+        // Prefer same location/district if available
+        const q: any = { limit: 6 };
+        if ((data as any).locationId) q.locationId = (data as any).locationId;
+        else if ((data as any).locationSlug) q.locationSlug = (data as any).locationSlug;
+
+        const resp = await apartmentService.getAll(q);
+        if (!mounted) return;
+        // resp might be { items, total } or an array
+        const items: Apartment[] = Array.isArray(resp) ? resp : resp?.items || [];
+        // Exclude current apartment and limit to 4
+        const filtered = items.filter((a) => a.id !== data.id).slice(0, 4);
+        setRelated(filtered);
+      } catch (err) {
+        // ignore silently
+      } finally {
+        if (mounted) setLoadingRelated(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [data]);
 
   const images = useMemo(() => {
     if (!data) return [] as string[];
@@ -681,7 +719,7 @@ export default function RoomPage({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-screen-xl px-3 py-8 lg:px-6">
+      <div className="mx-auto max-w-screen-2xl px-3 py-8 lg:px-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 w-64 rounded bg-emerald-100/70" />
           <div className="h-24 rounded-2xl bg-emerald-50" />
@@ -700,7 +738,7 @@ export default function RoomPage({ slug }: { slug: string }) {
 
   if (err || !data) {
     return (
-      <div className="mx-auto max-w-screen-md px-4 py-16 text-center">
+      <div className="mx-auto max-w-screen-2xl px-4 py-16 text-center">
         <p className="text-lg font-semibold text-emerald-900">Có lỗi xảy ra</p>
         <p className="mt-1 text-emerald-800/80">{err}</p>
         <Link href="/tim-phong-quanh-day" className="mt-4 inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700">
@@ -734,7 +772,7 @@ export default function RoomPage({ slug }: { slug: string }) {
     <>
       <div className="relative">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.08),transparent_45%),radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.06),transparent_40%)]" />
-        <div className="mx-auto max-w-screen-xl px-3 py-6 lg:px-6">
+        <div className="mx-auto max-w-screen-2xl px-3 py-6 lg:px-6">
           <Breadcrumb title={data.title} />
           <FancyHeader
             title={data.title}
@@ -745,6 +783,7 @@ export default function RoomPage({ slug }: { slug: string }) {
             updatedAt={updatedAt}
             noOwnerLiving={noOwnerLiving}
             flexibleHours={flexibleHours}
+            isVerified={(data as any).isVerified}
           />
 
           <div className="grid gap-6 lg:grid-cols-3">
@@ -809,6 +848,7 @@ export default function RoomPage({ slug }: { slug: string }) {
               ) : null}
 
               <MapBox lat={lat} lng={lng} address={addressLine} />
+              {/* Comments were moved to the right column below booking CTA */}
             </div>
 
             {/* Right */}
@@ -895,6 +935,52 @@ export default function RoomPage({ slug }: { slug: string }) {
                     </div>
                   </div>
                 </div>
+                
+                {/* Comments moved here — placed under booking CTA for better UX */}
+                <div className="mt-4">
+                  <Section title="Bình luận">
+                    <div className="space-y-4">
+                      <CommentForm targetType="apartment" targetId={data.id} />
+                      <CommentList targetType="apartment" targetId={data.id} />
+                    </div>
+                  </Section>
+                </div>
+
+                  {/* Related apartments */}
+                  <div className="mt-4">
+                    <Section title="Phòng liên quan">
+                      {loadingRelated ? (
+                        <div className="text-sm text-emerald-700">Đang tải...</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {related.length === 0 ? (
+                            <div className="text-sm text-emerald-800/80">Không có gợi ý nào.</div>
+                          ) : (
+                            related.map((r) => (
+                              <Link key={r.id} href={`/room/${r.slug}`} className="flex items-center gap-4 rounded-xl border border-emerald-100 bg-white p-3 hover:shadow-md">
+                                <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-emerald-50">
+                                  {r.coverImageUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={withBase(r.coverImageUrl as string) as string} alt={r.title} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-sm text-emerald-700">Ảnh</div>
+                                  )}
+                                </div>
+                                <div className="flex-1 text-sm">
+                                  <div className="font-semibold text-emerald-900 text-base line-clamp-2">{r.title}</div>
+                                  <div className="mt-1 text-sm text-emerald-700 font-medium">{formatMoneyVND(parseNum((r as any).rentPrice))}</div>
+                                  {/* optional small meta row */}
+                                  {(r as any).areaM2 && (
+                                    <div className="mt-1 text-xs text-emerald-600">{parseNum((r as any).areaM2)} m²</div>
+                                  )}
+                                </div>
+                              </Link>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </Section>
+                  </div>
               </div>
             </div>
           </div>

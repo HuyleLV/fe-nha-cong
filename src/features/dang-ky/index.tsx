@@ -10,13 +10,15 @@ import logo from "@/assets/logo-trang.png";
 import { toast } from "react-toastify";
 import { userService } from "@/services/userService";
 
-type Step = "enter-phone" | "verify-otp";
+type Step = "enter-personal" | "verify-otp" | "enter-credentials";
 
 export default function RegisterPage() {
   const router = useRouter();
   const formId = useId();
-  const [step, setStep] = useState<Step>("enter-phone");
+  const [step, setStep] = useState<Step>("enter-personal");
   const [phone, setPhone] = useState<string>("");
+  const [fullName, setFullName] = useState<string>("");
+  const [phoneExistsError, setPhoneExistsError] = useState<string>("");
   const [cooldown, setCooldown] = useState<number>(0);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -26,9 +28,9 @@ export default function RegisterPage() {
     register: regPhone,
     handleSubmit: handlePhoneSubmit,
     formState: { isSubmitting: isSubmittingPhone, errors: errorsPhone },
-  } = useForm<{ phone: string }>({
+  } = useForm<{ name?: string; phone: string }>({
     mode: "onTouched",
-    defaultValues: { phone: "" },
+    defaultValues: { phone: "", name: "" },
   });
 
   const {
@@ -51,11 +53,21 @@ export default function RegisterPage() {
     try {
       setIsSending(true);
       const p = String(data.phone || "").trim();
+      const n = String((data as any).name || "").trim();
+      if (n) setFullName(n);
       if (!p) {
         toast.warning("Vui lòng nhập số điện thoại");
         return;
       }
-      await userService.postStartRegisterPhone({ phone: p });
+      const res = await userService.postStartRegisterPhone({ phone: p });
+      // If backend says the phone is already registered, show message and redirect to login
+      if ((res as any)?.alreadyRegistered) {
+        const msg = (res as any)?.message || "Số điện thoại đã được đăng ký. Vui lòng đăng ký bằng số khác.";
+        setPhoneExistsError(msg);
+        toast.info(msg);
+        // stay on the registration screen and let user change the phone number
+        return;
+      }
       setPhone(p);
       setStep("verify-otp");
       setCooldown(60);
@@ -74,31 +86,93 @@ export default function RegisterPage() {
       const code = String(data.code || "").trim();
       if (!phone) {
         toast.warning("Thiếu số điện thoại. Vui lòng quay lại bước trước.");
-        setStep("enter-phone");
+        setStep("enter-personal");
         return;
       }
       if (!code) {
         toast.warning("Vui lòng nhập mã OTP");
         return;
       }
+      // Verify phone; after successful verification, proceed to credential step
       const res = await userService.postVerifyPhone({ phone, code });
-      if (res?.accessToken && res?.user) {
-        localStorage.setItem("access_token", res.accessToken);
-        localStorage.setItem("auth_user", JSON.stringify(res.user));
-        if (typeof document !== "undefined") {
-          document.cookie = `access_token=${res.accessToken}; Path=/; SameSite=Lax`;
-        }
-        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
-        toast.success(res?.message || "Xác minh thành công. Bạn đã được đăng nhập.");
-        router.replace("/");
+      if (res) {
+        // Do NOT auto-login here. Proceed to collect email & password.
+        setStep("enter-credentials");
+        toast.success((res as any)?.message || "Số điện thoại đã được xác minh. Vui lòng nhập email và mật khẩu để hoàn tất đăng ký.");
       } else {
-        toast.error(res?.message || "Xác minh thất bại. Vui lòng thử lại.");
+        toast.error((res as any)?.message || "Xác minh thất bại. Vui lòng thử lại.");
       }
     } catch (err: any) {
       const apiMsg = err?.response?.data?.message || err?.message || "Xác minh thất bại. Vui lòng thử lại!";
       toast.error(apiMsg);
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  // Credential form (email + password)
+  const {
+    register: regCred,
+    handleSubmit: handleCredSubmit,
+    getValues,
+    formState: { isSubmitting: isSubmittingCred, errors: errorsCred },
+  } = useForm<{ email: string; password: string; confirmPassword: string; agree?: boolean }>({
+    mode: "onTouched",
+    defaultValues: { email: "", password: "", confirmPassword: "", agree: true },
+  });
+
+  const submitCredentials = async (data: { email: string; password: string; confirmPassword: string; agree?: boolean }) => {
+    try {
+      const payload = {
+        name: fullName || undefined,
+        phone: phone || undefined,
+        email: String(data.email || "").trim() || undefined,
+        password_hash: String(data.password || "").trim() || undefined,
+        confirmPassword: String(data.confirmPassword || "").trim() || undefined,
+        agree: !!data.agree,
+      } as any;
+      const res = await userService.postRegisterUser(payload);
+      // If backend returns accessToken, log in. Otherwise, show success and redirect.
+      const anyRes: any = res;
+      if (anyRes?.accessToken && anyRes?.user) {
+        localStorage.setItem("access_token", anyRes.accessToken);
+        localStorage.setItem("auth_user", JSON.stringify(anyRes.user));
+        if (typeof document !== "undefined") {
+          document.cookie = `access_token=${anyRes.accessToken}; Path=/; SameSite=Lax`;
+        }
+        window.dispatchEvent(new CustomEvent("auth:login", { detail: anyRes.user }));
+        toast.success(anyRes?.message || "Đăng ký thành công.");
+        router.replace("/");
+        return;
+      }
+
+      // If the register route did not return a token, attempt to log in automatically
+      try {
+        const identifier = payload.email || payload.phone;
+        if (identifier && payload.password_hash) {
+          const loginRes: any = await userService.postLoginUser({ identifier, password_hash: payload.password_hash });
+          if (loginRes?.accessToken && loginRes?.user) {
+            localStorage.setItem("access_token", loginRes.accessToken);
+            localStorage.setItem("auth_user", JSON.stringify(loginRes.user));
+            if (typeof document !== "undefined") {
+              document.cookie = `access_token=${loginRes.accessToken}; Path=/; SameSite=Lax`;
+            }
+            window.dispatchEvent(new CustomEvent("auth:login", { detail: loginRes.user }));
+            toast.success(loginRes?.message || anyRes?.message || "Đăng ký và đăng nhập thành công.");
+            router.replace("/");
+            return;
+          }
+        }
+      } catch (e: any) {
+        // ignore login error here, show register message below
+        console.warn('Auto-login after register failed', e?.response?.data || e?.message || e);
+      }
+
+      toast.success(anyRes?.message || "Đăng ký thành công. Vui lòng đăng nhập.");
+      router.replace("/");
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.message || err?.message || "Đăng ký thất bại. Vui lòng thử lại!";
+      toast.error(apiMsg);
     }
   };
 
@@ -130,14 +204,26 @@ export default function RegisterPage() {
                   <Image src={logo} alt="logo" className="w-20 h-14 p-2 object-contain" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Đăng ký bằng số điện thoại</h1>
-                  <p className="text-sm text-gray-600">Nhập số điện thoại để nhận mã OTP qua Zalo và xác minh</p>
+                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Đăng ký</h1>
+                  <p className="text-sm text-gray-600">Nhập họ tên và số điện thoại để nhận mã OTP qua Zalo và xác minh</p>
                 </div>
               </div>
             </div>
-
-            {step === "enter-phone" && (
+            {step === "enter-personal" && (
               <form id={formId} onSubmit={handlePhoneSubmit(sendOtp)} className="px-7 pb-7 space-y-4" noValidate>
+                <label className="block">
+                  <span className="block text-sm font-medium text-gray-700">Họ và tên</span>
+                  <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                    <input
+                      {...regPhone("name", { required: "Vui lòng nhập họ và tên" })}
+                      type="text"
+                      placeholder="Nguyễn Văn A"
+                      className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                  {errorsPhone.name && <p className="mt-1 text-xs text-red-600">{(errorsPhone as any).name?.message as string}</p>}
+                </label>
+
                 <label className="block">
                   <span className="block text-sm font-medium text-gray-700">Số điện thoại</span>
                   <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
@@ -147,14 +233,16 @@ export default function RegisterPage() {
                         required: "Vui lòng nhập số điện thoại",
                         pattern: { value: /^(?:\+?84|0)[0-9\s\-().]{8,}$/, message: "Số điện thoại không hợp lệ" },
                       })}
+                      onInput={() => setPhoneExistsError("")}
                       type="tel"
                       inputMode="tel"
                       placeholder="090..."
                       className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
-                      aria-invalid={!!errorsPhone.phone}
+                      aria-invalid={!!errorsPhone.phone || !!phoneExistsError}
                     />
                   </div>
                   {errorsPhone.phone && <p className="mt-1 text-xs text-red-600">{errorsPhone.phone.message as string}</p>}
+                  {phoneExistsError && <p className="mt-1 text-xs text-red-600">{phoneExistsError}</p>}
                 </label>
 
                 <button
@@ -201,7 +289,7 @@ export default function RegisterPage() {
                       <button type="button" className="text-emerald-700 hover:underline" onClick={resend}>Gửi lại mã</button>
                     )}
                   </div>
-                  <button type="button" className="hover:underline" onClick={() => setStep("enter-phone")}>Đổi số</button>
+                  <button type="button" className="hover:underline" onClick={() => setStep("enter-personal")}>Đổi số</button>
                 </div>
 
                 <button
@@ -209,13 +297,71 @@ export default function RegisterPage() {
                   disabled={isSubmittingOtp || isVerifying}
                   className="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow hover:bg-emerald-700 transition disabled:opacity-60"
                 >
-                  <span className="relative z-10">{isSubmittingOtp || isVerifying ? "Đang xác minh..." : "Xác minh & Đăng nhập"}</span>
+                  <span className="relative z-10">{isSubmittingOtp || isVerifying ? "Đang xác minh..." : "Xác minh"}</span>
                   <span className="absolute inset-0 -z-0 opacity-0 group-hover:opacity-100 transition">
                     <span className="absolute left-0 top-0 h-full w-1/3 -translate-x-[120%] bg-white/30 blur-lg group-hover:translate-x-[220%] transition-transform duration-700" />
                   </span>
                 </button>
+                <p className="text-center text-sm text-gray-600">Sau khi xác minh thành công, vui lòng nhập email và mật khẩu để hoàn tất đăng ký.</p>
+              </form>
+            )}
 
-                <p className="text-center text-sm text-gray-600">Sau khi xác minh thành công, bạn sẽ được đăng nhập ngay. Bạn có thể bổ sung email/mật khẩu sau trong phần Hồ sơ.</p>
+            {step === "enter-credentials" && (
+              <form onSubmit={handleCredSubmit(submitCredentials)} className="px-7 pb-7 space-y-4" noValidate>
+                <label className="block">
+                  <span className="block text-sm font-medium text-gray-700">Email</span>
+                  <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                    <input
+                      {...regCred("email", { required: "Vui lòng nhập email", pattern: { value: /\S+@\S+\.\S+/, message: "Email không hợp lệ" } })}
+                      type="email"
+                      placeholder="you@example.com"
+                      className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                  {errorsCred.email && <p className="mt-1 text-xs text-red-600">{errorsCred.email.message as string}</p>}
+                </label>
+
+                <label className="block">
+                  <span className="block text-sm font-medium text-gray-700">Mật khẩu</span>
+                  <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                    <input
+                      {...regCred("password", { required: "Vui lòng nhập mật khẩu", minLength: { value: 6, message: "Mật khẩu tối thiểu 6 ký tự" } })}
+                      type="password"
+                      placeholder="Mật khẩu"
+                      className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                  {errorsCred.password && <p className="mt-1 text-xs text-red-600">{errorsCred.password.message as string}</p>}
+                </label>
+
+                <label className="block">
+                  <span className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu</span>
+                  <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
+                    <input
+                      {...regCred("confirmPassword", {
+                        required: "Vui lòng xác nhận mật khẩu",
+                        validate: (v) => v === getValues().password || "Mật khẩu không khớp",
+                      })}
+                      type="password"
+                      placeholder="Xác nhận mật khẩu"
+                      className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                  {errorsCred.confirmPassword && <p className="mt-1 text-xs text-red-600">{errorsCred.confirmPassword.message as string}</p>}
+                </label>
+
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input {...regCred("agree")} type="checkbox" defaultChecked className="h-4 w-4 rounded" />
+                  <span>Tôi đồng ý với Điều khoản và Chính sách</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingCred}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow hover:bg-emerald-700 transition disabled:opacity-60"
+                >
+                  <span className="relative z-10">{isSubmittingCred ? "Đang gửi..." : "Hoàn tất đăng ký"}</span>
+                </button>
               </form>
             )}
           </div>

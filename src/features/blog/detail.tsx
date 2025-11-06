@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Home, ChevronRight, Clock, Tag } from "lucide-react";
 import ShareActions from "./share-actions";
+import CommentList from "@/components/CommentList";
+import CommentForm from "@/components/CommentForm";
 import type { Metadata } from "next";
 import { blogService } from "@/services/blogService";
 import { timeAgo } from "@/utils/timeAgo";
@@ -46,7 +48,7 @@ export default async function BlogDetailPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
-      <div className="max-w-screen-xl mx-auto px-4 pt-6">
+      <div className="max-w-screen-2xl mx-auto px-4 pt-6">
         <div className="flex items-center gap-2 text-sm text-emerald-700/80">
           <Link href="/" className="flex items-center gap-1 hover:text-emerald-900">
             <Home className="h-4 w-4" /> Trang chủ
@@ -61,7 +63,7 @@ export default async function BlogDetailPage({
       </div>
 
       {/* Header + Title + Excerpt + Cover (CHUNG 1 CARD TRẮNG) */}
-      <header className="max-w-screen-xl mx-auto px-4 pb-2 pt-6">
+      <header className="max-w-screen-2xl mx-auto px-4 pb-2 pt-6">
         <section className="rounded-2xl border border-emerald-100 bg-white shadow-sm overflow-hidden">
           {/* thanh gradient mảnh phía trên */}
           <div className="h-1 w-full bg-gradient-to-r from-[#006633] to-[#4CAF50]" />
@@ -110,7 +112,7 @@ export default async function BlogDetailPage({
       </header>
 
       {/* Body (TRẮNG) + Sidebar */}
-      <main className="max-w-screen-xl mx-auto gap-6 px-4 py-8 md:grid md:grid-cols-[1fr_300px]">
+      <main className="max-w-screen-2xl mx-auto gap-6 px-4 py-8 md:grid md:grid-cols-[1fr_300px]">
         {/* Nội dung chính */}
         <article className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
           <div className="html-render leading-7 text-emerald-900/95 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-xl [&_p]:my-4">
@@ -136,6 +138,8 @@ export default async function BlogDetailPage({
           <div className="mt-6">
             <ShareActions shareUrl={shareUrl} />
           </div>
+
+          
         </article>
 
         {/* Sidebar */}
@@ -155,7 +159,19 @@ export default async function BlogDetailPage({
             </ul>
           </div>
         </aside>
+
+        {/* Comments */}
+        <div>
+          <section className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-emerald-900">Bình luận</h3>
+            <CommentForm targetType="blog" targetId={post.slug} />
+            <div className="mt-4">
+              <CommentList targetType="blog" targetId={post.slug} />
+            </div>
+          </section>
+        </div>
       </main>
+      
     </div>
   );
 }

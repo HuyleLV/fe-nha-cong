@@ -296,7 +296,7 @@ export default function AccountPage() {
     <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* ===== Header user ===== */}
       <section className="relative">
-        <div className="max-w-screen-xl mx-auto px-4 pt-24 pb-10">
+        <div className="max-w-screen-2xl mx-auto px-4 pt-24 pb-10">
           <div className="rounded-3xl bg-white shadow-lg p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="h-20 w-20 rounded-2xl bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
@@ -404,7 +404,7 @@ export default function AccountPage() {
       </section>
 
       {/* ===== Lịch xem phòng của tôi ===== */}
-      <section className="max-w-screen-xl mx-auto px-4 pb-10">
+      <section className="max-w-screen-2xl mx-auto px-4 pb-10">
         <div className="mb-4 flex items-center gap-2">
           <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900">
             <CalendarDays className="w-5 h-5 text-emerald-600" /> Lịch xem phòng của tôi
@@ -502,7 +502,7 @@ export default function AccountPage() {
       </section>
 
       {/* ===== Danh sách yêu thích ===== */}
-      <section className="max-w-screen-xl mx-auto px-4 pb-20">
+      <section className="max-w-screen-2xl mx-auto px-4 pb-20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900">
             <Heart className="w-5 h-5 text-rose-500" /> Phòng đã yêu thích
@@ -527,7 +527,7 @@ export default function AccountPage() {
             <Heart className="inline w-4 h-4 -mt-1 text-rose-500" /> ở trang phòng để thêm vào danh sách.
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
             {saved.map((fav) => (
               <RoomCardItem
                 key={fav.apartment.id}

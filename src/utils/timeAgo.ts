@@ -2,8 +2,8 @@ export function timeAgo(date: string | number | Date | any): string {
   const targetMs = new Date(date).getTime();
   if (!Number.isFinite(targetMs)) return "";
 
-  // ✅ chỉ cộng 7 giờ cho thời gian hiện tại
-  const nowMs = Date.now() + 7 * 60 * 60 * 1000;
+  // Use current time in ms (do not add manual timezone offset)
+  const nowMs = Date.now();
 
   let diffSec = Math.floor((nowMs - targetMs) / 1000); // >0: quá khứ, <0: tương lai
 

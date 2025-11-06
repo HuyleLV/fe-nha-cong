@@ -62,6 +62,9 @@ export type Apartment = {
   noOwnerLiving: boolean;
   flexibleHours: boolean;
 
+  /** Whether this apartment is verified by admin/system */
+  isVerified?: boolean;
+
   favorited?: boolean;
 
   createdById: number;
@@ -116,6 +119,9 @@ export type ApartmentForm = {
   hasMezzanine?: boolean;
   noOwnerLiving?: boolean;
   flexibleHours?: boolean;
+
+  /** Admin flag: verified */
+  isVerified?: boolean;
 
   /** SEO tuỳ hệ thống */
   focusKeyword?: string;

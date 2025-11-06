@@ -101,7 +101,9 @@ export default function ApartmentFormPage() {
       noOwnerLiving: false,
       flexibleHours: false,
 
+
       focusKeyword: "", // ✅ chỉ để chấm điểm SEO, không gửi lên API
+      isVerified: false,
     },
   });
 
@@ -206,6 +208,7 @@ export default function ApartmentFormPage() {
           status: ap.status,
           coverImageUrl: ap.coverImageUrl || "",
           images: ap.images || [],
+          isVerified: ap.isVerified ?? false,
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
           buildingId: ap.buildingId ?? null,
 
@@ -527,6 +530,15 @@ export default function ApartmentFormPage() {
                   <input className={inputCls} placeholder="VND" {...register("currency")} />
                 </div>
               </div>
+
+              <div className="mt-3">
+                <label className="inline-flex items-center gap-2">
+                  <input type="checkbox" {...register("isVerified")} />
+                  <span className="text-sm text-slate-700">Đã xác minh (hiển thị dấu tích xanh)</span>
+                </label>
+              </div>
+
+              
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
