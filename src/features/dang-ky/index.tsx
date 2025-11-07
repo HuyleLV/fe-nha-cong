@@ -190,8 +190,32 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-white/30" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[520px] px-4">
-        <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40">
+      <div className="relative z-10 w-full max-w-6xl px-4">
+        <div className="mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* LEFT: benefits panel (visible on md+) */}
+          <aside className="hidden md:block">
+            <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/90 border border-white/40 h-full">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-8" />
+              </div>
+              <div className="relative p-8">
+                <h2 className="text-2xl font-semibold mb-4">🔑 Lợi Ích Khi Đăng Ký Tài Khoản</h2>
+                <ol className="space-y-3 text-sm text-gray-700 list-decimal list-inside">
+                  <li>Truy Cập Tính Năng Độc Quyền</li>
+                  <li>Cập Nhật Tin Tức &amp; Ưu Đãi Sớm Nhất</li>
+                  <li>Lưu Trữ &amp; Quản Lý Dễ Dàng</li>
+                  <li>Nhận Thông Báo Tin Đăng Mới Theo Tiêu Chí</li>
+                  <li>Tương Tác Trực Tiếp &amp; Riêng Tư</li>
+                  <li>Đánh Giá &amp; Phản Hồi Chất Lượng</li>
+                </ol>
+                <p className="text-xs text-gray-500 mt-6">Đăng ký ngay để tận hưởng trải nghiệm tối ưu và nhận thông báo phù hợp với nhu cầu của bạn.</p>
+              </div>
+            </div>
+          </aside>
+
+          {/* RIGHT: existing register card */}
+          <div>
+            <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40">
           <div className="absolute inset-0 pointer-events-none">
             <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-20" />
           </div>
@@ -199,14 +223,9 @@ export default function RegisterPage() {
           <div className="relative">
             {/* Header */}
             <div className="px-7 pt-7 pb-4 text-center">
-              <div className="inline-flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
-                  <Image src={logo} alt="logo" className="w-20 h-14 p-2 object-contain" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Đăng ký</h1>
-                  <p className="text-sm text-gray-600">Nhập họ tên và số điện thoại để nhận mã OTP qua Zalo và xác minh</p>
-                </div>
+              <div className="flex flex-col items-center">
+                <h1 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">Đăng ký</h1>
+                <p className="mt-1 text-sm text-gray-600">Nhập họ tên và số điện thoại để nhận mã OTP qua Zalo và xác minh</p>
               </div>
             </div>
             {step === "enter-personal" && (
@@ -364,6 +383,8 @@ export default function RegisterPage() {
                 </button>
               </form>
             )}
+          </div>
+        </div>
           </div>
         </div>
 

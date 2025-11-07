@@ -247,6 +247,8 @@ export default function AccountPage() {
         return 'Đã xác nhận';
       case 'cancelled':
         return 'Đã huỷ';
+      case 'done':
+        return 'Đã xem';
       case 'pending':
       default:
         return 'Đang chờ';
@@ -482,6 +484,7 @@ export default function AccountPage() {
                         <span className={`rounded-full px-2 py-0.5 text-xs ${
                           v.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                           v.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                          v.status === 'done' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
                           'bg-amber-50 text-amber-700 border border-amber-200'
                         }`}>{statusLabel(v.status)}</span>
                       </div>

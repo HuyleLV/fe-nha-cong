@@ -6,6 +6,7 @@ import { Slide } from "react-slideshow-image";
 import "react-slideshow-image/dist/styles.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SearchBar from "@/components/searchBar";
+import { useRouter } from "next/navigation";
 import DistrictListingSection from "@/components/DistrictListingSection";
 import banner1 from "@/assets/banner-01.jpg";
 import banner2 from "@/assets/banner-02.jpg";
@@ -32,6 +33,7 @@ const FAQS: FaqItem[] = [
 
 export default function TrangChu() {
   const { isMobile } = useDevice();
+  const router = useRouter();
 
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
@@ -138,7 +140,13 @@ export default function TrangChu() {
         <SearchBar
           className="max-w-4xl mx-auto mt-6"
           onOpenLocation={() => console.log("open location picker")}
-          onSearch={(q) => console.log("search:", q)}
+          onSearch={(q, opts) => {
+            const params = new URLSearchParams();
+            if (q) params.set("q", q);
+            if (opts?.guests !== undefined) params.set("guests", String(opts.guests));
+            if (opts?.beds !== undefined) params.set("beds", String(opts.beds));
+            router.push(`/tim-phong-quanh-day?${params.toString()}`);
+          }}
         />
       </div>
 

@@ -45,7 +45,7 @@ export const viewingService = {
     if (Array.isArray(data)) return { items: data, meta: null };
     return data as { items: Viewing[]; meta: any };
   },
-  async adminUpdateStatus(id: number, payload: { status: 'pending'|'confirmed'|'cancelled'; staffNote?: string }) {
+  async adminUpdateStatus(id: number, payload: { status: 'pending'|'confirmed'|'cancelled'|'done'; staffNote?: string }) {
   const data = await axiosClient.patch(apiUrl(`/api/viewings/admin/${id}/status`), payload);
     return data;
   },
@@ -56,5 +56,24 @@ export const viewingService = {
   async adminGet(id: number): Promise<Viewing> {
     const data = await axiosClient.get(apiUrl(`/api/viewings/admin/${id}`)) as unknown as Viewing;
     return data;
+  }
+  ,
+  // Recently viewed history
+  async recordVisit(apartmentId: number) {
+    await axiosClient.post(apiUrl(`/api/viewings/visit`), { apartmentId });
+    return true;
+  },
+  async recent(params?: { page?: number; limit?: number }) {
+    const data = await axiosClient.get(apiUrl(`/api/viewings/recent`), { params }) as any;
+    return data as { items: { apartment: any; viewedAt: string; apartmentId: number }[]; meta: any };
+  },
+  async clearRecent() {
+    await axiosClient.delete(apiUrl(`/api/viewings/recent`));
+    return true;
+  }
+  ,
+  async visited(params?: { page?: number; limit?: number }) {
+    const data = await axiosClient.get(apiUrl(`/api/viewings/visited`), { params }) as any;
+    return data as { items: { apartment: any; apartmentId: number; viewingId: number; visitedAt: string }[]; meta: any };
   }
 };

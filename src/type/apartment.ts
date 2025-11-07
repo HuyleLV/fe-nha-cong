@@ -27,6 +27,7 @@ export type Apartment = {
 
   bedrooms: number;
   bathrooms: number;
+  livingRooms?: number;
   areaM2?: string | null;
 
   /** numeric string */
@@ -55,6 +56,13 @@ export type Apartment = {
   hasKitchenCabinet: boolean;
   hasWashingMachine: boolean;
   hasWardrobe: boolean;
+  hasSharedBathroom?: boolean;
+  hasWashingMachineShared?: boolean;
+  hasWashingMachinePrivate?: boolean;
+  hasDesk?: boolean;
+  hasKitchenTable?: boolean;
+  hasRangeHood?: boolean;
+  hasFridge?: boolean;
 
   // ===== Tiện nghi =====
   hasPrivateBathroom: boolean;
@@ -91,6 +99,7 @@ export type ApartmentForm = {
 
   bedrooms?: number;
   bathrooms?: number;
+  livingRooms?: number;
   areaM2?: string | null;
 
   /** numeric string */
@@ -113,6 +122,13 @@ export type ApartmentForm = {
   hasKitchenCabinet?: boolean;
   hasWashingMachine?: boolean;
   hasWardrobe?: boolean;
+  hasSharedBathroom?: boolean;
+  hasWashingMachineShared?: boolean;
+  hasWashingMachinePrivate?: boolean;
+  hasDesk?: boolean;
+  hasKitchenTable?: boolean;
+  hasRangeHood?: boolean;
+  hasFridge?: boolean;
 
   // ===== Tiện nghi =====
   hasPrivateBathroom?: boolean;
@@ -145,6 +161,10 @@ export type ApartmentQuery = {
   // ===== Phòng =====
   bedrooms?: number;
   bathrooms?: number;
+  /** Số phòng khách */
+  livingRooms?: number;
+  /** Sức chứa (số khách) */
+  guests?: number;
 
   // ===== Trạng thái =====
   status?: ApartmentStatus;

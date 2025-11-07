@@ -9,6 +9,7 @@ import { Mail, Lock, Phone, User as UserIcon, CheckCircle2, Sparkles, ShieldChec
 import google from "@/assets/google.png";
 import banner from "@/assets/banner-01.jpg";
 import logo from "@/assets/logo-trang.png";
+import logomau from "@/assets/logo-mau.png";
 import { userService } from "@/services/userService";
 import { LoginUserRequest, RegisterUserRequest, resLoginUser } from "@/type/user";
 import { partnerService } from "@/services/partnerService";
@@ -219,18 +220,12 @@ export default function LoginPage() {
           <div className="hidden md:flex relative rounded-3xl overflow-hidden ring-1 ring-white/40 backdrop-blur-xl bg-white/70">
             <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/50 blur-2xl" />
             <div className="absolute -bottom-12 -right-8 h-44 w-44 rounded-full bg-teal-300/50 blur-2xl" />
-            <div className="relative p-8 lg:p-10 flex flex-col justify-center">
-              <div className="inline-flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
-                  <Image src={logo} alt="logo" className="w-28 h-12 p-2" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-gray-900">Nền tảng thuê trọ dễ dàng</h2>
-                  <p className="text-sm text-gray-600">Nhanh chóng • Minh bạch • Hỗ trợ tận tâm</p>
-                </div>
-              </div>
+            <div className="relative p-8 lg:p-10 flex flex-col justify-center items-center text-center">
+              <Image src={logomau} alt="Logo" priority className="h-10 md:h-12 w-auto object-contain" />
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-gray-900">Nền tảng thuê trọ dễ dàng</h2>
+              <p className="mt-1 text-sm text-gray-600">Nhanh chóng • Minh bạch • Hỗ trợ tận tâm</p>
 
-              <ul className="mt-6 space-y-3 text-sm text-gray-700">
+              <ul className="mt-6 space-y-3 text-sm text-gray-700 text-left max-w-md">
                 <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" /> Tài khoản miễn phí, bảo mật <b className="ml-1">Shield</b></li>
                 <li className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 text-amber-500" /> Tìm phòng nhanh với bộ lọc thông minh</li>
                 <li className="flex items-start gap-2"><Star className="mt-0.5 h-4 w-4 text-rose-500" /> Yêu thích, đặt lịch xem phòng ngay</li>
@@ -251,18 +246,13 @@ export default function LoginPage() {
             <div className="relative">
             {/* Header + Tabs */}
             <div className="px-7 pt-7 pb-2 text-center">
-              <div className="inline-flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-600 text-white grid place-items-center text-lg font-bold shadow-md">
-                  <Image src={logo} alt="logo" className="w-22 h-10 p-2" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-                    {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    {mode === "login" ? "Chào mừng quay lại 👋" : "Nhập thông tin để bắt đầu ✨"}
-                  </p>
-                </div>
+              <div className="flex flex-col items-center">
+                <h1 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
+                  {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
+                </h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  {mode === "login" ? "Chào mừng quay lại 👋" : "Nhập thông tin để bắt đầu ✨"}
+                </p>
               </div>
 
               {/* Tabs removed per request; mode is set via route params */}

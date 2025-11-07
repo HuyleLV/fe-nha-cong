@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { viewingService, Viewing } from "@/services/viewingService";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment } from "@/type/apartment";
-import { CalendarDays, Calendar as CalendarIcon, List, Search, Clock, Phone, User as UserIcon, ChevronLeft, ChevronRight, RefreshCw, Circle } from "lucide-react";
+import { CalendarDays, Calendar as CalendarIcon, List, Search, Clock, Phone, User as UserIcon, ChevronLeft, ChevronRight, RefreshCw, Circle, CheckCircle2 } from "lucide-react";
 
 type AdminViewing = Viewing & { apartment?: Apartment };
 
@@ -23,7 +23,7 @@ function AdminViewingsPage() {
   const [aptLoading, setAptLoading] = useState(false);
   const [selectedApt, setSelectedApt] = useState<Apartment | null>(null);
 
-  const [statusFilter, setStatusFilter] = useState<""|"pending"|"confirmed"|"cancelled">("");
+  const [statusFilter, setStatusFilter] = useState<""|"pending"|"confirmed"|"cancelled"|"done">("");
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [viewMode, setViewMode] = useState<'list'|'calendar'>('calendar');
@@ -115,7 +115,7 @@ function AdminViewingsPage() {
   const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()+1, 1));
   const selectedEvents = eventsByDate[selectedDate] || [];
 
-  const onChangeStatus = async (v: AdminViewing, next: 'pending'|'confirmed'|'cancelled') => {
+  const onChangeStatus = async (v: AdminViewing, next: 'pending'|'confirmed'|'cancelled'|'done') => {
     if (!v) return;
     const prev = v.status;
     setViewings(list => list.map(it => it.id === v.id ? { ...it, status: next } : it));
@@ -170,6 +170,7 @@ function AdminViewingsPage() {
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
                 <option value="cancelled">Đã huỷ</option>
+                <option value="done">Đã xem</option>
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
@@ -215,6 +216,7 @@ function AdminViewingsPage() {
                                 <option value="pending">Đang chờ</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="cancelled">Đã huỷ</option>
+                                <option value="done">Đã xem</option>
                               </select>
                             </td>
                           </tr>
@@ -303,6 +305,7 @@ function AdminViewingsPage() {
                                 <option value="pending">Đang chờ</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="cancelled">Đã huỷ</option>
+                                <option value="done">Đã xem</option>
                               </select>
                             </div>
                           </li>
@@ -336,6 +339,7 @@ function AdminViewingsPage() {
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
                 <option value="cancelled">Đã huỷ</option>
+                <option value="done">Đã xem</option>
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
@@ -380,6 +384,7 @@ function AdminViewingsPage() {
                                 <option value="pending">Đang chờ</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="cancelled">Đã huỷ</option>
+                                <option value="done">Đã xem</option>
                               </select>
                             </td>
                           </tr>
@@ -468,6 +473,7 @@ function AdminViewingsPage() {
                                 <option value="pending">Đang chờ</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="cancelled">Đã huỷ</option>
+                                <option value="done">Đã xem</option>
                               </select>
                             </div>
                           </li>

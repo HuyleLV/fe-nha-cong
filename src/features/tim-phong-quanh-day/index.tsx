@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   MapPinned, ChevronDown, ChevronRight, Flame,
   FilterX, Map as MapIcon, List, RotateCcw
@@ -29,6 +30,7 @@ export default function TimPhongQuanhDayPage() {
 
   // search
   const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
 
   // Filters ↔ QueryApartmentDto
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
@@ -39,6 +41,8 @@ export default function TimPhongQuanhDayPage() {
   const [maxArea, setMaxArea] = useState<string>("100");
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
+  const [livingRooms, setLivingRooms] = useState<string>("");
+  const [guests, setGuests] = useState<string>("");
 
   // Amenities (boolean)
   const [hasPrivateBathroom, setHasPrivateBathroom] = useState(false);
@@ -49,6 +53,14 @@ export default function TimPhongQuanhDayPage() {
   const [hasWashingMachine, setHasWashingMachine] = useState(false);
   const [hasWardrobe, setHasWardrobe] = useState(false);
   const [flexibleHours, setFlexibleHours] = useState(false);
+  const [hasSharedBathroom, setHasSharedBathroom] = useState(false);
+  const [hasWashingMachineShared, setHasWashingMachineShared] = useState(false);
+  const [hasWashingMachinePrivate, setHasWashingMachinePrivate] = useState(false);
+  const [hasDesk, setHasDesk] = useState(false);
+  const [hasKitchenTable, setHasKitchenTable] = useState(false);
+  const [hasKitchenCabinet, setHasKitchenCabinet] = useState(false);
+  const [hasRangeHood, setHasRangeHood] = useState(false);
+  const [hasFridge, setHasFridge] = useState(false);
 
   // “Ưu tiên giá tốt” (client-side)
   const [onlyHot, setOnlyHot] = useState(false);
@@ -74,6 +86,8 @@ export default function TimPhongQuanhDayPage() {
     minArea: minArea ? Number(minArea) : undefined,
     maxArea: maxArea ? Number(maxArea) : undefined,
     bedrooms: bedrooms ? Number(bedrooms) : undefined,
+  livingRooms: livingRooms ? Number(livingRooms) : undefined,
+    guests: guests ? Number(guests) : undefined,
     bathrooms: bathrooms ? Number(bathrooms) : undefined,
     status,
     sort,                  // ✅ server-side sort
@@ -84,11 +98,60 @@ export default function TimPhongQuanhDayPage() {
     hasAirConditioner: hasAirConditioner || undefined,
     hasWaterHeater: hasWaterHeater || undefined,
     hasWashingMachine: hasWashingMachine || undefined,
+    hasSharedBathroom: hasSharedBathroom || undefined,
+    hasWashingMachineShared: hasWashingMachineShared || undefined,
+    hasWashingMachinePrivate: hasWashingMachinePrivate || undefined,
+    hasDesk: hasDesk || undefined,
+    hasKitchenTable: hasKitchenTable || undefined,
+    hasKitchenCabinet: hasKitchenCabinet || undefined,
+    hasRangeHood: hasRangeHood || undefined,
+    hasFridge: hasFridge || undefined,
     hasWardrobe: hasWardrobe || undefined,
     flexibleHours: flexibleHours || undefined,
     page,
     limit: LIMIT,
   });
+
+  // Sync URL query params into state so direct navigation with ?q=... works
+  useEffect(() => {
+    try {
+      const q = searchParams?.get("q") ?? "";
+      const g = searchParams?.get("guests") ?? "";
+      const b = searchParams?.get("beds") ?? searchParams?.get("bedrooms") ?? "";
+      const lr = searchParams?.get("livingRooms") ?? searchParams?.get("living_rooms") ?? "";
+      setQuery(q);
+      setGuests(g);
+      setBedrooms(b);
+      setLivingRooms(lr);
+
+      // booleans (stored as 'true'/'false')
+      const readBool = (k: string) => {
+        const v = searchParams?.get(k);
+        return v === 'true';
+      };
+      setHasPrivateBathroom(readBool('hasPrivateBathroom'));
+      setHasSharedBathroom(readBool('hasSharedBathroom'));
+      setHasMezzanine(readBool('hasMezzanine'));
+      setNoOwnerLiving(readBool('noOwnerLiving'));
+      setHasAirConditioner(readBool('hasAirConditioner'));
+      setHasWaterHeater(readBool('hasWaterHeater'));
+      setHasWashingMachine(readBool('hasWashingMachine'));
+      setHasWashingMachineShared(readBool('hasWashingMachineShared'));
+      setHasWashingMachinePrivate(readBool('hasWashingMachinePrivate'));
+      setHasWardrobe(readBool('hasWardrobe'));
+      setHasDesk(readBool('hasDesk'));
+      setHasKitchenTable(readBool('hasKitchenTable'));
+      setHasKitchenCabinet(readBool('hasKitchenCabinet'));
+      setHasRangeHood(readBool('hasRangeHood'));
+      setHasFridge(readBool('hasFridge'));
+
+      // reset page to 1 when params change
+      setPage(1);
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.toString()]);
 
   // Call API via service + paginate meta (debounce 300ms)
   useEffect(() => {
@@ -121,7 +184,7 @@ export default function TimPhongQuanhDayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     query, locationSlug, minPrice, maxPrice, minArea, maxArea,
-    bedrooms, bathrooms, status, sort,
+    bedrooms, bathrooms, livingRooms, guests, status, sort,
     hasPrivateBathroom, hasMezzanine, noOwnerLiving, hasAirConditioner,
     hasWaterHeater, hasWashingMachine, hasWardrobe, flexibleHours, page
   ]);
@@ -139,18 +202,28 @@ export default function TimPhongQuanhDayPage() {
     setLocationSlug(undefined);
     setStatus("published");
     setMinPrice("0");
-    setMaxPrice("8000000");
+    setMaxPrice("12000000");
     setMinArea("0");
     setMaxArea("100");
     setBedrooms("");
+    setLivingRooms("");
+    setGuests("");
     setBathrooms("");
     setHasPrivateBathroom(false);
+  setHasSharedBathroom(false);
     setHasMezzanine(false);
     setNoOwnerLiving(false);
     setHasAirConditioner(false);
     setHasWaterHeater(false);
     setHasWashingMachine(false);
+  setHasWashingMachineShared(false);
+  setHasWashingMachinePrivate(false);
     setHasWardrobe(false);
+  setHasDesk(false);
+  setHasKitchenTable(false);
+  setHasKitchenCabinet(false);
+  setHasRangeHood(false);
+  setHasFridge(false);
     setFlexibleHours(false);
     setOnlyHot(false);
     setSort("newest");
@@ -160,7 +233,7 @@ export default function TimPhongQuanhDayPage() {
   return (
     <div className="min-h-screen">
       {/* Topbar */}
-      <div className="max-w-screen-2xl mx-auto mt-10">
+      <div className="max-w-screen-2xl mx-auto pt-10">
         <div className="px-4 py-4 flex items-center gap-3">
           <MapPinned />
           <h1 className="font-bold text-xl md:text-2xl">Tìm phòng quanh đây</h1>
@@ -280,40 +353,40 @@ export default function TimPhongQuanhDayPage() {
             </Accordion>
 
             {/* Phòng ngủ / WC */}
-            <Accordion title="Phòng ngủ / WC">
-              <div className="grid grid-cols-2 gap-2">
-                <NumberChip labelPrefix="PN" values={[0, 1, 2, 3]} current={bedrooms} onChange={setBedrooms} />
-                <NumberChip labelPrefix="WC" values={[0, 1, 2]} current={bathrooms} onChange={setBathrooms} />
+            <Accordion title="Số phòng">
+              <div className="flex flex-col gap-3">
+                <VerticalCounter label="Phòng ngủ" value={bedrooms} onChange={setBedrooms} max={5} />
+                <VerticalCounter label="WC" value={bathrooms} onChange={setBathrooms} max={5} />
+                <VerticalCounter label="Phòng khách" value={livingRooms} onChange={setLivingRooms} max={5} />
               </div>
             </Accordion>
 
             {/* Tiện nghi */}
             <Accordion title="Tiện nghi (Nâng cao)">
-              <div className="flex flex-wrap gap-2">
-                <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>VS khép kín</ToggleChip>
-                <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
-                <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
-                <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
-                <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
-                <ToggleChip active={hasWashingMachine} onToggle={() => { setHasWashingMachine(!hasWashingMachine); setPage(1); }}>Máy giặt</ToggleChip>
-                <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
-                <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
-              </div>
-            </Accordion>
+                <div className="grid grid-cols-2 gap-2">
+                  <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>Vệ sinh khép kín</ToggleChip>
+                  <ToggleChip active={hasSharedBathroom} onToggle={() => { setHasSharedBathroom(!hasSharedBathroom); setPage(1); }}>Vệ sinh chung</ToggleChip>
 
-            {/* Khác */}
-            <Accordion title="Khác">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={onlyHot}
-                  onChange={(e) => { setOnlyHot(e.target.checked); setPage(1); }}
-                  className="accent-green-600"
-                />
-                <span className="inline-flex items-center gap-1">
-                  Ưu tiên <Flame className="w-4 h-4 text-orange-500" /> Giá tốt
-                </span>
-              </label>
+                  <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
+                  <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
+
+                  <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
+                  <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
+
+                  <ToggleChip active={hasWashingMachineShared} onToggle={() => { setHasWashingMachineShared(!hasWashingMachineShared); setPage(1); }}>Máy giặt (chung)</ToggleChip>
+                  <ToggleChip active={hasWashingMachinePrivate} onToggle={() => { setHasWashingMachinePrivate(!hasWashingMachinePrivate); setPage(1); }}>Máy giặt (riêng)</ToggleChip>
+
+                  <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
+                  <ToggleChip active={hasDesk} onToggle={() => { setHasDesk(!hasDesk); setPage(1); }}>Bàn làm việc</ToggleChip>
+
+                  <ToggleChip active={hasKitchenTable} onToggle={() => { setHasKitchenTable(!hasKitchenTable); setPage(1); }}>Bàn bếp</ToggleChip>
+                  <ToggleChip active={hasKitchenCabinet} onToggle={() => { setHasKitchenCabinet(!hasKitchenCabinet); setPage(1); }}>Tủ bếp</ToggleChip>
+
+                  <ToggleChip active={hasRangeHood} onToggle={() => { setHasRangeHood(!hasRangeHood); setPage(1); }}>Hút mùi</ToggleChip>
+                  <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>Tủ lạnh</ToggleChip>
+
+                  <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
+                </div>
             </Accordion>
           </div>
         </aside>
@@ -321,8 +394,13 @@ export default function TimPhongQuanhDayPage() {
         {/* Results */}
         <main className="md:col-span-3">
           <SearchBar
-            onSearch={(q: string) => {
+            defaultValue={query}
+            defaultGuests={guests ? Number(guests) : undefined}
+            defaultBeds={bedrooms ? Number(bedrooms) : undefined}
+            onSearch={(q: string, opts) => {
               setQuery(q);
+              if (opts?.guests !== undefined) setGuests(String(opts.guests));
+              if (opts?.beds !== undefined) setBedrooms(String(opts.beds));
               setPage(1);
             }}
           />
@@ -487,6 +565,44 @@ function NumberChip({
           {labelPrefix} {n}
         </button>
       ))}
+    </div>
+  );
+}
+
+function VerticalCounter({
+  label,
+  value,
+  onChange,
+  max = 10,
+}: {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+  max?: number;
+}) {
+  const val = value === "" ? 0 : Number(value || 0);
+  return (
+    <div className="w-full flex items-center justify-between p-3 bg-emerald-50/60 rounded-xl shadow-sm">
+      <div className="text-sm font-semibold text-slate-700">{label}</div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label={`Giảm ${label}`}
+          onClick={() => onChange(String(Math.max(0, val - 1)))}
+          className="w-9 h-9 rounded-full bg-white border border-emerald-100 shadow-sm flex items-center justify-center hover:bg-emerald-50 transition"
+        >
+          −
+        </button>
+        <div className="min-w-[36px] h-9 flex items-center justify-center text-lg font-semibold text-emerald-700 bg-white rounded-md px-2 shadow-sm">{val}</div>
+        <button
+          type="button"
+          aria-label={`Tăng ${label}`}
+          onClick={() => onChange(String(Math.min(max, val + 1)))}
+          className="w-9 h-9 rounded-full bg-white border border-emerald-100 shadow-sm flex items-center justify-center hover:bg-emerald-50 transition"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }

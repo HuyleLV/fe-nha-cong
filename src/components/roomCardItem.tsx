@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MapPin, BedDouble, Bath, CheckCircle2 } from "lucide-react";
+import { Heart, MapPin, BedDouble, Bath, CheckCircle2, Sofa } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { formatMoneyVND } from "@/utils/format-number";
@@ -16,6 +16,8 @@ type Props = {
   isFav?: boolean;                            // hoặc truyền từ cha
   onToggleFav?: (id: Apartment["id"]) => void;
   onBook?: (apt: Apartment) => void;
+  /** Badge tuỳ chọn hiển thị trên góc ảnh (ví dụ: thời điểm đã xem) */
+  extraBadge?: React.ReactNode;
 };
 
 const withBase = (u?: string | null) => {
@@ -30,7 +32,7 @@ const toNumber = (v?: string | null) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props) {
+export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBadge }: Props) {
   const router = useRouter();
 
   // ===== Local state cho tim (được hydrate từ prop/BE/API) =====
@@ -103,6 +105,7 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
   const area = item.areaM2 ? toNumber(item.areaM2) : undefined;
   const beds = item.bedrooms;
   const baths = item.bathrooms;
+  const livingRooms = item.livingRooms;
 
   // ⬇️ Lấy ảnh đầu tiên an toàn (undefined nếu rỗng)
   const imageUrl = useMemo(() => {
@@ -181,37 +184,44 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
           )}
         </Link>
 
-        {/* Verified badge over image (top-left) */}
-        {item.isVerified && (
-          <span
-            title="Đã xác minh"
-            className="absolute left-3 top-3 inline-flex items-center justify-center rounded-full bg-white/90 p-1 shadow-lg"
-            style={{ zIndex: 20 }}
+        {/* Overlay clusters */}
+        {extraBadge && (
+          <div
+            className="absolute left-3 top-3 z-20 inline-flex max-w-[180px] items-center gap-1 rounded-full bg-gradient-to-r from-white/95 to-white/70 px-2 py-1 text-[11px] font-medium text-slate-700 shadow backdrop-blur-md ring-1 ring-white/50"
           >
-            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-          </span>
+            {extraBadge}
+          </div>
         )}
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleFavorite();
-          }}
-          disabled={loadingFav}
-          className={clsx(
-            "absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-md cursor-pointer",
-            "hover:bg-white shadow disabled:opacity-60"
+        <div className="absolute right-2 top-2 z-20 inline-flex items-center gap-2">
+          {item.isVerified && (
+            <span
+              title="Đã xác minh"
+              className="inline-flex items-center justify-center rounded-full bg-white/90 p-1 shadow-lg"
+            >
+              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+            </span>
           )}
-          aria-label={fav ? "Bỏ yêu thích" : "Thêm yêu thích"}
-          title={fav ? "Bỏ yêu thích" : "Thêm yêu thích"}
-        >
-          <Heart
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFavorite();
+            }}
+            disabled={loadingFav}
             className={clsx(
-              "h-5 w-5 transition-colors",
-              fav ? "fill-rose-500 text-rose-500" : "text-emerald-700"
+              "inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-md cursor-pointer",
+              "hover:bg-white shadow disabled:opacity-60"
             )}
-          />
-        </button>
+            aria-label={fav ? "Bỏ yêu thích" : "Thêm yêu thích"}
+            title={fav ? "Bỏ yêu thích" : "Thêm yêu thích"}
+          >
+            <Heart
+              className={clsx(
+                "h-5 w-5 transition-colors",
+                fav ? "fill-rose-500 text-rose-500" : "text-emerald-700"
+              )}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Nội dung */}
@@ -237,6 +247,11 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook }: Props
           {typeof baths === "number" && baths >= 0 && (
             <span className="inline-flex items-center gap-1">
               <Bath className="h-4 w-4" /> {baths}
+            </span>
+          )}
+          {typeof livingRooms === "number" && livingRooms >= 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Sofa className="h-4 w-4" /> {livingRooms}
             </span>
           )}
         </div>

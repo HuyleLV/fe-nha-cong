@@ -617,6 +617,27 @@ export default function RoomPage({ slug }: { slug: string }) {
         setData(apt);
         setFav(!!(apt as any)?.favorited); // lấy cờ từ BE
         setErr(null);
+        // Record view (ignore errors) and persist to local recent
+        try {
+          const id = (apt as any)?.id;
+          const slugVal = (apt as any)?.slug;
+          if (id) {
+            // call backend if authed (cookie or localStorage/sessionStorage)
+            const authed = hasLoginToken();
+            if (authed) viewingService.recordVisit(id).catch(()=>{});
+            // local storage fallback
+            if (typeof window !== 'undefined') {
+              const key = 'recent_rooms';
+              const raw = window.localStorage.getItem(key);
+              const arr = raw ? (JSON.parse(raw) as any[]) : [];
+              const now = new Date().toISOString();
+              const filtered = Array.isArray(arr) ? arr.filter(x => x && x.apartmentId !== id) : [];
+              filtered.unshift({ apartmentId: id, slug: slugVal, title: (apt as any)?.title, coverImageUrl: (apt as any)?.coverImageUrl, viewedAt: now });
+              const limited = filtered.slice(0, 50);
+              window.localStorage.setItem(key, JSON.stringify(limited));
+            }
+          }
+        } catch {}
       } catch (e: any) {
         if (!mounted) return;
         setErr(e?.message || "Không thể tải dữ liệu");

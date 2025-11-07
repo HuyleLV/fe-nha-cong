@@ -21,6 +21,7 @@ import {
   LogOut,
   User as UserIcon,
   Map,
+  Search,
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
@@ -208,13 +209,13 @@ export default function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2 md:gap-3">
-            {/* <button
-              type="button"
-              aria-label="Yêu thích"
+            <Link
+              href="/tim-phong-quanh-day"
+              aria-label="Tìm phòng"
               className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
             >
-              <Heart className="text-white w-5 h-5" />
-            </button> */}
+              <Search className="text-white w-5 h-5" />
+            </Link>
 
             <button
               ref={userBtnRef}
@@ -481,18 +482,18 @@ export default function Header() {
           <div className="px-5 pt-4">
             <div className="grid grid-cols-2 gap-3">
               <Link
-                href="/new"
+                href="/phong-quan-tam"
                 onClick={() => setOpenNavDesktop(false)}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
-                Tin mới đăng
+                Phòng quan tâm
               </Link>
               <Link
-                href="#"
+                href="/phong-da-xem"
                 onClick={() => setOpenNavDesktop(false)}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
-                Ưu đãi hôm nay
+                Phòng đã xem
               </Link>
               <Link
                 href="#"

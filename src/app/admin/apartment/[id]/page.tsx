@@ -77,7 +77,8 @@ export default function ApartmentFormPage() {
       lat: "",
       lng: "",
       bedrooms: 0,
-      bathrooms: 0,
+      	bathrooms: 0,
+      	livingRooms: 0,
       areaM2: "",
       rentPrice: "0",
       currency: "VND",
@@ -95,6 +96,14 @@ export default function ApartmentFormPage() {
       hasKitchenCabinet: false,
       hasWashingMachine: false,
       hasWardrobe: false,
+
+      	hasSharedBathroom: false,
+      	hasWashingMachineShared: false,
+      	hasWashingMachinePrivate: false,
+      	hasDesk: false,
+      	hasKitchenTable: false,
+      	hasRangeHood: false,
+      	hasFridge: false,
 
       hasPrivateBathroom: false,
       hasMezzanine: false,
@@ -201,6 +210,7 @@ export default function ApartmentFormPage() {
           lat: ap.lat || "",
           lng: ap.lng || "",
           bedrooms: ap.bedrooms,
+          	livingRooms: ap.livingRooms ?? 0,
           bathrooms: ap.bathrooms,
           areaM2: ap.areaM2 || "",
           rentPrice: ap.rentPrice,
@@ -222,6 +232,14 @@ export default function ApartmentFormPage() {
           hasKitchenCabinet: ap.hasKitchenCabinet ?? false,
           hasWashingMachine: ap.hasWashingMachine ?? false,
           hasWardrobe: ap.hasWardrobe ?? false,
+
+          	hasSharedBathroom: ap.hasSharedBathroom ?? false,
+          	hasWashingMachineShared: ap.hasWashingMachineShared ?? false,
+          	hasWashingMachinePrivate: ap.hasWashingMachinePrivate ?? false,
+          	hasDesk: ap.hasDesk ?? false,
+          	hasKitchenTable: ap.hasKitchenTable ?? false,
+          	hasRangeHood: ap.hasRangeHood ?? false,
+          	hasFridge: ap.hasFridge ?? false,
 
           hasPrivateBathroom: ap.hasPrivateBathroom ?? false,
           hasMezzanine: ap.hasMezzanine ?? false,
@@ -465,18 +483,25 @@ export default function ApartmentFormPage() {
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasAirConditioner")} /> Điều hoà</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWaterHeater")} /> Nóng lạnh</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenCabinet")} /> Kệ bếp</label>
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachine")} /> Máy giặt</label>
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWardrobe")} /> Tủ quần áo</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachine")} /> Máy giặt (chung/riêng)</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachineShared")} /> Máy giặt (chung)</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachinePrivate")} /> Máy giặt (riêng)</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWardrobe")} /> Tủ quần áo</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasFridge")} /> Tủ lạnh</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasRangeHood")} /> Hút mùi</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenTable")} /> Bàn bếp</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasDesk")} /> Bàn làm việc</label>
             </div>
           </Section>
 
           {/* Amenities */}
           <Section title="Tiện nghi">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasPrivateBathroom")} /> Vệ sinh khép kín</label>
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
-              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasPrivateBathroom")} /> Vệ sinh khép kín</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasSharedBathroom")} /> Vệ sinh chung</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
             </div>
           </Section>
         </div>
@@ -548,6 +573,10 @@ export default function ApartmentFormPage() {
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Phòng tắm</label>
                   <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true })} />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Phòng khách</label>
+                  <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true })} />
                 </div>
               </div>
 
