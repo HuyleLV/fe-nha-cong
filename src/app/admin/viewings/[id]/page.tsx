@@ -55,8 +55,8 @@ export default function ViewingAdminDetailPage() {
         return "Đã xác nhận";
       case "cancelled":
         return "Đã huỷ";
-      case "done":
-        return "Hoàn tất";
+      case "visited":
+        return "Đã xem";
       default:
         return String(st);
     }

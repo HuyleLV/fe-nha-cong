@@ -45,28 +45,14 @@ export default function LocationLookup({
     setLoading(true);
     try {
       // Nếu all levels -> tổng hợp nhiều call
-      if (queryLevels.length > 1) {
-        const pages = await Promise.all(
-          queryLevels.map((lv) =>
-            locationService.getAll({
-              page: 1,
-              limit
-            })
-          )
-        );
-        const merged = pages.flatMap((p) => p.items || []);
-        // Loại trùng theo id (nếu BE trả trùng khi search nhiều level)
-        const uniq = new Map<number, Location>();
-        merged.forEach((it) => uniq.set(it.id, it));
-        setItems(Array.from(uniq.values()));
-      } else {
-        const only = queryLevels[0];
-        const { items } = await locationService.getAll({
-          page: 1,
-          limit
-        });
-        setItems(items || []);
-      }
+      // Chỉ hiển thị cấp quận (District) nên ép level = 'District' bỏ qua cấu hình khác
+      const { items } = await locationService.getAll({
+        page: 1,
+        limit,
+        q: kw || undefined,
+        level: 'District' as any,
+      });
+      setItems(items || []);
     } finally {
       setLoading(false);
     }
@@ -75,25 +61,20 @@ export default function LocationLookup({
   // Lần đầu tải
   useEffect(() => {
     fetchLocations("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(queryLevels), limit]);
 
-  // Đồng bộ ô nhập với giá trị đã chọn (khi mở form edit)
   useEffect(() => {
     if (value && value.id) {
       setKeyword(value.name || value.slug || "");
     } else if (!value) {
       setKeyword("");
     }
-    // chỉ phụ thuộc vào id để tránh set lại khi giá trị khác không đổi
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value?.id]);
 
   // Debounce khi gõ
   useEffect(() => {
     const t = setTimeout(() => fetchLocations(keyword), 350);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword]);
 
   // Đóng khi click ra ngoài
@@ -109,8 +90,14 @@ export default function LocationLookup({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
+  const handleRootClick = () => {
+    if (disabled) return;
+    setOpen(true);
+    inputRef.current?.focus();
+  };
+
   return (
-    <div ref={rootRef} className="relative">
+  <div ref={rootRef} className="relative" onClick={handleRootClick}>
       <label className="text-sm font-medium text-slate-700">Khu vực (Location)</label>
 
       <div className="mt-1 flex items-start gap-2">
@@ -132,7 +119,7 @@ export default function LocationLookup({
           {/* Dropdown list */}
           {open && !disabled && (
             <div
-              className="absolute z-20 mt-2 w-full max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="absolute z-20 mt-2 w-full max-h-96 overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm"
               role="listbox"
             >
               {loading ? (
@@ -150,7 +137,6 @@ export default function LocationLookup({
                         onClick={() => {
                           onChange(it);
                           setOpen(false);
-                          // Điền lại keyword bằng tên, tuỳ bạn có muốn giữ search string không.
                           setKeyword(it.name || it.slug || "");
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-emerald-50"

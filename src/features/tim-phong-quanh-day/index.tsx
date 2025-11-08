@@ -12,6 +12,8 @@ import { apartmentService } from "@/services/apartmentService";
 import Pagination from "@/components/Pagination";
 import { toSlug } from "@/utils/formatSlug";
 import LocationLookup from "@/app/admin/components/locationLookup";
+import { locationService } from "@/services/locationService";
+import type { Location } from "@/type/location";
 import RoomCardItem from "@/components/roomCardItem";
 
 // ================ Helpers =================
@@ -34,6 +36,8 @@ export default function TimPhongQuanhDayPage() {
 
   // Filters ↔ QueryApartmentDto
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
+  const [locationId, setLocationId] = useState<number | undefined>(undefined); // resolved from slug (fallback)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [status, setStatus] = useState<ApartmentStatus | undefined>("published");
   const [minPrice, setMinPrice] = useState<string>("0");
   const [maxPrice, setMaxPrice] = useState<string>("8000000");
@@ -81,6 +85,7 @@ export default function TimPhongQuanhDayPage() {
   const buildParams = () => ({
     q: query?.trim() || undefined,
     locationSlug: locationSlug || undefined,
+    locationId: locationId || undefined,
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
     minArea: minArea ? Number(minArea) : undefined,
@@ -119,10 +124,13 @@ export default function TimPhongQuanhDayPage() {
       const g = searchParams?.get("guests") ?? "";
       const b = searchParams?.get("beds") ?? searchParams?.get("bedrooms") ?? "";
       const lr = searchParams?.get("livingRooms") ?? searchParams?.get("living_rooms") ?? "";
+      const locSlug = searchParams?.get("locationSlug") ?? ""; // khu vực
       setQuery(q);
       setGuests(g);
       setBedrooms(b);
       setLivingRooms(lr);
+      // chỉ set locationSlug nếu param có giá trị (giữ lựa chọn người dùng sau đó)
+  if (locSlug) setLocationSlug(locSlug);
 
       // booleans (stored as 'true'/'false')
       const readBool = (k: string) => {
@@ -152,6 +160,27 @@ export default function TimPhongQuanhDayPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.toString()]);
+
+  // Resolve locationSlug -> locationId & selectedLocation chỉ bằng API /api/locations (không gọi endpoint by-slug)
+  useEffect(() => {
+    if (!locationSlug) { setLocationId(undefined); return; }
+    // Nếu locationSlug là số => dùng trực tiếp
+    if (/^\d+$/.test(locationSlug)) { setLocationId(Number(locationSlug)); setSelectedLocation(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { items } = await locationService.getAll({ page: 1, limit: 20 });
+        const found = items.find((l: any) => l.slug === locationSlug);
+        if (!cancelled) {
+          setLocationId(found?.id);
+          if (found) setSelectedLocation(found as Location);
+        }
+      } catch (e) {
+        if (!cancelled) { setLocationId(undefined); setSelectedLocation(null); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [locationSlug]);
 
   // Call API via service + paginate meta (debounce 300ms)
   useEffect(() => {
@@ -183,10 +212,11 @@ export default function TimPhongQuanhDayPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    query, locationSlug, minPrice, maxPrice, minArea, maxArea,
+    query, locationSlug, locationId, minPrice, maxPrice, minArea, maxArea,
     bedrooms, bathrooms, livingRooms, guests, status, sort,
-    hasPrivateBathroom, hasMezzanine, noOwnerLiving, hasAirConditioner,
-    hasWaterHeater, hasWashingMachine, hasWardrobe, flexibleHours, page
+    hasPrivateBathroom, hasSharedBathroom, hasMezzanine, noOwnerLiving, hasAirConditioner,
+    hasWaterHeater, hasWashingMachine, hasWashingMachineShared, hasWashingMachinePrivate, hasWardrobe, hasDesk, hasKitchenTable, hasKitchenCabinet, hasRangeHood, hasFridge,
+    flexibleHours, page
   ]);
 
   // client-side “hot”
@@ -199,7 +229,8 @@ export default function TimPhongQuanhDayPage() {
   // reset filters
   const clearAll = () => {
     setQuery("");
-    setLocationSlug(undefined);
+  setLocationSlug(undefined);
+  setSelectedLocation(null);
     setStatus("published");
     setMinPrice("0");
     setMaxPrice("12000000");
@@ -268,16 +299,21 @@ export default function TimPhongQuanhDayPage() {
             {/* Khu vực */}
             <Accordion title="Khu vực">
               <LocationLookup
-                value={null as any}
-                onChange={(loc: any) => {
-                  setLocationSlug(loc?.slug || (loc?.name ? toSlug(loc.name) : undefined));
+                value={selectedLocation}
+                onChange={async (loc: any) => {
+                  // loc có thể là object Location từ dropdown hoặc null khi clear
+                  const slug = loc?.slug || (loc?.name ? toSlug(loc.name) : undefined);
+                  setSelectedLocation(loc ?? null);
+                  setLocationSlug(slug);
                   setPage(1);
                 }}
                 placeholder="Chọn khu vực"
+                levels={["District"] as any}
+                limit={100}
               />
               {locationSlug && (
                 <div className="text-xs text-slate-600 mt-2">
-                  Đang lọc theo: <span className="font-medium text-green-700">{locationSlug}</span>
+                  Đang lọc theo: <span className="font-medium text-green-700">{selectedLocation?.name || locationSlug}</span>
                 </div>
               )}
             </Accordion>
@@ -513,7 +549,7 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
         <span className="font-semibold text-green-900">{title}</span>
         <ChevronRight className={cx("w-4 h-4 transition", open && "rotate-90")} />
       </button>
-      <div className={cx("overflow-hidden transition-all", open ? "mt-2" : "h-0")}>{open && children}</div>
+      <div className={cx("transition-all", open ? "mt-2 overflow-visible" : "h-0 overflow-hidden")}>{open && children}</div>
     </div>
   );
 }

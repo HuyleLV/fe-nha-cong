@@ -7,6 +7,7 @@ import { viewingService, Viewing } from "@/services/viewingService";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment } from "@/type/apartment";
 import { CalendarDays, Calendar as CalendarIcon, List, Search, Clock, Phone, User as UserIcon, ChevronLeft, ChevronRight, RefreshCw, Circle, CheckCircle2 } from "lucide-react";
+import AdminTable from "@/components/AdminTable";
 
 type AdminViewing = Viewing & { apartment?: Apartment };
 
@@ -23,7 +24,7 @@ function AdminViewingsPage() {
   const [aptLoading, setAptLoading] = useState(false);
   const [selectedApt, setSelectedApt] = useState<Apartment | null>(null);
 
-  const [statusFilter, setStatusFilter] = useState<""|"pending"|"confirmed"|"cancelled"|"done">("");
+  const [statusFilter, setStatusFilter] = useState<""|"pending"|"confirmed"|"cancelled"|"visited">("");
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [viewMode, setViewMode] = useState<'list'|'calendar'>('calendar');
@@ -115,7 +116,7 @@ function AdminViewingsPage() {
   const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()+1, 1));
   const selectedEvents = eventsByDate[selectedDate] || [];
 
-  const onChangeStatus = async (v: AdminViewing, next: 'pending'|'confirmed'|'cancelled'|'done') => {
+  const onChangeStatus = async (v: AdminViewing, next: 'pending'|'confirmed'|'cancelled'|'visited') => {
     if (!v) return;
     const prev = v.status;
     setViewings(list => list.map(it => it.id === v.id ? { ...it, status: next } : it));
@@ -127,6 +128,35 @@ function AdminViewingsPage() {
       toast.error(e?.message || "Cập nhật thất bại");
     }
   };
+
+  // ===== Table config (List mode) =====
+  const tableHeaders = useMemo(() => [
+    'Thời gian',
+    'Khách',
+    'Liên hệ',
+    'Ghi chú',
+    'Trạng thái',
+  ], []);
+
+  const renderRows = (arr: AdminViewing[]) => arr.map(v => {
+    const timeStr = new Date(v.preferredAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+    return (
+      <tr key={v.id} className="hover:bg-slate-50">
+        <td className="px-4 py-3"><span className="inline-flex items-center gap-1 text-slate-800"><Clock className="h-4 w-4" /> {timeStr}</span></td>
+        <td className="px-4 py-3"><span className="inline-flex items-center gap-1"><UserIcon className="h-4 w-4" /> {v.name || 'Khách'}</span></td>
+        <td className="px-4 py-3"><span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" /> {v.phone || '-'}</span></td>
+        <td className="px-4 py-3 max-w-[320px] truncate" title={v.note || ''}>{v.note || '-'}</td>
+        <td className="px-4 py-3">
+          <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-sm">
+            <option value="pending">Đang chờ</option>
+            <option value="confirmed">Đã xác nhận</option>
+            <option value="cancelled">Đã huỷ</option>
+            <option value="visited">Đã xem</option>
+          </select>
+        </td>
+      </tr>
+    );
+  });
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6">
@@ -170,7 +200,7 @@ function AdminViewingsPage() {
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
                 <option value="cancelled">Đã huỷ</option>
-                <option value="done">Đã xem</option>
+                <option value="visited">Đã xem</option>
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
@@ -188,44 +218,9 @@ function AdminViewingsPage() {
             ) : loading ? (
               <div className="rounded-xl border bg-slate-50 p-6 text-sm text-slate-600">Đang tải dữ liệu…</div>
             ) : viewMode === 'list' ? (
-              viewings.length === 0 ? (
-                <div className="rounded-xl border bg-slate-50 p-6 text-sm text-slate-600">Chưa có lịch xem phòng nào cho phòng này.</div>
-              ) : (
-                <div className="overflow-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="text-left text-slate-600">
-                      <tr>
-                        <th className="px-3 py-2">Thời gian</th>
-                        <th className="px-3 py-2">Khách</th>
-                        <th className="px-3 py-2">Liên hệ</th>
-                        <th className="px-3 py-2">Ghi chú</th>
-                        <th className="px-3 py-2">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {viewings.map(v => {
-                        const timeStr = new Date(v.preferredAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                        return (
-                          <tr key={v.id} className="hover:bg-slate-50">
-                            <td className="px-3 py-2"><span className="inline-flex items-center gap-1 text-slate-800"><Clock className="h-4 w-4" /> {timeStr}</span></td>
-                            <td className="px-3 py-2"><span className="inline-flex items-center gap-1"><UserIcon className="h-4 w-4" /> {v.name || 'Khách'} </span></td>
-                            <td className="px-3 py-2"><span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" /> {v.phone || '-'}</span></td>
-                            <td className="px-3 py-2 max-w-[320px] truncate" title={v.note || ''}>{v.note || '-'}</td>
-                            <td className="px-3 py-2">
-                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-sm">
-                                <option value="pending">Đang chờ</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã huỷ</option>
-                                <option value="done">Đã xem</option>
-                              </select>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )
+              <AdminTable headers={tableHeaders} loading={loading} emptyText="Chưa có lịch xem phòng nào cho phòng này.">
+                {renderRows(viewings)}
+              </AdminTable>
             ) : (
               <div className="grid gap-5 lg:grid-cols-3">
                 {/* Calendar grid */}
@@ -339,7 +334,7 @@ function AdminViewingsPage() {
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
                 <option value="cancelled">Đã huỷ</option>
-                <option value="done">Đã xem</option>
+                <option value="visited">Đã xem</option>
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
@@ -356,44 +351,9 @@ function AdminViewingsPage() {
             ) : loading ? (
               <div className="rounded-xl border bg-slate-50 p-6 text-sm text-slate-600">Đang tải dữ liệu…</div>
             ) : viewMode === 'list' ? (
-              viewings.length === 0 ? (
-                <div className="rounded-xl border bg-slate-50 p-6 text-sm text-slate-600">Chưa có lịch xem phòng nào cho phòng này.</div>
-              ) : (
-                <div className="overflow-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="text-left text-slate-600">
-                      <tr>
-                        <th className="px-3 py-2">Thời gian</th>
-                        <th className="px-3 py-2">Khách</th>
-                        <th className="px-3 py-2">Liên hệ</th>
-                        <th className="px-3 py-2">Ghi chú</th>
-                        <th className="px-3 py-2">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {viewings.map(v => {
-                        const timeStr = new Date(v.preferredAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
-                        return (
-                          <tr key={v.id} className="hover:bg-slate-50">
-                            <td className="px-3 py-2">{timeStr}</td>
-                            <td className="px-3 py-2">{v.name || 'Khách'}</td>
-                            <td className="px-3 py-2">{v.phone || '-'}</td>
-                            <td className="px-3 py-2 max-w-[320px] truncate" title={v.note || ''}>{v.note || '-'}</td>
-                            <td className="px-3 py-2">
-                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-sm">
-                                <option value="pending">Đang chờ</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã huỷ</option>
-                                <option value="done">Đã xem</option>
-                              </select>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )
+              <AdminTable headers={tableHeaders} loading={loading} emptyText="Chưa có lịch xem phòng nào cho phòng này.">
+                {renderRows(viewings)}
+              </AdminTable>
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
                 {/* Calendar (left) */}
@@ -473,7 +433,7 @@ function AdminViewingsPage() {
                                 <option value="pending">Đang chờ</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="cancelled">Đã huỷ</option>
-                                <option value="done">Đã xem</option>
+                                <option value="visited">Đã xem</option>
                               </select>
                             </div>
                           </li>

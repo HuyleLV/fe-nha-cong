@@ -19,7 +19,7 @@ export type Viewing = {
   apartmentId: number;
   userId?: number | null;
   preferredAt: string;
-  status: "pending" | "confirmed" | "cancelled" | "done";
+  status: "pending" | "confirmed" | "cancelled" | "visited";
   name: string;
   phone: string;
   email?: string | null;
@@ -45,7 +45,7 @@ export const viewingService = {
     if (Array.isArray(data)) return { items: data, meta: null };
     return data as { items: Viewing[]; meta: any };
   },
-  async adminUpdateStatus(id: number, payload: { status: 'pending'|'confirmed'|'cancelled'|'done'; staffNote?: string }) {
+  async adminUpdateStatus(id: number, payload: { status: 'pending'|'confirmed'|'cancelled'|'visited'; staffNote?: string }) {
   const data = await axiosClient.patch(apiUrl(`/api/viewings/admin/${id}/status`), payload);
     return data;
   },
