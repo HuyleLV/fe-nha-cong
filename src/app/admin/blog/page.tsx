@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { Blog, BlogStatus } from "@/type/blog";
 import Pagination from "@/components/Pagination";
 import { toSlug } from "@/utils/formatSlug";
+import AdminTable from "@/components/AdminTable";
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -79,7 +80,7 @@ export default function BlogPage() {
     );
 
   return (
-    <div className="p-4">
+  <div className="mx-auto max-w-screen-2xl p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">QUẢN LÝ BLOG</h1>
         <button
@@ -89,117 +90,66 @@ export default function BlogPage() {
           + Tạo bài viết
         </button>
       </div>
+      <AdminTable
+        headers={["ID","Tiêu đề","Slug","Tags","Keyword","SEO","Trạng thái","Views","Ngày tạo","Ngày cập nhật","Thao tác"]}
+        loading={loading}
+        emptyText="Chưa có bài viết nào."
+      >
+        {blogs.map((b) => {
+          const pointSeo = (b as any)?.pointSeo as number | undefined;
+          const kw = fallbackKeyword(b);
 
-      <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden mt-5">
-        <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
-          <tr>
-            <th className="px-4 py-3">ID</th>
-            <th className="px-4 py-3">Tiêu đề</th>
-            <th className="px-4 py-3">Slug</th>
-            <th className="px-4 py-3">Tags</th>
-            <th className="px-4 py-3">Keyword</th>
-            <th className="px-4 py-3">SEO</th>
-            <th className="px-4 py-3">Trạng thái</th>
-            <th className="px-4 py-3">Views</th>
-            <th className="px-4 py-3">Ngày tạo</th>
-            <th className="px-4 py-3">Ngày cập nhật</th>
-            <th className="px-4 py-3 text-center">Thao tác</th>
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-gray-200 text-[15px]">
-          {blogs.map((b) => {
-            const pointSeo = (b as any)?.pointSeo as number | undefined; // NEW
-            const kw = fallbackKeyword(b); // NEW
-
-            return (
-              <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-2 font-medium text-gray-900">{b.id}</td>
-                <td className="px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    {/* Nếu muốn hiện cover nhỏ:
-                    {b.coverImageUrl && (
-                      <img src={b.coverImageUrl} alt="" className="w-8 h-8 rounded object-cover" />
-                    )} */}
-                    <span className="line-clamp-1">{b.title}</span>
+          return (
+            <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-4 py-2 font-medium text-gray-900">{b.id}</td>
+              <td className="px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="line-clamp-1">{b.title}</span>
+                </div>
+              </td>
+              <td className="px-4 py-2 text-gray-700">{b.slug}</td>
+              <td className="px-4 py-2 text-gray-700">{b.tags?.length ? b.tags.join(", ") : <span className="text-gray-400">—</span>}</td>
+              <td className="px-4 py-2">
+                <span className="inline-flex max-w-[180px] items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs truncate">{kw || "—"}</span>
+              </td>
+              <td className="px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${seoBadgeClass(pointSeo)}`}>{Number.isFinite(pointSeo) ? `${pointSeo}` : "0"}/100</span>
+                  <div className="w-20 h-2 bg-gray-200 rounded overflow-hidden">
+                    <div className={`h-2 ${seoBarClass(pointSeo)}`} style={{ width: `${Math.max(0, Math.min(100, pointSeo ?? 0))}%` }} />
                   </div>
-                </td>
-                <td className="px-4 py-2 text-gray-700">{b.slug}</td>
-                <td className="px-4 py-2 text-gray-700">
-                  {b.tags?.length ? b.tags.join(", ") : <span className="text-gray-400">—</span>}
-                </td>
-
-                {/* KEYWORD */}
-                <td className="px-4 py-2">
-                  <span className="inline-flex max-w-[180px] items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs truncate">
-                    {kw || "—"}
-                  </span>
-                </td>
-
-                {/* SEO SCORE */}
-                <td className="px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold rounded-full px-2 py-0.5 ${seoBadgeClass(pointSeo)}`}>
-                      {Number.isFinite(pointSeo) ? `${pointSeo}` : "0"}/100
-                    </span>
-                    <div className="w-20 h-2 bg-gray-200 rounded overflow-hidden">
-                      <div
-                        className={`h-2 ${seoBarClass(pointSeo)}`}
-                        style={{ width: `${Math.max(0, Math.min(100, pointSeo ?? 0))}%` }}
-                      />
-                    </div>
-                  </div>
-                </td>
-
-                <td className={`px-4 py-2 font-semibold ${statusClass(b.status)}`}>
-                  {statusText(b.status)} {b.isPinned ? "• Pinned" : ""}
-                </td>
-                <td className="px-4 py-2">{b.viewCount ?? 0}</td>
-                <td className="px-4 py-2 text-gray-500">{formatDateTime(b.createdAt)}</td>
-                <td className="px-4 py-2 text-gray-500">{formatDateTime(b.updatedAt)}</td>
-                <td className="px-4 py-2">
-                  <div className="flex justify-center gap-2">
-                    <button
-                      className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
-                      onClick={() => router.push(`/admin/blog/${b.id}`)}
-                    >
-                      <Edit size={15} />
-                      Sửa
-                    </button>
-                    <button
-                      className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
-                      onClick={async () => {
-                        const ok = confirm("Bạn có chắc chắn muốn xoá bài viết này?");
-                        if (!ok) return;
-                        try {
-                          await blogService.delete(b.id);
-                          toast.success("Xoá bài viết thành công!");
-                          fetchBlogs(1); // về trang 1 nếu xóa để tránh trang rỗng
-                          setPage(1);
-                        } catch (err) {
-                          console.error(err);
-                          toast.error("Xoá thất bại, vui lòng thử lại!");
-                        }
-                      }}
-                    >
-                      <Trash2 size={15} />
-                      Xoá
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-
-          {!blogs.length && (
-            <tr>
-              <td colSpan={11} className="px-4 py-6 text-center text-gray-500">
-                Chưa có bài viết nào.
+                </div>
+              </td>
+              <td className={`px-4 py-2 font-semibold ${statusClass(b.status)}`}>{statusText(b.status)} {b.isPinned ? "• Pinned" : ""}</td>
+              <td className="px-4 py-2">{b.viewCount ?? 0}</td>
+              <td className="px-4 py-2 text-gray-500">{formatDateTime(b.createdAt)}</td>
+              <td className="px-4 py-2 text-gray-500">{formatDateTime(b.updatedAt)}</td>
+              <td className="px-4 py-2">
+                <div className="flex justify-center gap-2">
+                  <button className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer" onClick={() => router.push(`/admin/blog/${b.id}`)}>
+                    <Edit size={15} /> Sửa
+                  </button>
+                  <button className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer" onClick={async () => {
+                    const ok = confirm("Bạn có chắc chắn muốn xoá bài viết này?");
+                    if (!ok) return;
+                    try {
+                      await blogService.delete(b.id);
+                      toast.success("Xoá bài viết thành công!");
+                      fetchBlogs(1);
+                      setPage(1);
+                    } catch (err) {
+                      console.error(err);
+                      toast.error("Xoá thất bại, vui lòng thử lại!");
+                    }
+                  }}>
+                    <Trash2 size={15} /> Xoá
+                  </button>
+                </div>
               </td>
             </tr>
-          )}
-        </tbody>
-      </table>
+          );
+        })}
+      </AdminTable>
 
       <Pagination
         page={page}

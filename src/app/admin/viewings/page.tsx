@@ -160,7 +160,7 @@ function AdminViewingsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6">
-      <div className="mx-auto max-w-screen-2xl">
+  <div className="mx-auto max-w-screen-2xl">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-semibold text-slate-900 flex items-center gap-2"><CalendarDays className="h-5 w-5 text-emerald-600" /> Quản lý lịch xem phòng</h1>
           <span className="text-xs text-slate-500">{monthLabel}</span>

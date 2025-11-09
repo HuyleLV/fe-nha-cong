@@ -62,7 +62,7 @@ function BuildingAdminListInner() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+  <div className="max-w-screen-2xl mx-auto px-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-800">Quản lý Tòa Nhà</h1>
         <Link

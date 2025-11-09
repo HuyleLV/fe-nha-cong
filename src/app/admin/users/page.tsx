@@ -65,7 +65,7 @@ function AdminUsersPage() {
   const handleNext = () => page < totalPages && goto(page + 1);
 
   return (
-    <div className="p-4">
+  <div className="mx-auto max-w-screen-2xl p-4">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-emerald-900">QUẢN LÝ NGƯỜI DÙNG</h1>

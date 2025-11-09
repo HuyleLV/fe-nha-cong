@@ -8,6 +8,7 @@ import Pagination from "@/components/Pagination";
 import { formatDateTime } from "@/utils/format-time";
 import { locationService } from "@/services/locationService";
 import { Location, LocationLevel } from "@/type/location";
+import AdminTable from "@/components/AdminTable";
 
 function LevelTag({ level }: { level: LocationLevel }) {
   const map: Record<LocationLevel, string> = {
@@ -60,7 +61,7 @@ export default function CityLocationPage() {
     );
 
   return (
-    <div className="p-4">
+    <div className="mx-auto max-w-screen-2xl p-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-emerald-900">ĐỊA ĐIỂM · THÀNH PHỐ</h1>
         <button
@@ -70,65 +71,49 @@ export default function CityLocationPage() {
           <Plus size={16} /> Tạo Thành phố
         </button>
       </div>
-
-      <table className="w-full text-left border border-gray-200 shadow rounded-lg overflow-hidden mt-5">
-        <thead className="bg-gray-200 text-gray-700 uppercase text-[14px]">
-          <tr>
-            <th className="px-4 py-3">ID</th>
-            <th className="px-4 py-3">Tên</th>
-            <th className="px-4 py-3">Slug</th>
-            <th className="px-4 py-3">Cấp</th>
-            <th className="px-4 py-3">Ngày tạo</th>
-            <th className="px-4 py-3">Ngày cập nhật</th>
-            <th className="px-4 py-3 text-center">Thao tác</th>
+      <AdminTable
+        headers={["ID","Tên","Slug","Cấp","Ngày tạo","Ngày cập nhật","Thao tác"]}
+        loading={loading}
+        emptyText="Chưa có Thành phố."
+      >
+        {items.map((loc) => (
+          <tr key={loc.id} className="hover:bg-gray-50 transition-colors">
+            <td className="px-4 py-2 font-medium text-gray-900">{loc.id}</td>
+            <td className="px-4 py-2"><span className="line-clamp-1">{loc.name}</span></td>
+            <td className="px-4 py-2 text-gray-700">{loc.slug}</td>
+            <td className="px-4 py-2"><LevelTag level={loc.level} /></td>
+            <td className="px-4 py-2 text-gray-500">{formatDateTime(loc.createdAt)}</td>
+            <td className="px-4 py-2 text-gray-500">{formatDateTime(loc.updatedAt)}</td>
+            <td className="px-4 py-2">
+              <div className="flex justify-center gap-2">
+                <button
+                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  onClick={() => router.push(`/admin/location/${loc.id}`)}
+                >
+                  <Edit size={15} /> Sửa
+                </button>
+                <button
+                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  onClick={async () => {
+                    const ok = confirm(`Xoá Thành phố "${loc.name}"?`);
+                    if (!ok) return;
+                    try {
+                      await locationService.delete(loc.id);
+                      toast.success("Đã xoá!");
+                      fetchlocation();
+                    } catch (err) {
+                      console.error(err);
+                      toast.error("Xoá thất bại, vui lòng thử lại!");
+                    }
+                  }}
+                >
+                  <Trash2 size={15} /> Xoá
+                </button>
+              </div>
+            </td>
           </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 text-[15px]">
-          {items.map((loc) => (
-            <tr key={loc.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-2 font-medium text-gray-900">{loc.id}</td>
-              <td className="px-4 py-2"><span className="line-clamp-1">{loc.name}</span></td>
-              <td className="px-4 py-2 text-gray-700">{loc.slug}</td>
-              <td className="px-4 py-2"><LevelTag level={loc.level} /></td>
-              <td className="px-4 py-2 text-gray-500">{formatDateTime(loc.createdAt)}</td>
-              <td className="px-4 py-2 text-gray-500">{formatDateTime(loc.updatedAt)}</td>
-              <td className="px-4 py-2">
-                <div className="flex justify-center gap-2">
-                  <button
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
-                    onClick={() => router.push(`/admin/location/${loc.id}`)}
-                  >
-                    <Edit size={15} /> Sửa
-                  </button>
-                  <button
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
-                    onClick={async () => {
-                      const ok = confirm(`Xoá Thành phố "${loc.name}"?`);
-                      if (!ok) return;
-                      try {
-                        await locationService.delete(loc.id);
-                        toast.success("Đã xoá!");
-                        fetchlocation();
-                      } catch (err) {
-                        console.error(err);
-                        toast.error("Xoá thất bại, vui lòng thử lại!");
-                      }
-                    }}
-                  >
-                    <Trash2 size={15} /> Xoá
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-
-          {!items.length && (
-            <tr>
-              <td colSpan={7} className="px-4 py-6 text-center text-gray-500">Chưa có Thành phố.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+        ))}
+      </AdminTable>
 
       <div className="mt-4">
         <Pagination page={page} totalPages={totalPages} onPageChange={(n) => setPage(n)} onPrev={handlePrev} onNext={handleNext} />

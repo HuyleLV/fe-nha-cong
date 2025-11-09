@@ -22,6 +22,7 @@ import {
   User as UserIcon,
   Map,
   Search,
+  FileSearch,
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
@@ -527,6 +528,13 @@ export default function Header() {
               className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
             >
               <Newspaper className="w-5 h-5" /> Blog & Cẩm nang thuê nhà
+            </Link>
+            <Link
+              href="/tuyen-dung"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <FileSearch className="w-5 h-5" /> Tuyển dụng
             </Link>
             <Link
               href="/ve-chung-toi"

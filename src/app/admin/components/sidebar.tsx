@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -39,6 +39,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
+    { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
     { href: "/admin/building", label: "Quản lý Tòa Nhà", icon: House },
     { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
