@@ -75,7 +75,7 @@ function AdminJobsPage() {
             <RotateCcw className="size-4" /> Tải lại
           </button>
           <Link
-            href="/admin/jobs/new"
+            href="/admin/jobs/create"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
           >
             <Plus className="size-4" /> Thêm tin

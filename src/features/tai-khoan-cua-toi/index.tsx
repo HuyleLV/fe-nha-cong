@@ -73,6 +73,18 @@ export default function AccountPage() {
     return `${y}-${m}-${day}`;
   });
   const [editing, setEditing] = useState(false);
+  const [emailOtpSent, setEmailOtpSent] = useState<{ sent: boolean; expiresAt?: string } | null>(null);
+  const [emailCode, setEmailCode] = useState('');
+  const [phoneOtpSent, setPhoneOtpSent] = useState<{ sent: boolean; expiresAt?: string } | null>(null);
+  const [phoneCode, setPhoneCode] = useState('');
+
+  // --- Quick stats ---
+  const totalFavorites = saved.length;
+  const totalViewings = viewings.length;
+  const upcomingViewings = useMemo(() => {
+    const now = Date.now();
+    return viewings.filter(v => +new Date(v.preferredAt) >= now).length;
+  }, [viewings]);
 
   /* ---------- AUTH: đọc JWT ---------- */
   const readAuth = (): (Me & Partial<User>) | null => {
@@ -123,6 +135,76 @@ export default function AccountPage() {
     localStorage.removeItem("adminInfo");
     sessionStorage.removeItem("auth_user");
     sessionStorage.removeItem("access_token");
+  };
+
+  // === Verification handlers ===
+  const requestEmailVerification = async () => {
+    try {
+      const email = auth?.email || '';
+      if (!email) return toast.error('Bạn chưa cập nhật email');
+      const { userService } = await import('@/services/userService');
+      // Use existing verify-email API without code to request sending OTP
+      const res = await userService.postVerifyEmail({ email, code: '' } as any);
+      setEmailOtpSent({ sent: true });
+      toast.success('Đã gửi mã xác thực email');
+    } catch (e: any) {
+      toast.error(e?.message || 'Không gửi được mã xác thực email');
+    }
+  };
+  const submitEmailCode = async () => {
+    try {
+      const email = auth?.email || '';
+      if (!email) return toast.error('Bạn chưa cập nhật email');
+      const { userService } = await import('@/services/userService');
+      await userService.postVerifyEmail({ email, code: emailCode.trim() });
+      // fetch latest profile and persist to storage
+      try {
+        const me: any = await userService.getMe();
+        const json = JSON.stringify(me);
+        setCookie('auth_user', json, 60 * 60 * 24 * 30);
+        localStorage.setItem('auth_user', json);
+      } catch {}
+      toast.success('Xác thực email thành công');
+      // refresh auth from /me or token
+      window.dispatchEvent(new CustomEvent('auth:update'));
+      setEmailOtpSent(null);
+      setEmailCode('');
+    } catch (e: any) {
+      toast.error(e?.message || 'Mã xác thực email không đúng');
+    }
+  };
+  const requestPhoneOtp = async () => {
+    try {
+      const phone = auth?.phone || '';
+      if (!phone) return toast.error('Bạn chưa cập nhật số điện thoại');
+      const { userService } = await import('@/services/userService');
+      const res = await userService.postStartRegisterPhone({ phone });
+      setPhoneOtpSent({ sent: true, expiresAt: res.expiresAt });
+      toast.success('Đã gửi mã OTP số điện thoại');
+    } catch (e: any) {
+      toast.error(e?.message || 'Không gửi được mã OTP điện thoại');
+    }
+  };
+  const submitPhoneCode = async () => {
+    try {
+      const phone = auth?.phone || '';
+      if (!phone) return toast.error('Bạn chưa cập nhật số điện thoại');
+      const { userService } = await import('@/services/userService');
+      const res = await userService.postVerifyPhone({ phone, code: phoneCode.trim() });
+      // cập nhật auth_user trong storage từ response login
+      const u = res?.user;
+      if (u) {
+        const json = JSON.stringify(u);
+        setCookie('auth_user', json, 60 * 60 * 24 * 30);
+        localStorage.setItem('auth_user', json);
+        window.dispatchEvent(new CustomEvent('auth:update'));
+      }
+      toast.success('Xác thực số điện thoại thành công');
+      setPhoneOtpSent(null);
+      setPhoneCode('');
+    } catch (e: any) {
+      toast.error(e?.message || 'Mã OTP không đúng hoặc đã hết hạn');
+    }
   };
 
   /* ---------- FAVORITES LOCAL ---------- */
@@ -298,10 +380,16 @@ export default function AccountPage() {
     <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* ===== Header user ===== */}
       <section className="relative">
+        {/* Decorative background */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+          <div className="absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-teal-200/40 blur-3xl" />
+        </div>
         <div className="max-w-screen-2xl mx-auto px-4 pt-24 pb-10">
-          <div className="rounded-3xl bg-white shadow-lg p-6 md:p-8">
+          <div className="rounded-3xl bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border border-emerald-100 shadow-xl p-6 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="h-20 w-20 rounded-2xl bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
+            <div className="p-0.5 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400">
+              <div className="h-20 w-20 rounded-[0.9rem] bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
               {auth.avatarUrl && !avatarBroken ? (
                 <img
                   src={asImageSrc(auth.avatarUrl)}
@@ -312,16 +400,24 @@ export default function AccountPage() {
               ) : (
                 <UserIcon className="w-10 h-10" />
               )}
+              </div>
             </div>
 
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl font-bold text-slate-900">{auth.name || "Người dùng"}</h1>
-              <div className="mt-1 flex flex-wrap items-center gap-2 justify-center md:justify-start">
-                {typeof auth.emailVerified !== 'undefined' && (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${auth.emailVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                    <Sparkles className="w-3.5 h-3.5" /> {auth.emailVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">{auth.name || "Người dùng"}</h1>
+                {((auth as any).email_verified === 1) && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Email đã xác minh
                   </span>
                 )}
+                {((auth as any).phone_verified === 1) && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 text-emerald-700 border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5" /> SĐT đã xác minh
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 justify-center md:justify-start">
                 {auth.provider && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-700">
                     <Fingerprint className="w-3.5 h-3.5" /> Đăng nhập: {auth.provider}
@@ -343,6 +439,31 @@ export default function AccountPage() {
                   </span>
                 )}
               </p>
+              {/* Verification actions */}
+              <div className="mt-3 flex flex-col gap-2">
+                {/* Email verify */}
+                {((auth as any).email_verified !== 1) && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-50/40 p-2">
+                    <span className="text-sm text-rose-600">Email chưa xác minh</span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={requestEmailVerification} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition">Gửi mã xác minh</button>
+                      <input value={emailCode} onChange={e=>setEmailCode(e.target.value)} placeholder="Nhập mã" className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
+                      <button onClick={submitEmailCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                    </div>
+                  </div>
+                )}
+                {/* Phone verify */}
+                {((auth as any).phone_verified !== 1) && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-50/40 p-2">
+                    <span className="text-sm text-rose-600">Số điện thoại chưa xác minh</span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={requestPhoneOtp} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition">Gửi mã OTP</button>
+                      <input value={phoneCode} onChange={e=>setPhoneCode(e.target.value)} placeholder="Nhập mã" className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
+                      <button onClick={submitPhoneCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-600">
                 {auth.address && (
                   <div className="inline-flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Địa chỉ: {auth.address}</div>
@@ -361,10 +482,10 @@ export default function AccountPage() {
                 )}
               </div>
             </div>
-              <div className="flex items-center gap-2">
+              <div className="w-full md:w-auto flex justify-center md:justify-end items-center gap-2 mt-2 md:mt-0 md:self-start md:ml-auto">
                 <button
                   onClick={() => setEditing((v) => !v)}
-                  className="rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 flex items-center gap-2"
+                  className="h-10 rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 flex items-center gap-2 transition"
                 >
                   {editing ? 'Đóng sửa' : 'Sửa thông tin'}
                 </button>
@@ -377,7 +498,7 @@ export default function AccountPage() {
                     toast.info("Đã đăng xuất");
                     router.replace("/dang-nhap");
                   }}
-                  className="rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 flex items-center gap-2"
+                  className="h-10 rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 flex items-center gap-2 transition"
                 >
                   <LogOut className="w-4 h-4" /> Đăng xuất
                 </button>
@@ -401,6 +522,31 @@ export default function AccountPage() {
                 }} />
               </div>
             )}
+
+            {/* Quick stats */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
+              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-emerald-50/40 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500">Phòng đã yêu thích</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500" />
+                  <div className="text-xl font-semibold text-slate-900">{totalFavorites}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-sky-50/40 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500">Lịch xem sắp tới</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-sky-600" />
+                  <div className="text-xl font-semibold text-slate-900">{upcomingViewings}</div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-amber-50/40 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500">Tổng số lịch đã đặt</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-amber-600" />
+                  <div className="text-xl font-semibold text-slate-900">{totalViewings}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -513,7 +659,7 @@ export default function AccountPage() {
           {saved.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 text-rose-700 rounded-xl hover:bg-rose-50 cursor-pointer"
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 text-rose-700 rounded-xl hover:bg-rose-50 cursor-pointer transition"
             >
               <Trash2 className="w-4 h-4" /> Xóa tất cả
             </button>

@@ -37,7 +37,11 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginUserRequest & { remember: boolean }) => {
     try {
-      const res = (await userService.postLoginUser(data)) as resLoginUser;
+      const payload: LoginUserRequest = {
+        identifier: String(data.identifier || "").trim(),
+        password_hash: data.password_hash,
+      };
+      const res = (await userService.postLoginUser(payload)) as resLoginUser;
       console.log("Login response:", res);
       if (res?.accessToken && res?.user) {
         const storage = data.remember ? localStorage : sessionStorage;

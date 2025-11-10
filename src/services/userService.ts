@@ -85,6 +85,7 @@ export const userService = {
         ) as unknown as { message: string };
         return res;
     },
+    // Note: dùng chung /verify-email cho cả việc gửi mã (truyền chỉ email) và xác minh (truyền email + code)
         
     async getMe(): Promise<Me> {
         const res = await axiosClient.get<Me>(

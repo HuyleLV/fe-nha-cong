@@ -19,7 +19,7 @@ export default function Footer() {
               Địa chỉ: số 27 liền kề 7, KĐT Văn Khê, La Khê, Hà Đông, Hà Nội
             </p>
             <p className="mt-1 text-sm">CSKH: 0968.345.486</p>
-            <p className="mt-1 text-sm">Email: hotro.nhacong@gmail.com</p>
+            <p className="mt-1 text-sm">Email: hotro@nhacong.com.vn</p>
             {/* Social icons */}
             <div className="mt-2 flex items-center gap-2">
               <a
@@ -67,7 +67,7 @@ export default function Footer() {
                 <Link href="#" className="hover:underline">Dành cho khách thuê</Link>
               </li>
               <li>
-                <Link href="/tuyen-dung" className="hover:underline">Tuyển dụng nhà cộng</Link>
+                <Link href="/tuyen-dung" className="hover:underline">Cơ hội nghề nghiệp</Link>
               </li>
               <li>
                 <Link href="#" className="hover:underline">Hỗ trợ</Link>

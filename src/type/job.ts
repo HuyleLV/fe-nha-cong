@@ -13,6 +13,7 @@ export type Job = {
   salaryMin?: number | null;
   salaryMax?: number | null;
   currency?: string | null;
+  coverImageUrl?: string | null; // ảnh đại diện tin tuyển dụng
   status: JobStatus;
   publishedAt?: string | null;
   createdAt: string;

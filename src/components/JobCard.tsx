@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Job } from '@/type/job';
-import { MapPin, Clock, Target, ArrowRight, CalendarDays } from 'lucide-react';
+import { MapPin, Clock, Target, ArrowRight, CalendarDays, ImageOff } from 'lucide-react';
+import MyImage from '@/components/myImage';
 
 export default function JobCard({ job }: { job: Job }) {
   const salary = job.salaryMin || job.salaryMax
@@ -12,6 +13,23 @@ export default function JobCard({ job }: { job: Job }) {
       href={`/tuyen-dung/${job.slug || job.id}`}
       className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-xl hover:border-emerald-300 transition duration-300"
     >
+      {/* Cover image */}
+      {job.coverImageUrl ? (
+        <div className="relative w-full aspect-[16/9]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={(process.env.NEXT_PUBLIC_API_URL || "") + job.coverImageUrl}
+            alt={job.title}
+            className="w-full h-full object-cover"
+          />
+          <span className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
+        </div>
+      ) : (
+        <div className="w-full aspect-[16/9] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-400">
+          <ImageOff className="w-8 h-8" />
+        </div>
+      )}
+
       {/* Accent bar */}
       <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
 
