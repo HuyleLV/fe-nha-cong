@@ -6,6 +6,9 @@ import { Slide } from "react-slideshow-image";
 import "react-slideshow-image/dist/styles.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import uudai from "@/assets/uu-dai.jpg";
+import uudai2 from "@/assets/uu-dai-2.jpg";
+import uudai3 from "@/assets/uu-dai-3.jpg";
+import uudai4 from "@/assets/uu-dai-4.jpg";
 
 export type PromoItem = {
   id: string | number;
@@ -29,11 +32,14 @@ export default function PromoSection({
   perSlide?: number; // number of cards per slide (2 mặc định)
   autoplay?: boolean;
 }) {
-  // Tạm thời hiển thị 6 ảnh giống nhau dùng asset `uudai`
-  const list: PromoItem[] = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    image: uudai,
-  }));
+  // Mặc định hiển thị 4 ảnh ưu đãi đã import sẵn
+  const defaultItems: PromoItem[] = [
+    { id: 1, image: uudai },
+    { id: 2, image: uudai2 },
+    { id: 3, image: uudai3 },
+    { id: 4, image: uudai4 },
+  ];
+  const list: PromoItem[] = (items && items.length ? items : defaultItems);
 
   // Chia nhóm theo perSlide
   const chunk = (arr: PromoItem[], size: number) => {
