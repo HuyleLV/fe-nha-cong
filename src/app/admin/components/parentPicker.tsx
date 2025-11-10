@@ -7,12 +7,12 @@ import { Location, LocationLevel } from "@/type/location";
 
 // Quan hệ parent hợp lệ cho từng child level
 // - Province: không có parent
-// - City: không có parent (theo ràng buộc hiện tại ở trang form)
-// - District: parent phải là Province
+// - City: parent phải là Province
+// - District: parent phải là City
 const allowedParents: Record<LocationLevel, LocationLevel[]> = {
   Province: [],
-  City: [],
-  District: ["Province"],
+  City: ["Province"],
+  District: ["City"],
 };
 
 type ParentPickerProps = {
@@ -28,7 +28,7 @@ export default function ParentPicker({
   onChange,
   childLevel,
   disabled,
-  placeholder = "Tìm theo tên hoặc slug để chọn parent…",
+  placeholder = "Tìm theo tên hoặc slug để chọn cấp cha…",
 }: ParentPickerProps) {
   const [keyword, setKeyword] = useState("");
   const [items, setItems] = useState<Location[]>([]);
@@ -38,6 +38,7 @@ export default function ParentPicker({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const parentLevels = useMemo<LocationLevel[]>(() => allowedParents[childLevel] ?? [], [childLevel]);
+  const viLabel = (lv: LocationLevel) => (lv === 'Province' ? 'Tỉnh' : lv === 'City' ? 'Thành phố' : 'Quận');
 
   const fetchParents = async (kw: string) => {
     // Nếu level hiện tại không cần parent hoặc component bị vô hiệu hoá, không fetch
@@ -91,7 +92,7 @@ export default function ParentPicker({
 
   return (
     <div data-parentpicker-root>
-      <label className="text-sm font-medium text-slate-700">Thuộc khu vực (parent)</label>
+  <label className="text-sm font-medium text-slate-700">Thuộc khu vực (cấp cha)</label>
 
       {/* ô nhập */}
       <div className="mt-1 flex items-start gap-2">
@@ -104,7 +105,7 @@ export default function ParentPicker({
             onChange={(e) => setKeyword(e.target.value)}
             onFocus={() => setOpenList(true)}
             placeholder={
-              canPickParent ? placeholder : "Level này không cần/không có parent"
+              canPickParent ? placeholder : "Cấp này không cần/không có cấp cha"
             }
             className="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:bg-slate-50 disabled:text-slate-400"
           />
@@ -134,7 +135,7 @@ export default function ParentPicker({
                       >
                         <div className="font-medium">{it.name}</div>
                         <div className="text-xs text-slate-500">
-                          {it.slug} · {it.level}
+                          {it.slug} · {viLabel(it.level)}
                         </div>
                       </button>
                     </li>
@@ -165,10 +166,10 @@ export default function ParentPicker({
       {/* gợi ý cấp hợp lệ */}
       {parentLevels.length > 0 ? (
         <p className="mt-1 text-xs text-slate-500">
-          Cấp parent hợp lệ: <b>{parentLevels.join(", ")}</b>
+          Cấp cha hợp lệ: <b>{parentLevels.map(viLabel).join(", ")}</b>
         </p>
       ) : (
-        <p className="mt-1 text-xs text-slate-400">Mục này không có parent.</p>
+        <p className="mt-1 text-xs text-slate-400">Mục này không có cấp cha.</p>
       )}
     </div>
   );

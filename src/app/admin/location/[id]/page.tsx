@@ -108,22 +108,29 @@ export default function LocationFormPage() {
     }
   }, [isEdit, searchParams, setValue]);
 
-  // Ràng buộc parent theo level (Province/City: null; District: required & parent phải là Province/City)
+  // Ràng buộc parent theo level
+  // Province: luôn null
+  // City: phải có parent (Province)
+  // District: phải có parent (City)
   useEffect(() => {
     if (!level) return;
 
     if (level === 'Province') {
-      // không có parent
       setSelectedParent(null);
       setValue('parentId', null, { shouldDirty: true });
       clearErrors('parentId');
-    } else if (level === 'District') {
-      // nếu đang có parent nhưng không hợp lệ (phòng trường hợp ParentPicker cho chọn sâu hơn)
-      if (selectedParent && !['Province'].includes(selectedParent.level)) {
+    } else if (level === 'City') {
+      // City yêu cầu parent là Province
+      if (selectedParent && selectedParent.level !== 'Province') {
         setSelectedParent(null);
         setValue('parentId', null, { shouldDirty: true });
       }
-      // không set error ở đây; để lúc submit validate cứng thêm lần nữa
+    } else if (level === 'District') {
+      // District yêu cầu parent là City
+      if (selectedParent && selectedParent.level !== 'City') {
+        setSelectedParent(null);
+        setValue('parentId', null, { shouldDirty: true });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level]);
@@ -132,16 +139,25 @@ export default function LocationFormPage() {
   const onSubmit = async (values: LocationForm) => {
     const cleanedSlug = (values.slug?.trim() || toSlug(values.name)).trim();
 
-    // ✅ Validate FE: District phải có parent; Province/City không có parent
-    if (values.level === 'District' && !values.parentId) {
-      setError('parentId', { message: 'Quận cần chọn Tỉnh/Thành phố cha' });
-      toast.error('Vui lòng chọn Tỉnh/Thành phố cha cho Quận');
+    // FE validate theo hierarchy mới
+    if (values.level === 'Province' && values.parentId) {
+      setError('parentId', { message: 'Tỉnh không được có parent' });
+      toast.error('Tỉnh không được có parent');
       return;
     }
-    if ((values.level === 'Province') && values.parentId) {
-      setError('parentId', { message: 'Tỉnh/Thành phố không được có cha' });
-      toast.error('Tỉnh/Thành phố không được có cha');
-      return;
+    if (values.level === 'City') {
+      if (!values.parentId) {
+        setError('parentId', { message: 'Thành phố cần chọn Tỉnh cha' });
+        toast.error('Vui lòng chọn Tỉnh cha cho Thành phố');
+        return;
+      }
+    }
+    if (values.level === 'District') {
+      if (!values.parentId) {
+        setError('parentId', { message: 'Quận cần chọn Thành phố cha' });
+        toast.error('Vui lòng chọn Thành phố cha cho Quận');
+        return;
+      }
     }
 
     const payload: LocationForm = {
@@ -160,7 +176,8 @@ export default function LocationFormPage() {
         await locationService.create(payload);
         toast.success('Tạo khu vực thành công!');
       }
-      router.push('/admin/location');
+      const levelPath = payload.level === 'Province' ? 'province' : payload.level === 'City' ? 'city' : 'district';
+      router.push(`/admin/location/${levelPath}`);
     } catch (err: any) {
       // Server đã có validate hierarchy & unique(scope); hiển thị message server
       toast.error(err?.message || 'Có lỗi xảy ra, vui lòng thử lại!');
@@ -229,7 +246,7 @@ export default function LocationFormPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
         {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
-          <Section title="Tên & Permalink">
+          <Section title="Tên & Đường dẫn tĩnh">
             <div className="space-y-3">
               <input
                 className={editableInput}
@@ -240,7 +257,7 @@ export default function LocationFormPage() {
 
               <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-slate-400" />
-                <span className="font-medium">Permalink:</span>
+                <span className="font-medium">Đường dẫn:</span>
                 <span className="truncate">
                   /location/<span className="font-mono text-slate-800">{slug || toSlug(name || '')}</span>
                 </span>
@@ -263,7 +280,7 @@ export default function LocationFormPage() {
             </div>
           </Section>
 
-          <Section title="Ảnh cover (tùy chọn)">
+          <Section title="Ảnh bìa (tùy chọn)">
             <div className="p-2">
               <div className="flex items-center gap-2">
                 <UploadPicker
@@ -285,7 +302,7 @@ export default function LocationFormPage() {
           <Section title="Thuộc tính khu vực">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-slate-600 mb-1">Cấp (level)</label>
+                <label className="block text-sm text-slate-600 mb-1">Cấp</label>
                 <select
                   className="w-full rounded border border-dashed border-slate-300 bg-white focus:border-emerald-500 focus:ring-emerald-500"
                   {...register('level', { required: true })}
@@ -302,8 +319,9 @@ export default function LocationFormPage() {
                   name="parentId"
                   rules={{
                     validate: (val) => {
-                      if (level === 'District' && !val) return 'Quận cần chọn Tỉnh/Thành phố cha';
-                      if ((level === 'Province') && val) return 'Tỉnh/Thành phố không được có cha';
+                      if (level === 'Province' && val) return 'Tỉnh không được có cấp cha';
+                      if (level === 'City' && !val) return 'Thành phố cần chọn Tỉnh cha';
+                      if (level === 'District' && !val) return 'Quận cần chọn Thành phố cha';
                       return true;
                     },
                   }}
@@ -323,9 +341,9 @@ export default function LocationFormPage() {
                         <p className="text-red-600 text-sm mt-1">{String(errors.parentId.message || '')}</p>
                       )}
                       <p className="text-xs text-slate-500 mt-1">
-                        {level === 'District'
-                          ? 'Chọn Tỉnh/Thành phố cha cho Quận.'
-                          : 'Tỉnh/Thành phố không có cấp cha.'}
+            {level === 'Province' && 'Tỉnh không có cấp cha.'}
+            {level === 'City' && 'Chọn Tỉnh cha cho Thành phố.'}
+            {level === 'District' && 'Chọn Thành phố cha cho Quận.'}
                       </p>
                     </div>
                   )}

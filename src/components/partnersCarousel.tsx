@@ -37,7 +37,7 @@ export default function PartnersCarousel({
 
   return (
     <section className={clsx("py-10", className)}>
-      <div className="mx-auto max-w-screen-2xl rounded-3xl bg-emerald-900 p-5 text-white md:p-8">
+      <div className="mx-auto max-w-screen-2xl rounded-3xl bg-[#087748] p-5 text-white md:p-8">
         <div className="mb-4 text-center">
           <h3 className="text-2xl md:text-3xl font-bold">{title}</h3>
         </div>

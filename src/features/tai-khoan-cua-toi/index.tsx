@@ -14,6 +14,7 @@ import { Apartment } from "@/type/apartment";
 import { favoriteService } from "@/services/favoriteService";
 import RoomCardItem from "@/components/roomCardItem";
 import { viewingService, Viewing } from "@/services/viewingService";
+import { isDepositViewing, viewingStatusLabel, viewingDisplayNote } from "@/utils/viewingLabels";
 import CompleteProfileSheet from "@/features/dang-nhap/CompleteProfileSheet";
 
 /* ========= Cookie helpers ========= */
@@ -143,12 +144,16 @@ export default function AccountPage() {
       const email = auth?.email || '';
       if (!email) return toast.error('Bạn chưa cập nhật email');
       const { userService } = await import('@/services/userService');
-      // Use existing verify-email API without code to request sending OTP
-      const res = await userService.postVerifyEmail({ email, code: '' } as any);
+      // Gọi endpoint riêng để gửi OTP email (cần JWT), không truyền code
+      const res = await userService.postRequestEmailVerification();
       setEmailOtpSent({ sent: true });
       toast.success('Đã gửi mã xác thực email');
     } catch (e: any) {
-      toast.error(e?.message || 'Không gửi được mã xác thực email');
+      if (e?.response?.status === 401) {
+        toast.error('Vui lòng đăng nhập lại để gửi mã xác thực email');
+      } else {
+        toast.error(e?.response?.data?.message?.[0] || e?.message || 'Không gửi được mã xác thực email');
+      }
     }
   };
   const submitEmailCode = async () => {
@@ -323,19 +328,7 @@ export default function AccountPage() {
 
   const selectedEvents = eventsByDate[selectedDate] || [];
 
-  const statusLabel = (st: string) => {
-    switch (st) {
-      case 'confirmed':
-        return 'Đã xác nhận';
-      case 'cancelled':
-        return 'Đã huỷ';
-      case 'visited':
-        return 'Đã xem';
-      case 'pending':
-      default:
-        return 'Đang chờ';
-    }
-  };
+  // Deprecated local statusLabel replaced by viewingStatusLabel util
 
   const goPrevMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()-1, 1));
   const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()+1, 1));
@@ -589,16 +582,23 @@ export default function AccountPage() {
                     } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                   >
                     <span className="leading-none">{dayNum}</span>
-                    {d && events.length > 0 && (
-                      <span className="mt-1 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                        Lịch xem phòng
-                        {events.length >= 2 && (
-                          <span className="absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                            {events.length}
-                          </span>
-                        )}
-                      </span>
-                    )}
+                    {d && events.length > 0 && (() => {
+                      const depositCount = events.filter(v => isDepositViewing(v)).length;
+                      const allDeposit = depositCount === events.length && events.length > 0;
+                      const hasBoth = depositCount > 0 && !allDeposit;
+                      const label = allDeposit ? 'Lịch đặt cọc' : hasBoth ? 'Có lịch' : 'Lịch xem phòng';
+                      const baseClass = allDeposit ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                      return (
+                        <span className={`mt-1 relative inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${baseClass}`}>
+                          {label}
+                          {events.length >= 2 && (
+                            <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full ${allDeposit ? 'bg-cyan-600' : 'bg-emerald-600'} text-[10px] font-bold text-white`}>
+                              {events.length}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()}
                   </button>
                 )
               })}
@@ -620,21 +620,25 @@ export default function AccountPage() {
               <ul className="space-y-2.5">
                 {selectedEvents.map((v) => {
                   const hhmm = new Date(v.preferredAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                  const isDeposit = isDepositViewing(v);
                   return (
                     <li key={v.id} className="rounded-xl border border-slate-100 bg-white p-2.5">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-emerald-700">
+                        <div className={`flex items-center gap-2 ${isDeposit ? 'text-violet-700' : 'text-emerald-700'}`}>
                           <Clock className="h-3.5 w-3.5" />
                           <span className="font-semibold">{hhmm}</span>
+                          {isDeposit && (
+                            <span className="rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px] leading-none">Đặt cọc</span>
+                          )}
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-xs ${
                           v.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                           v.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                           v.status === 'visited' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
-                          'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>{statusLabel(v.status)}</span>
+                          isDeposit ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}>{viewingStatusLabel(v)}</span>
                       </div>
-                      {v.note && <div className="mt-0.5 text-xs text-slate-600">{v.note}</div>}
+                      {viewingDisplayNote(v) && <div className="mt-0.5 text-xs text-slate-600">{viewingDisplayNote(v)}</div>}
                       <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
                         <MapPin className="h-3.5 w-3.5" /> Mã tin: #{v.apartmentId}
                         <a className="ml-auto inline-flex items-center gap-1 text-emerald-700 hover:underline" href={`/room/${v.apartmentId}`}>

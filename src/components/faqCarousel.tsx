@@ -66,7 +66,7 @@ export default function FaqCarousel({
                 </div>
 
                 {/* Card nổi bật giữa */}
-                <div className="relative rounded-2xl bg-emerald-900 text-white p-6 md:p-8 shadow-xl">
+                <div className="relative rounded-2xl bg-[#087748] text-white p-6 md:p-8 shadow-xl">
                   <div className="text-5xl leading-none opacity-80 mb-2">“</div>
                   <p className="text-sm md:text-base">{q.text}</p>
                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-emerald-700"></div>

@@ -75,7 +75,7 @@ export default function DistrictListingSection({
   const showHeaderTabs = !onlyDistrict && showTabs;
 
   return (
-    <section className="w-full rounded-3xl bg-emerald-900 px-4 py-6 sm:px-6 md:px-8 md:py-8">
+    <section className="w-full rounded-3xl bg-[#087748] px-4 py-6 sm:px-6 md:px-8 md:py-8">
       {/* Header */}
       <div className="text-center text-white">
         <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>

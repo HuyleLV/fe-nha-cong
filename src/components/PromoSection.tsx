@@ -45,7 +45,7 @@ export default function PromoSection({
 
   return (
     <section className="max-w-screen-2xl mx-auto px-4 md:px-0 mt-6">
-      <div className="rounded-3xl bg-emerald-900 text-white p-5 md:p-8">
+      <div className="rounded-3xl bg-[#087748] text-white p-5 md:p-8">
         <div className="mb-4 md:mb-6">
           <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         </div>
@@ -81,7 +81,7 @@ export default function PromoSection({
                   <Link
                     key={p.id}
                     href={p.href || "#"}
-                    className="group relative overflow-hidden rounded-2xl h-80 sm:h-96 md:h-[28rem] lg:h-[32rem] ring-1 ring-emerald-100 bg-white"
+                    className="group relative overflow-hidden rounded-2xl h-56 sm:h-64 md:h-72 lg:h-80 ring-1 ring-emerald-100 bg-white"
                   >
                     {/* Image fill only (contain to avoid distortion) */}
                     {typeof p.image === "string" ? (

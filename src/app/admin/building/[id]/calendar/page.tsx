@@ -50,7 +50,8 @@ function BuildingCalendarInner() {
     })();
   }, [bid]);
 
-  const viewingStatusVi = (st: Viewing["status"]) => {
+  const viewingStatusVi = (st: Viewing["status"], isDeposit: boolean) => {
+    if (isDeposit && st === 'pending') return 'Chờ đặt cọc';
     switch (st) {
       case "pending":
         return "Chờ xác nhận";
@@ -58,8 +59,8 @@ function BuildingCalendarInner() {
         return "Đã xác nhận";
       case "cancelled":
         return "Đã huỷ";
-      case "done":
-        return "Hoàn tất";
+      case "visited":
+        return "Đã xem";
       default:
         return String(st);
     }
@@ -87,12 +88,15 @@ function BuildingCalendarInner() {
 
       <Section title="Lịch đặt phòng (Calendar)">
         <CalendarMonth
-          events={(viewings || []).map((v) => ({
-            id: v.id,
-            date: new Date(v.preferredAt),
-            title: `#${v.apartmentId} · ${v.name}${v.phone ? ` (${v.phone})` : ""}`,
-            status: v.status,
-          })) as CalendarEvent[]}
+          events={(viewings || []).map((v) => {
+            const isDeposit = (v.note || "").includes("[DEPOSIT]");
+            return {
+              id: v.id,
+              date: new Date(v.preferredAt),
+              title: `#${v.apartmentId} · ${v.name}${v.phone ? ` (${v.phone})` : ""}` + (isDeposit ? " · Đặt cọc" : ""),
+              status: isDeposit ? "deposit" : v.status,
+            } as CalendarEvent;
+          })}
           onEventClick={(ev) => {
             const found = (viewings || []).find((v) => v.id === ev.id);
             if (found) setSelectedViewing(found);
@@ -121,8 +125,8 @@ function BuildingCalendarInner() {
                 <div className="text-slate-500">Thời gian</div>
                 <div className="col-span-2">{new Date(selectedViewing.preferredAt).toLocaleString()}</div>
                 <div className="text-slate-500">Trạng thái</div>
-                <div className="col-span-2">{viewingStatusVi(selectedViewing.status)}</div>
-                {selectedViewing.note && (<><div className="text-slate-500">Ghi chú</div><div className="col-span-2 whitespace-pre-wrap">{selectedViewing.note}</div></>)}
+                <div className="col-span-2">{viewingStatusVi(selectedViewing.status, (selectedViewing.note||'').includes('[DEPOSIT]'))}</div>
+                {selectedViewing.note && (<><div className="text-slate-500">Ghi chú</div><div className="col-span-2 whitespace-pre-wrap">{(selectedViewing.note||'').includes('[DEPOSIT]') ? 'Đặt cọc: ' + selectedViewing.note.replace('[DEPOSIT]', '').trim() : selectedViewing.note}</div></>)}
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">

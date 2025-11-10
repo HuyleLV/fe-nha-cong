@@ -113,11 +113,11 @@ function AdminJobsPage() {
               <td className="px-4 py-3 text-xs text-gray-600">{j.publishedAt ? new Date(j.publishedAt).toLocaleDateString() : '—'}</td>
               <td className="px-4 py-3">
                 <div className="flex gap-2">
-                  <Link href={`/admin/jobs/${j.id}`} className="inline-flex items-center gap-1 px-3 py-1 text-[13px] rounded bg-yellow-500 text-white hover:bg-yellow-600"> <Edit size={14}/> Sửa</Link>
-                  <button onClick={() => handleDelete(j.id)} className="inline-flex items-center gap-1 px-3 py-1 text-[13px] rounded bg-red-600 text-white hover:bg-red-700">
+                  <Link href={`/admin/jobs/${j.id}`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600"> <Edit size={14}/> Sửa</Link>
+                  <button onClick={() => handleDelete(j.id)} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700">
                     <Trash2 size={14}/> Xoá
                   </button>
-                  <Link href={`/tuyen-dung/${j.slug || j.id}`} className="inline-flex items-center gap-1 px-3 py-1 text-[13px] rounded border border-slate-300 text-slate-700 hover:bg-slate-100">
+                  <Link href={`/tuyen-dung/${j.slug || j.id}`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100">
                     <Eye size={14}/> Xem
                   </Link>
                 </div>

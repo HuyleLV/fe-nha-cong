@@ -85,7 +85,16 @@ export const userService = {
         ) as unknown as { message: string };
         return res;
     },
-    // Note: dùng chung /verify-email cho cả việc gửi mã (truyền chỉ email) và xác minh (truyền email + code)
+    /**
+     * Yêu cầu gửi OTP xác thực email tới người dùng hiện tại (cần JWT)
+     */
+    async postRequestEmailVerification(): Promise<{ message: string }> {
+        const res = await axiosClient.post<{ message: string }>(
+            apiUrl(`/api/auth/request-email-verification`),
+            {}
+        ) as unknown as { message: string };
+        return res;
+    },
         
     async getMe(): Promise<Me> {
         const res = await axiosClient.get<Me>(

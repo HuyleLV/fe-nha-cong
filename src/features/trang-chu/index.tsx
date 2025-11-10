@@ -11,6 +11,7 @@ import DistrictListingSection from "@/components/DistrictListingSection";
 import banner1 from "@/assets/banner-01.jpg";
 import banner2 from "@/assets/banner-02.jpg";
 import banner3 from "@/assets/banner-03.jpg";
+import banner4 from "@/assets/banner-04.jpg";
 import PartnersCarousel, { PartnerLogo } from "@/components/partnersCarousel";
 import FaqCarousel, { FaqItem } from "@/components/faqCarousel";
 import { Apartment } from "@/type/apartment";
@@ -94,7 +95,7 @@ export default function TrangChu() {
   );
 
   return (
-    <div className="w-full bg-gradient-to-b from-emerald-50 to-white">
+    <div className="w-full bg-emerald-50">
       {/* ===== Banner (Slideshow) ===== */}
       <div className="w-full">
         <Slide
@@ -122,7 +123,7 @@ export default function TrangChu() {
           transitionDuration={600}
           pauseOnHover
         >
-          {[banner1.src, banner2.src, banner3.src].map((src, idx) => (
+          {[banner4.src, banner1.src, banner2.src, banner3.src].map((src, idx) => (
             <div key={idx} className="relative w-full">
               <div
                 className={`w-full ${isMobile ? "h-60" : "h-120"} bg-center bg-cover`}
@@ -170,7 +171,7 @@ export default function TrangChu() {
 
       {/* ===== Intro Section ===== */}
       <div className="mt-6 px-4 md:px-0">
-        <section className="w-full bg-emerald-800 px-6 md:px-12 py-2 md:py-4 text-white my-10">
+        <section className="w-full bg-[#087748] px-6 md:px-12 py-2 md:py-4 text-white my-10">
           <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold leading-tight">Tìm kiếm dễ dàng</h2>
@@ -186,7 +187,7 @@ export default function TrangChu() {
               <img
                 src={img1.src}
                 alt="Ngôi nhà"
-                className="object-contain w-full h-100"
+                className="object-contain w-full h-80"
               />
             </div>
           </div>
@@ -219,7 +220,7 @@ export default function TrangChu() {
 
       {/* ===== Bản đồ ===== */}
       <section className="py-10">
-        <div className="mx-auto max-w-screen-2xl rounded-3xl bg-emerald-900 p-5 text-white md:p-8">
+        <div className="mx-auto max-w-screen-2xl rounded-3xl bg-[#087748] p-5 text-white md:p-8">
           <h3 className="text-2xl md:text-3xl font-bold">Khám phá khu vực trên bản đồ</h3>
           <div className="mt-4 grid grid-cols-1 items-center gap-6 md:grid-cols-2">
             <div>

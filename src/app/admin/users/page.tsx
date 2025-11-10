@@ -87,7 +87,7 @@ function AdminUsersPage() {
 
       {/* Table */}
       <AdminTable
-        headers={["ID", "Tên", "Email", "SĐT", "Role", "Xác minh email", "Xác minh SĐT", "Cập nhật", "Thao tác"]}
+        headers={["ID", "Tên", "Email", "SĐT", "Vai trò", "Xác minh email", "Xác minh SĐT", "Cập nhật", "Thao tác"]}
         loading={loading}
         emptyText="Không có người dùng"
       >
@@ -129,16 +129,16 @@ function AdminUsersPage() {
               <div className="flex justify-center gap-2">
                 <Link
                   href={`/admin/users/${u.id}`}
-                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 cursor-pointer"
                 >
-                  <Edit size={15} />
+                  <Edit size={14} />
                   Sửa
                 </Link>
                 <button
                   onClick={() => onDelete(u.id)}
-                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={14} />
                   Xoá
                 </button>
               </div>

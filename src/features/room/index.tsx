@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   ChevronRight, Heart, Share2, MapPin, Home, ShowerHead, BedDouble, Ruler, Lock,
   Zap, Wifi, Car, ShieldCheck, Phone, CalendarDays, Copy, X, Sparkles, User,
-  Clock, CheckCircle2, Calendar, Lightbulb, FileText, AlertCircle,
+  Clock, CheckCircle2, Calendar, Lightbulb, FileText, AlertCircle, MessageCircle,
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
@@ -16,15 +16,12 @@ import { viewingService } from "@/services/viewingService";
 import { favoriteService } from "@/services/favoriteService";
 import { Apartment } from "@/type/apartment";
 import { formatMoneyVND } from "@/utils/format-number";
+import { fDate } from "@/utils/format-time";
+import { asImageSrc } from "@/utils/imageUrl";
 import CommentList from "@/components/CommentList";
 import CommentForm from "@/components/CommentForm";
 
 /* ===================== Helpers ===================== */
-const withBase = (u?: string | null) => {
-  if (!u) return null;
-  if (u.startsWith("http") || u.startsWith("data:")) return u;
-  return `${process.env.NEXT_PUBLIC_API_URL || ""}${u}`;
-};
 // Simple cookie reader for checking auth token
 function getCookie(name: string) {
   if (typeof document === "undefined") return null;
@@ -43,18 +40,12 @@ const hasLoginToken = () => {
     window.localStorage.getItem("tokenUser")
   );
 };
+
+// ========== Reconstructed missing helpers & components (after refactor merge) ==========
 const parseNum = (v: any, fallback = 0): number => {
   if (v == null) return fallback;
   const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
   return Number.isFinite(n) ? n : fallback;
-};
-const formatDateVN = (d?: string | number | Date) => {
-  if (!d) return "";
-  try {
-    return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-  } catch {
-    return "";
-  }
 };
 const toISOWithTZ = (dateStr: string, timeStr: string) => {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -63,13 +54,12 @@ const toISOWithTZ = (dateStr: string, timeStr: string) => {
   return dt.toISOString();
 };
 
-/* ===================== Amenity & small components ===================== */
 type AmenityKey =
   | "wifi" | "parking" | "private_bath" | "shared_kitchen" | "aircon"
   | "water_heater" | "security" | "balcony" | "washing" | "elevator";
 
 const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode } => {
-  const meta = {
+  const meta: Record<AmenityKey, { label: string; icon: any }> = {
     wifi: { label: "Wi-Fi", icon: Wifi },
     parking: { label: "Chỗ để xe", icon: Car },
     private_bath: { label: "WC riêng", icon: ShowerHead },
@@ -83,21 +73,21 @@ const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode
   };
   const item = meta[key];
   const IconComponent = item.icon;
-  return {
-    label: item.label,
-    icon: <IconComponent className="h-4 w-4" />,
-  };
+  return { label: item.label, icon: <IconComponent className="h-4 w-4" /> };
 };
 
-const Section = ({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) => (
-  <section className="rounded-2xl border border-emerald-100/70 bg-white/80 shadow-[0_6px_20px_-12px_rgba(16,185,129,0.35)] backdrop-blur px-4 py-4 md:px-6 md:py-5">
-    <div className="mb-3 flex items-center justify-between">
-      <h2 className="text-lg font-semibold text-emerald-950">{title}</h2>
-      {right}
-    </div>
-    {children}
-  </section>
+const Section = React.forwardRef<HTMLElement, { title: string; children: React.ReactNode; right?: React.ReactNode }>(
+  ({ title, children, right }, ref) => (
+    <section ref={ref} className="rounded-2xl border border-emerald-100/70 bg-white/80 shadow-[0_6px_20px_-12px_rgba(16,185,129,0.35)] backdrop-blur px-4 py-4 md:px-6 md:py-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-emerald-950">{title}</h2>
+        {right}
+      </div>
+      {children}
+    </section>
+  )
 );
+Section.displayName = "Section";
 
 function Breadcrumb({ title, district }: { title: string; district?: string }) {
   return (
@@ -118,73 +108,37 @@ function Breadcrumb({ title, district }: { title: string; district?: string }) {
 }
 
 function FancyHeader({
-  title, address, priceVnd, depositVnd, rating, reviewsCount, excerpt, updatedAt, noOwnerLiving, flexibleHours, isVerified,
+  title, address, priceVnd, depositVnd, excerpt, updatedAt, noOwnerLiving, flexibleHours, isVerified,
 }: {
-  title: string; address: string; priceVnd: number; depositVnd?: number; rating?: number; reviewsCount?: number;
-  excerpt?: string | null; updatedAt?: string | Date; noOwnerLiving?: boolean; flexibleHours?: boolean; isVerified?: boolean;
+  title: string; address: string; priceVnd: number; depositVnd?: number; excerpt?: string | null; updatedAt?: string | Date; noOwnerLiving?: boolean; flexibleHours?: boolean; isVerified?: boolean;
 }) {
-  // Tính số ngày kể từ khi cập nhật
   const daysSinceUpdate = updatedAt ? Math.floor((Date.now() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24)) : 999;
   const isNew = daysSinceUpdate <= 7;
-  
   return (
     <div className="relative mb-6 overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-1">
       <div className="rounded-3xl bg-white/70 p-5 backdrop-blur">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="mb-2 inline-flex flex-wrap items-center gap-2">
-              {isNew && (
-                <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5" /> Tin mới
-                </span>
-              )}
-              {noOwnerLiving && (
-                <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-200 inline-flex items-center gap-1">
-                  <User className="h-3.5 w-3.5" /> Không chung chủ
-                </span>
-              )}
-              {flexibleHours && (
-                <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> Giờ giấc tự do
-                </span>
-              )}
-              {/* Verified badge (admin-verified) */}
-              {isVerified && (
-                <span className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Đã xác minh
-                </span>
-              )}
-              <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Vào ở ngay
-              </span>
+              {isNew && <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> Tin mới</span>}
+              {noOwnerLiving && <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-200 inline-flex items-center gap-1"><User className="h-3.5 w-3.5" /> Không chung chủ</span>}
+              {flexibleHours && <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Giờ giấc tự do</span>}
+              {isVerified && <span className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Đã xác minh</span>}
+              <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Vào ở ngay</span>
             </div>
-            <h1 className="text-2xl font-bold leading-snug text-emerald-950 md:text-3xl">{title}</h1>
+            <h1 className="text-3xl font-bold leading-tight text-emerald-950 md:text-4xl">{title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-emerald-800/80">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                <span className="line-clamp-1">{address}</span>
-              </div>
-              {updatedAt && (
-                <span className="flex items-center gap-1 text-xs text-emerald-700/80">
-                  <Calendar className="h-3.5 w-3.5" /> Cập nhật {formatDateVN(updatedAt)}
-                </span>
-              )}
+              <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /><span className="line-clamp-1">{address}</span></div>
+              {updatedAt && <span className="flex items-center gap-1 text-xs text-emerald-700/80"><Calendar className="h-3.5 w-3.5" /> Cập nhật {fDate(updatedAt, "DD/MM/YYYY")}</span>}
             </div>
-            {excerpt ? (
-              <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-emerald-900/80">
-                {excerpt}
-              </p>
-            ) : null}
+            {excerpt && <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-emerald-900/80">{excerpt}</p>}
           </div>
-          <div className="shrink-0 rounded-2xl border border-emerald-200 bg-white px-5 py-4 text-right shadow-sm">
-            <div className="text-xs font-medium text-emerald-700 uppercase">Giá thuê</div>
-            <div className="text-3xl font-extrabold text-emerald-900">{formatMoneyVND(priceVnd)}</div>
-            <div className="text-xs text-emerald-600">/ tháng</div>
-            {depositVnd && depositVnd !== priceVnd ? (
-              <div className="mt-2 pt-2 border-t border-emerald-100">
-                <div className="text-xs text-emerald-700/80">Đặt cọc: <span className="font-semibold text-emerald-800">{formatMoneyVND(depositVnd)}</span></div>
-              </div>
-            ) : null}
+          <div className="shrink-0 rounded-2xl border border-emerald-200 bg-white px-6 py-5 shadow-sm">
+            <div className="text-md font-semibold uppercase text-emerald-700">Giá thuê</div>
+            <div className="text-2xl font-extrabold text-emerald-900">{formatMoneyVND(priceVnd)}/ tháng</div>
+            {depositVnd && depositVnd !== priceVnd && (
+              <div className="mt-2 pt-2 border-t border-emerald-100 text-xs text-emerald-700">Đặt cọc: <span className="font-semibold text-emerald-800">{formatMoneyVND(depositVnd)}</span></div>
+            )}
           </div>
         </div>
       </div>
@@ -243,7 +197,7 @@ function Gallery({ images }: { images: string[] }) {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const big = images?.[active] ?? images?.[0];
-  const bigSrc = withBase(big || undefined);
+  const bigSrc = asImageSrc(big || undefined);
   const isVideo = (u?: string | null) => {
     if (!u) return false;
     const s = String(u).toLowerCase();
@@ -253,7 +207,7 @@ function Gallery({ images }: { images: string[] }) {
   return (
     <>
       <div className="rounded-3xl border border-emerald-100 bg-white/80 p-2 backdrop-blur">
-        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
+  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
           {bigSrc ? (
             isVideo(big) ? (
               <video src={bigSrc} controls className="h-full w-full object-contain bg-black" />
@@ -273,7 +227,7 @@ function Gallery({ images }: { images: string[] }) {
         {images?.length > 1 && (
           <div className="mt-2 grid grid-cols-5 gap-2">
             {images.slice(0, 10).map((src, i) => {
-              const s = withBase(src);
+              const s = asImageSrc(src);
               if (!s) return null;
               return (
                 <button key={i} onClick={() => setActive(i)} className={clsx("relative aspect-[4/3] overflow-hidden rounded-xl border", i === active ? "border-emerald-600 ring-2 ring-emerald-600/50" : "border-emerald-100")}>
@@ -313,7 +267,7 @@ function MapBox({ lat, lng, address }: { lat?: number; lng?: number; address: st
     ? `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=15&output=embed`;
   return (
-    <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white/80 shadow-[0_6px_20px_-12px_rgba(16,185,129,0.35)]">
+    <div className="overflow-hidden rounded-b-3xl bg-white/80 shadow-[0_6px_20px_-12px_rgba(16,185,129,0.35)]">
       <div className="flex items-center gap-2 p-3 text-emerald-900">
         <MapPin className="h-5 w-5" />
         <span className="truncate">{address}</span>
@@ -332,7 +286,7 @@ function AvailabilityBar({ availableFrom }: { availableFrom?: string | number | 
   if (!availableFrom) return null;
   return (
     <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-      Dự kiến có thể vào ở từ <b>{formatDateVN(availableFrom)}</b>
+  Dự kiến có thể vào ở từ <b>{fDate(availableFrom, "DD/MM/YYYY")}</b>
     </div>
   );
 }
@@ -414,9 +368,11 @@ function HouseRules({ rules }: { rules?: string[] }) {
 }
 
 /* ===================== Booking Modal ===================== */
-function BookingModal({
-  open, onClose, apartmentId,
-}: { open: boolean; onClose: () => void; apartmentId: number; }) {
+type ViewingVariant = "booking" | "deposit";
+
+function BaseViewingModal({
+  open, onClose, apartmentId, variant,
+}: { open: boolean; onClose: () => void; apartmentId: number; variant: ViewingVariant; }) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
@@ -448,12 +404,15 @@ function BookingModal({
       setSubmitting(true);
       setFieldErrors(null);
       const preferredAt = toISOWithTZ(date, time);
-      await viewingService.create({ apartmentId, preferredAt, name, phone, note: note || undefined });
-      toast.success("Đã gửi yêu cầu đặt lịch xem phòng!");
+      const payloadNote = variant === "deposit"
+        ? (note ? `[DEPOSIT] ${note}` : `[DEPOSIT] Yêu cầu đặt cọc`)
+        : (note || undefined);
+      await viewingService.create({ apartmentId, preferredAt, name, phone, note: payloadNote });
+      toast.success(variant === "deposit" ? "Đã gửi yêu cầu đặt cọc (Trạng thái: Chờ đặt cọc)" : "Đã gửi yêu cầu đặt lịch xem phòng!");
       onClose();
     } catch (e: any) {
       if (e?.response?.status === 401) {
-        toast.info("Vui lòng đăng nhập để đặt lịch xem phòng.");
+        toast.info(variant === "deposit" ? "Vui lòng đăng nhập để đặt cọc." : "Vui lòng đăng nhập để đặt lịch xem phòng.");
         onClose();
         return;
       }
@@ -465,7 +424,7 @@ function BookingModal({
         ? [resp.message]
         : e?.message
         ? [e.message]
-        : ["Không thể đặt lịch"];
+  : [variant === "deposit" ? "Không thể gửi yêu cầu đặt cọc" : "Không thể đặt lịch"];
 
       // Map lỗi theo trường để hiển thị inline
       const errs: { phone?: string[]; preferredAt?: string[]; name?: string[] } = {};
@@ -490,15 +449,17 @@ function BookingModal({
       <div className="flex h-full items-center justify-center p-4">
         <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-500 p-4 text-white">
+          <div className={clsx("relative p-4 text-white",
+            variant === "deposit" ? "bg-gradient-to-r from-cyan-600 to-cyan-500" : "bg-gradient-to-r from-emerald-600 to-emerald-500"
+          )}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/30">
-                  <CalendarDays className="h-5 w-5" />
+                  {variant === "deposit" ? <ShieldCheck className="h-5 w-5" /> : <CalendarDays className="h-5 w-5" />}
                 </span>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6">Đặt lịch xem phòng</h3>
-                  <p className="text-xs opacity-90">Chọn thời gian phù hợp, chúng tôi sẽ xác nhận ngay.</p>
+                  <h3 className="text-lg font-semibold leading-6">{variant === "deposit" ? "Đặt cọc ngay" : "Đặt lịch xem phòng"}</h3>
+                  <p className="text-xs opacity-90">{variant === "deposit" ? "Gửi yêu cầu đặt cọc, chúng tôi sẽ liên hệ xác nhận." : "Chọn thời gian phù hợp, chúng tôi sẽ xác nhận ngay."}</p>
                 </div>
               </div>
               <button onClick={() => { setFieldErrors(null); onClose(); }} className="rounded-full p-1 text-white/90 hover:bg-white/15">
@@ -509,9 +470,14 @@ function BookingModal({
 
           {/* Body */}
           <div className="p-4 md:p-5">
+            {variant === "deposit" && (
+              <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-800">
+                Trạng thái dự kiến: <b>Chờ đặt cọc</b>
+              </div>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm text-emerald-800">Ngày xem</label>
+                <label className="text-sm text-emerald-800">{variant === "deposit" ? "Ngày" : "Ngày xem"}</label>
                 <div className="relative mt-1">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><CalendarDays className="h-4 w-4" /></span>
                   <input type="date" min={todayStr} className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={date} onChange={(e) => setDate(e.target.value)} />
@@ -563,14 +529,205 @@ function BookingModal({
 
               <div className="md:col-span-2">
                 <label className="text-sm text-emerald-800">Ghi chú</label>
-                <textarea className="mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: Tôi muốn xem phòng trong 15 phút, tôi có thể đến sớm hơn một chút." />
+                <textarea className="mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder={variant === "deposit" ? "Ví dụ: Tôi muốn chuyển khoản đặt cọc ngay hôm nay." : "Ví dụ: Tôi muốn xem phòng trong 15 phút, tôi có thể đến sớm hơn một chút."} />
               </div>
             </div>
 
             <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-xs text-emerald-800 flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 text-emerald-600" />
               <div>
-                Bạn có thể thay đổi hoặc huỷ lịch sau khi đặt. Chúng tôi sẽ liên hệ xác nhận qua số điện thoại bạn cung cấp.
+                {variant === "deposit"
+                  ? "Yêu cầu đặt cọc sẽ được xác nhận qua số điện thoại bạn cung cấp."
+                  : "Bạn có thể thay đổi hoặc huỷ lịch sau khi đặt. Chúng tôi sẽ liên hệ xác nhận qua số điện thoại bạn cung cấp."}
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button onClick={onClose} className="rounded-xl border border-emerald-200 px-4 py-2 text-emerald-800 hover:bg-emerald-50">Huỷ</button>
+              <button
+                disabled={!canSubmit || submitting}
+                onClick={handleSubmit}
+                className={clsx(
+                  "rounded-xl px-4 py-2 text-white",
+                  !canSubmit || submitting
+                    ? (variant === "deposit" ? "bg-cyan-400" : "bg-emerald-400")
+                    : (variant === "deposit"
+                        ? "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600"
+                        : "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600")
+                )}
+              >
+                {submitting ? "Đang gửi..." : (variant === "deposit" ? "Gửi yêu cầu đặt cọc" : "Đặt lịch")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BookingModal({ open, onClose, apartmentId }: { open: boolean; onClose: () => void; apartmentId: number; }) {
+  return <BaseViewingModal open={open} onClose={onClose} apartmentId={apartmentId} variant="booking" />;
+}
+
+/* ===================== Deposit Modal ===================== */
+function DepositModal({
+  open, onClose, apartmentId,
+}: { open: boolean; onClose: () => void; apartmentId: number; }) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ phone?: string[]; preferredAt?: string[]; name?: string[] } | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setFieldErrors(null);
+    }
+  }, [open]);
+
+  const dateToInput = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const todayStr = dateToInput(new Date());
+  const tomorrowStr = dateToInput(new Date(Date.now() + 24 * 60 * 60 * 1000));
+
+  const canSubmit = date && time && name && phone;
+
+  const handleSubmit = async () => {
+    if (!canSubmit || submitting) return;
+    try {
+      setSubmitting(true);
+      setFieldErrors(null);
+      const preferredAt = toISOWithTZ(date, time);
+      const extraNote = note ? `[DEPOSIT] ${note}` : `[DEPOSIT] Yêu cầu đặt cọc`;
+      await viewingService.create({ apartmentId, preferredAt, name, phone, note: extraNote });
+      toast.success("Đã gửi yêu cầu đặt cọc (Trạng thái: Chờ đặt cọc)");
+      onClose();
+    } catch (e: any) {
+      if (e?.response?.status === 401) {
+        toast.info("Vui lòng đăng nhập để đặt cọc.");
+        onClose();
+        return;
+      }
+      const resp = e?.response?.data;
+      const messages: string[] = Array.isArray(resp?.message)
+        ? resp.message
+        : resp?.message
+        ? [resp.message]
+        : e?.message
+        ? [e.message]
+        : ["Không thể gửi yêu cầu đặt cọc"];
+      const errs: { phone?: string[]; preferredAt?: string[]; name?: string[] } = {};
+      for (const m of messages) {
+        const s = String(m).toLowerCase();
+        if (s.includes("phone")) errs.phone = [...(errs.phone || []), m];
+        if (s.includes("preferredat") || s.includes("startat")) errs.preferredAt = [...(errs.preferredAt || []), m];
+        if (s.includes("name")) errs.name = [...(errs.name || []), m];
+      }
+      if (Object.keys(errs).length) setFieldErrors(errs);
+      messages.forEach((msg) => toast.error(msg));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm">
+      <div className="flex h-full items-center justify-center p-4">
+        <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+          {/* Header */}
+          <div className="relative bg-gradient-to-r from-emerald-700 to-emerald-600 p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/30">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-semibold leading-6">Đặt cọc ngay</h3>
+                  <p className="text-xs opacity-90">Gửi yêu cầu đặt cọc, chúng tôi sẽ liên hệ xác nhận.</p>
+                </div>
+              </div>
+              <button onClick={() => { setFieldErrors(null); onClose(); }} className="rounded-full p-1 text-white/90 hover:bg-white/15">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-4 md:p-5">
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-800">
+              Trạng thái dự kiến: <b>Chờ đặt cọc</b>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm text-emerald-800">Ngày</label>
+                <div className="relative mt-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><CalendarDays className="h-4 w-4" /></span>
+                  <input type="date" min={todayStr} className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={date} onChange={(e) => setDate(e.target.value)} />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  <button type="button" onClick={() => setDate(todayStr)} className="rounded-full border border-emerald-200 px-3 py-1 text-emerald-800 hover:bg-emerald-50">Hôm nay</button>
+                  <button type="button" onClick={() => setDate(tomorrowStr)} className="rounded-full border border-emerald-200 px-3 py-1 text-emerald-800 hover:bg-emerald-50">Ngày mai</button>
+                </div>
+                {fieldErrors?.preferredAt && (
+                  <div className="mt-1 text-xs text-rose-600">{fieldErrors.preferredAt.join("; ")}</div>
+                )}
+              </div>
+              <div>
+                <label className="text-sm text-emerald-800">Giờ</label>
+                <div className="relative mt-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><Clock className="h-4 w-4" /></span>
+                  <input type="time" className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={time} onChange={(e) => setTime(e.target.value)} />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {["09:00","14:00","18:00"].map(t => (
+                    <button key={t} type="button" onClick={() => setTime(t)} className="rounded-full border border-emerald-200 px-3 py-1 text-emerald-800 hover:bg-emerald-50">{t}</button>
+                  ))}
+                </div>
+                {fieldErrors?.preferredAt && (
+                  <div className="mt-1 text-xs text-rose-600">{fieldErrors.preferredAt.join("; ")}</div>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm text-emerald-800">Họ tên</label>
+                <div className="relative mt-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><User className="h-4 w-4" /></span>
+                  <input className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.name && "border-rose-400") } placeholder="Nguyễn Văn A" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                {fieldErrors?.name && (
+                  <div className="mt-1 text-xs text-rose-600">{fieldErrors.name.join("; ")}</div>
+                )}
+              </div>
+              <div>
+                <label className="text-sm text-emerald-800">Số điện thoại</label>
+                <div className="relative mt-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><Phone className="h-4 w-4" /></span>
+                  <input inputMode="tel" className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.phone && "border-rose-400") } placeholder="09xx xxx xxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+                {fieldErrors?.phone && (
+                  <div className="mt-1 text-xs text-rose-600">{fieldErrors.phone.join("; ")}</div>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-sm text-emerald-800">Ghi chú</label>
+                <textarea className="mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ví dụ: Tôi muốn chuyển khoản đặt cọc ngay hôm nay." />
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-xs text-emerald-800 flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 text-emerald-600" />
+              <div>
+                Yêu cầu đặt cọc sẽ được xác nhận qua số điện thoại bạn cung cấp.
               </div>
             </div>
 
@@ -584,7 +741,7 @@ function BookingModal({
                   !canSubmit || submitting ? "bg-emerald-400" : "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600"
                 )}
               >
-                {submitting ? "Đang gửi..." : "Đặt lịch"}
+                {submitting ? "Đang gửi..." : "Gửi yêu cầu đặt cọc"}
               </button>
             </div>
           </div>
@@ -605,6 +762,18 @@ export default function RoomPage({ slug }: { slug: string }) {
   const [loadingFav, setLoadingFav] = useState(false);
   const [related, setRelated] = useState<Apartment[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  // Scroll spy state
+  const [activeSection, setActiveSection] = useState<string>("overview");
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  // Khi click tab, tạm thời khoá scrollspy để không ghi đè trạng thái active
+  const [scrollLockUntil, setScrollLockUntil] = useState<number>(0);
+  const heroRef = React.useRef<HTMLDivElement | null>(null);
+  const overviewRef = React.useRef<HTMLElement | null>(null);
+  const featuresRef = React.useRef<HTMLElement | null>(null);
+  const descriptionRef = React.useRef<HTMLElement | null>(null);
+  const mapRef = React.useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -719,6 +888,12 @@ export default function RoomPage({ slug }: { slug: string }) {
     return out;
   }, [data]);
 
+  // Avatar/thumbnail for sticky bar
+  const avatarSrc = useMemo(() => {
+    const src = (data as any)?.coverImageUrl || images?.[0] || null;
+  return asImageSrc(src || undefined) || undefined;
+  }, [data, images]);
+
   // Tiện nghi suy ra từ các cờ boolean của BE
   const amenities: AmenityKey[] = useMemo(() => {
     if (!data) return [];
@@ -737,6 +912,66 @@ export default function RoomPage({ slug }: { slug: string }) {
     
     return Array.from(new Set(list));
   }, [data]);
+
+  // ===== Sticky tab bar logic (must be before any conditional returns) =====
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      // Determine when to show bar (after hero bottom)
+      const heroBottom = heroRef.current ? (heroRef.current.getBoundingClientRect().bottom + window.scrollY) : 0;
+      setShowStickyBar(scrollY > heroBottom - 80); // small threshold
+
+      // Build an ordered list of sections to evaluate
+      const candidates: { id: string; el: HTMLElement | null }[] = [
+        { id: "overview", el: overviewRef.current },
+        { id: "features", el: featuresRef.current },
+        { id: "description", el: descriptionRef.current },
+        { id: "map", el: mapRef.current },
+      ].filter(c => c.el);
+
+      // New algorithm: choose the last section whose top is above (scrollY + offset)
+      const stickyOffset = 90; // approximate height of fixed bar + margin
+      const thresholdY = scrollY + stickyOffset + 10; // small buffer
+
+      let current = candidates[0]?.id || "overview";
+      for (const c of candidates) {
+        const topAbs = c.el!.getBoundingClientRect().top + window.scrollY;
+        if (topAbs <= thresholdY) {
+          current = c.id; // advance as long as section top is above threshold
+        } else {
+          break; // sections are ordered; stop once top is below threshold
+        }
+      }
+      // Nếu đang trong giai đoạn khoá (sau khi click tab) thì bỏ qua cập nhật tự động
+      if (Date.now() < scrollLockUntil) return;
+      setActiveSection(current);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [data]);
+
+  const scrollTo = (id: string) => {
+    const targetMap: Record<string, HTMLElement | null> = {
+      overview: overviewRef.current,
+      features: featuresRef.current,
+      description: descriptionRef.current,
+      map: mapRef.current,
+    };
+    const el = targetMap[id];
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 72; // offset for sticky bar height
+    // Khoá scrollspy ~600ms (thời gian smooth scroll) để highlight giữ nguyên
+    setScrollLockUntil(Date.now() + 600);
+    window.scrollTo({ top: y, behavior: "smooth" });
+  };
+
+  const tabs = [
+    { id: "overview", label: "Tổng quan" },
+    { id: "features", label: "Tiện nghi" },
+    { id: "description", label: "Mô tả", disabled: !data?.description },
+    { id: "map", label: "Bản đồ" },
+  ];
 
   if (loading) {
     return (
@@ -784,10 +1019,16 @@ export default function RoomPage({ slug }: { slug: string }) {
   const serviceFee = parseNum((data as any).commonServiceFeePerPerson, 0) || undefined;
   const availableFrom = (data as any)?.availableFrom as any;
   const rules = ((data as any)?.houseRules as string[]) || [];
-  const landlordPhone = (data as any)?.contactPhone || "";
+  const landlordPhone = "0968.345.486"; // fixed hotline override per request
+  const landlordName = (data as any)?.contactName || (data as any)?.landlordName || "Chủ nhà";
   const updatedAt = (data as any)?.updatedAt as any;
   const noOwnerLiving = (data as any)?.noOwnerLiving || false;
   const flexibleHours = (data as any)?.flexibleHours || false;
+
+  const normalizePhone = (p: string) => p.replace(/\D/g, "");
+  const phoneRaw = normalizePhone(landlordPhone);
+  const phone84 = phoneRaw.startsWith("0") ? `84${phoneRaw.slice(1)}` : (phoneRaw.startsWith("84") ? phoneRaw : `84${phoneRaw}`);
+  const zaloUrl = `https://zalo.me/${phone84}`;
 
   return (
     <>
@@ -795,17 +1036,152 @@ export default function RoomPage({ slug }: { slug: string }) {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.08),transparent_45%),radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.06),transparent_40%)]" />
         <div className="mx-auto max-w-screen-2xl px-3 py-6 lg:px-6">
           <Breadcrumb title={data.title} />
-          <FancyHeader
-            title={data.title}
-            address={addressLine}
-            priceVnd={priceVnd}
-            depositVnd={depositVnd}
-            excerpt={(data as any).excerpt}
-            updatedAt={updatedAt}
-            noOwnerLiving={noOwnerLiving}
-            flexibleHours={flexibleHours}
-            isVerified={(data as any).isVerified}
-          />
+          <div ref={heroRef}>
+            <FancyHeader
+              title={data.title}
+              address={addressLine}
+              priceVnd={priceVnd}
+              depositVnd={depositVnd}
+              excerpt={(data as any).excerpt}
+              updatedAt={updatedAt}
+              noOwnerLiving={noOwnerLiving}
+              flexibleHours={flexibleHours}
+              isVerified={(data as any).isVerified}
+            />
+          </div>
+
+          {/* Fixed top tabs + info bar (full-width, covers header) */}
+          <div className={clsx(
+            "fixed inset-x-0 top-0 z-[120] border-b border-emerald-100 bg-white shadow-sm transition-all",
+            showStickyBar ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            <div className="mx-auto max-w-screen-2xl px-3 lg:px-6">
+              <div className="px-3 py-2 md:px-5 md:py-3">
+                  {/* Info row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex items-center gap-3">
+                      <div className="h-12 w-12 overflow-hidden rounded-lg bg-emerald-50 ring-1 ring-emerald-200">
+                        {avatarSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-[10px] text-emerald-700">Ảnh</div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-xl font-semibold text-emerald-900">{data.title}</div>
+                        <div className="mt-0.5 flex items-center gap-1 truncate text-xs text-emerald-700">
+                          <div className="leading-none text-xl font-extrabold text-emerald-900 py-2">{formatMoneyVND(priceVnd)}/ Tháng</div>
+                          <MapPin className="h-3.5 w-3.5 ml-5" />
+                          <span className="truncate text-lg">{addressLine}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="mt-2 flex items-center justify-end gap-2">
+                          {phoneRaw && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(phoneRaw).then(() => {
+                                  toast.success(`Đã sao chép số: ${phoneRaw}`);
+                                }).catch(() => {
+                                  try {
+                                    const ta = document.createElement('textarea');
+                                    ta.value = phoneRaw; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                                    toast.success(`Đã sao chép số: ${phoneRaw}`);
+                                  } catch {
+                                    toast.info(`Số điện thoại: ${phoneRaw}`);
+                                  }
+                                });
+                              }}
+                              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700"
+                            >
+                              <Phone className="h-4 w-4" /> Gọi ngay
+                            </button>
+                          )}
+                          {zaloUrl && (
+                            <a
+                              href={zaloUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+                            >
+                              <MessageCircle className="h-4 w-4" /> Chat
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Tabs row */}
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <nav className="flex flex-1 flex-wrap items-center gap-2 md:gap-3" role="tablist" aria-label="Room detail sections">
+                      {tabs.map(t => (
+                        <button
+                          key={t.id}
+                          role="tab"
+                          aria-selected={activeSection === t.id}
+                          disabled={t.disabled}
+                          onClick={() => { setActiveSection(t.id); scrollTo(t.id); }}
+                          className={clsx(
+                            "rounded-full px-3 py-1 text-[0.90rem] font-semibold transition border",
+                            t.disabled && "cursor-not-allowed border-emerald-100 bg-transparent opacity-40",
+                            activeSection === t.id && !t.disabled ? "border-emerald-600 bg-emerald-600 text-white shadow" : "border-emerald-100 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                          )}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </nav>
+                    {/* Price + call on small screens */}
+                    <div className="flex items-center gap-3 sm:hidden">
+                      <div className="text-right">
+                        <div className="text-[10px] font-semibold uppercase text-emerald-600">Giá thuê</div>
+                        <div className="leading-none text-xl font-extrabold text-emerald-900">{formatMoneyVND(priceVnd)}</div>
+                        <div className="mt-1 flex items-center justify-end gap-2">
+                          {phoneRaw && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(phoneRaw).then(() => {
+                                  toast.success(`Đã sao chép số: ${phoneRaw}`);
+                                }).catch(() => {
+                                  try {
+                                    const ta = document.createElement('textarea');
+                                    ta.value = phoneRaw; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                                    toast.success(`Đã sao chép số: ${phoneRaw}`);
+                                  } catch {
+                                    toast.info(`Số điện thoại: ${phoneRaw}`);
+                                  }
+                                });
+                              }}
+                              className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700"
+                              aria-label="Sao chép số chủ nhà"
+                            >
+                              <Phone className="h-4 w-4" /> Gọi ngay
+                            </button>
+                          )}
+                          {zaloUrl && (
+                            <a
+                              href={zaloUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+                            >
+                              <MessageCircle className="h-4 w-4" /> Chat
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {/* Spacer to prevent layout jump when fixed bar appears */}
+          {showStickyBar && <div aria-hidden className="mb-4 h-[96px] md:h-[108px]" />}
 
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left */}
@@ -813,7 +1189,7 @@ export default function RoomPage({ slug }: { slug: string }) {
               <Gallery images={images} />
               <AvailabilityBar availableFrom={availableFrom} />
 
-              <Section title="Tổng quan">
+              <Section ref={overviewRef as any} title="Tổng quan">
                 <KeyFacts areaM2={areaM2} bedrooms={bedrooms} bathrooms={bathrooms} />
                 {/* Thông tin chi tiết */}
                 <div className="mt-4 space-y-3">
@@ -840,7 +1216,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                 </div>
               </Section>
 
-              <Section title="Tiện nghi">
+              <Section ref={featuresRef as any} title="Tiện nghi">
                 <AmenityGrid amenities={amenities} />
               </Section>
 
@@ -855,26 +1231,27 @@ export default function RoomPage({ slug }: { slug: string }) {
                 />
               </Section>
 
-              <Section title="Quy định nhà">
+              {/* <Section title="Quy định nhà">
                 <HouseRules rules={rules} />
-              </Section>
+              </Section> */}
 
               {data.description ? (
-                <Section title="Mô tả chi tiết">
+                <Section ref={descriptionRef as any} title="Mô tả chi tiết">
                   <div
                     className="prose prose-emerald max-w-none prose-p:leading-relaxed prose-ul:list-disc prose-li:marker:text-emerald-600"
                     dangerouslySetInnerHTML={{ __html: data.description as string }}
                   />
                 </Section>
               ) : null}
-
-              <MapBox lat={lat} lng={lng} address={addressLine} />
+              <Section ref={mapRef as any} title="Bản đồ">
+                <MapBox lat={lat} lng={lng} address={addressLine} />
+              </Section>
               {/* Comments were moved to the right column below booking CTA */}
             </div>
 
             {/* Right */}
             <div className="space-y-5 lg:col-span-1">
-              <div className="sticky top-20">
+              <div className="sticky top-35">
                 <div className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_10px_30px_-16px_rgba(16,185,129,0.6)] backdrop-blur">
                   <div className="mb-3 flex items-center justify-between">
                     <button
@@ -926,11 +1303,27 @@ export default function RoomPage({ slug }: { slug: string }) {
                       <Share2 className="h-5 w-5" /> Chia sẻ
                     </button>
                   </div>
-                  {landlordPhone && (
-                    <a href={`tel:${landlordPhone}`} className="group mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-white shadow hover:bg-emerald-700">
-                      <Phone className="h-5 w-5" /> Gọi ngay
-                    </a>
-                  )}
+                  {/* <button
+                    type="button"
+                    onClick={() => {
+                      const raw = landlordPhone.replace(/\D/g, '');
+                      navigator.clipboard.writeText(raw).then(() => {
+                        toast.success(`Đã sao chép số: ${raw}`);
+                      }).catch(() => {
+                        try {
+                          const ta = document.createElement('textarea');
+                          ta.value = raw; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                          toast.success(`Đã sao chép số: ${raw}`);
+                        } catch {
+                          toast.info(`Số điện thoại: ${raw}`);
+                        }
+                      });
+                    }}
+                    className="group mb-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-white shadow hover:bg-emerald-700"
+                    aria-label="Sao chép số chủ nhà"
+                  >
+                    <Phone className="h-5 w-5" /> Gọi ngay
+                  </button> */}
                   <button
                     onClick={() => {
                       if (!hasLoginToken()) {
@@ -944,15 +1337,67 @@ export default function RoomPage({ slug }: { slug: string }) {
                     <CalendarDays className="h-5 w-5" /> Đặt lịch xem phòng
                   </button>
 
+                  <button
+                    onClick={() => {
+                      if (!hasLoginToken()) {
+                        toast.info("Vui lòng đăng nhập để đặt cọc.");
+                        return;
+                      }
+                      setDepositOpen(true);
+                    }}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 px-4 py-3 text-white shadow hover:from-emerald-800 hover:to-emerald-700"
+                  >
+                    <ShieldCheck className="h-5 w-5" /> Đặt cọc ngay
+                  </button>
+
                   {/* Thẻ thông tin nhanh */}
                   <div className="mt-3 rounded-xl border border-emerald-100 bg-white p-3 text-sm text-emerald-900/90">
                     <div className="flex items-center justify-between">
                       <span>Đăng lúc</span>
-                      <b>{formatDateVN((data as any).createdAt)}</b>
+                      <b>{fDate((data as any).createdAt, "DD/MM/YYYY")}</b>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Cập nhật</span>
-                      <b>{formatDateVN((data as any).updatedAt)}</b>
+                      <b>{fDate((data as any).updatedAt, "DD/MM/YYYY")}</b>
+                    </div>
+                  </div>
+                  {/* Thông tin chủ nhà (hiển thị tên, có nút hiện số) */}
+                  <div className="mt-3 rounded-xl border border-emerald-100 bg-white p-3 text-sm text-emerald-900/90">
+                    <div className="mb-2 text-sm font-semibold text-emerald-900">Thông tin chủ nhà</div>
+                    <div className="space-y-2">
+                      <div className="truncate">Tên: <b className="text-emerald-800">{landlordName}</b></div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                          onClick={() => {
+                            setShowPhone(true);
+                            if (phoneRaw) {
+                              navigator.clipboard.writeText(phoneRaw).then(() => {
+                                toast.success(`Đã sao chép số: ${phoneRaw}`);
+                              }).catch(() => {
+                                try {
+                                  const ta = document.createElement('textarea');
+                                  ta.value = phoneRaw; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                                  toast.success(`Đã sao chép số: ${phoneRaw}`);
+                                } catch {
+                                  toast.info(`Số điện thoại: ${phoneRaw}`);
+                                }
+                              });
+                            }
+                          }}
+                        >
+                          <Phone className="h-4 w-4" /> {showPhone ? phoneRaw : 'Hiện số chủ nhà'}
+                        </button>
+                        <a
+                          href={zaloUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800 hover:bg-sky-100"
+                        >
+                          <MessageCircle className="h-4 w-4" /> Chat
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -982,7 +1427,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                                 <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-emerald-50">
                                   {r.coverImageUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={withBase(r.coverImageUrl as string) as string} alt={r.title} className="h-full w-full object-cover" />
+                                    <img src={asImageSrc(r.coverImageUrl as string) as string} alt={r.title} className="h-full w-full object-cover" />
                                   ) : (
                                     <div className="flex h-full w-full items-center justify-center text-sm text-emerald-700">Ảnh</div>
                                   )}
@@ -1013,6 +1458,11 @@ export default function RoomPage({ slug }: { slug: string }) {
       <BookingModal
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}
+        apartmentId={data.id}
+      />
+      <DepositModal
+        open={depositOpen}
+        onClose={() => setDepositOpen(false)}
         apartmentId={data.id}
       />
     </>

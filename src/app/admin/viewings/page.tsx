@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { viewingService, Viewing } from "@/services/viewingService";
+import { isDepositViewing, viewingStatusLabel, viewingDisplayNote } from "@/utils/viewingLabels";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment } from "@/type/apartment";
 import { CalendarDays, Calendar as CalendarIcon, List, Search, Clock, Phone, User as UserIcon, ChevronLeft, ChevronRight, RefreshCw, Circle, CheckCircle2 } from "lucide-react";
@@ -140,17 +141,19 @@ function AdminViewingsPage() {
 
   const renderRows = (arr: AdminViewing[]) => arr.map(v => {
     const timeStr = new Date(v.preferredAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const isDeposit = isDepositViewing(v);
+    const displayNote = viewingDisplayNote(v) || '-';
     return (
       <tr key={v.id} className="hover:bg-slate-50">
-        <td className="px-4 py-3"><span className="inline-flex items-center gap-1 text-slate-800"><Clock className="h-4 w-4" /> {timeStr}</span></td>
+        <td className="px-4 py-3"><span className={`inline-flex items-center gap-1 ${isDeposit ? 'text-cyan-700' : 'text-slate-800'}`}><Clock className="h-4 w-4" /> {timeStr}</span></td>
         <td className="px-4 py-3"><span className="inline-flex items-center gap-1"><UserIcon className="h-4 w-4" /> {v.name || 'Khách'}</span></td>
         <td className="px-4 py-3"><span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" /> {v.phone || '-'}</span></td>
-        <td className="px-4 py-3 max-w-[320px] truncate" title={v.note || ''}>{v.note || '-'}</td>
+  <td className="px-4 py-3 max-w-[320px] truncate" title={displayNote}>{displayNote}{isDeposit && <span className="ml-1 inline-flex items-center rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px]">Đặt cọc</span>}</td>
         <td className="px-4 py-3">
           <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-sm">
-            <option value="pending">Đang chờ</option>
-            <option value="confirmed">Đã xác nhận</option>
-            <option value="cancelled">Đã huỷ</option>
+            <option value="pending">{isDeposit ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
+            <option value="confirmed">{isDeposit ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
+            <option value="cancelled">{isDeposit ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
             <option value="visited">Đã xem</option>
           </select>
         </td>
@@ -170,7 +173,7 @@ function AdminViewingsPage() {
         <div className="grid gap-5 lg:grid-cols-3">
           {/* Sidebar: search & select apartment */}
           <aside className="rounded-2xl border bg-white p-4 shadow-sm">
-            <div className="text-sm font-medium text-slate-700 mb-2">Chọn phòng (apartment)</div>
+            <div className="text-sm font-medium text-slate-700 mb-2">Chọn phòng</div>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Search className="h-4 w-4" /></span>
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm theo tiêu đề / mã" className="w-full rounded-lg border px-3 py-2 pl-9" />
@@ -204,10 +207,10 @@ function AdminViewingsPage() {
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
-                  <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> List</span>
+                  <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> Danh sách</span>
                 </button>
                 <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Lịch">
-                  <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Calendar</span>
+                  <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Lịch</span>
                 </button>
               </div>
               <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
@@ -248,16 +251,23 @@ function AdminViewingsPage() {
                           } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                         >
                             <span className="leading-none">{dayNum}</span>
-                          {hasEvents && (
-                            <span className="mt-0.5 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                              Lịch xem phòng
-                              {events.length >= 2 && (
-                                <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                                  {events.length}
-                                </span>
-                              )}
-                            </span>
-                          )}
+                          {hasEvents && (() => {
+                            const depositCount = events.filter(v => isDepositViewing(v)).length;
+                            const allDeposit = depositCount === events.length && events.length > 0;
+                            const hasBoth = depositCount > 0 && !allDeposit;
+                            const label = allDeposit ? 'Lịch đặt cọc' : hasBoth ? 'Có lịch' : 'Lịch xem phòng';
+                            const baseClass = allDeposit ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                            return (
+                              <span className={`mt-0.5 relative inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${baseClass}`}>
+                                {label}
+                                {events.length >= 2 && (
+                                  <span className={`absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full ${allDeposit ? 'bg-cyan-600' : 'bg-emerald-600'} text-[10px] font-bold text-white`}>
+                                    {events.length}
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })()}
                         </button>
                       )
                     })}
@@ -281,9 +291,12 @@ function AdminViewingsPage() {
                         return (
                           <li key={v.id} className="rounded-xl border border-slate-100 bg-white p-2.5">
                             <div className="flex items-center gap-3 text-xs">
-                              <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                              <span className={`inline-flex items-center gap-1.5 ${isDepositViewing(v) ? 'text-cyan-700' : 'text-emerald-700'}`}>
                                 <Clock className="h-3.5 w-3.5" />
                                 <span className="font-semibold text-[13px]">{hhmm}</span>
+                                {isDepositViewing(v) && (
+                                  <span className="rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px] leading-none">Đặt cọc</span>
+                                )}
                               </span>
                               <span className="hidden sm:inline h-3 w-px bg-slate-200" />
                               <span className="inline-flex items-center gap-1.5 text-slate-700">
@@ -292,15 +305,18 @@ function AdminViewingsPage() {
                               <span className="inline-flex items-center gap-1.5 text-slate-700">
                                 <Phone className="h-3.5 w-3.5" /> {v.phone || '-'}
                               </span>
-                              {v.note && (
-                                <span className="truncate text-slate-600 max-w-[140px] sm:max-w-[220px]" title={v.note}>• {v.note}</span>
-                              )}
+                              {(() => {
+                                const note = viewingDisplayNote(v);
+                                return note ? (
+                                  <span className="truncate text-slate-600 max-w-[140px] sm:max-w-[220px]" title={note}>• {note}</span>
+                                ) : null;
+                              })()}
                               <span className="ml-auto" />
                               <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-xs">
-                                <option value="pending">Đang chờ</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã huỷ</option>
-                                <option value="done">Đã xem</option>
+                                <option value="pending">{isDepositViewing(v) ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
+                                <option value="confirmed">{isDepositViewing(v) ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
+                                <option value="cancelled">{isDepositViewing(v) ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
+                                <option value="visited">Đã xem</option>
                               </select>
                             </div>
                           </li>
@@ -338,10 +354,10 @@ function AdminViewingsPage() {
               </select>
               <div className="ml-2 flex overflow-hidden rounded-lg border">
                 <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Danh sách">
-                  <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> List</span>
+                  <span className="inline-flex items-center gap-1"><List className="h-4 w-4" /> Danh sách</span>
                 </button>
                 <button onClick={() => setViewMode('calendar')} className={`px-3 py-2 text-sm ${viewMode==='calendar' ? 'bg-slate-100 text-slate-900' : 'bg-white text-slate-600'}`} title="Lịch">
-                  <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Calendar</span>
+                  <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Lịch</span>
                 </button>
               </div>
               <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
@@ -381,16 +397,23 @@ function AdminViewingsPage() {
                           } ${isSelected ? 'border-emerald-400 ring-1 ring-emerald-200' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
                         >
                           <span className="font-medium text-slate-700 leading-none">{dayNum}</span>
-                          {hasEvents && (
-                            <span className="mt-0.5 relative inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                              Lịch xem phòng
-                              {events.length >= 2 && (
-                                <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                                  {events.length}
-                                </span>
-                              )}
-                            </span>
-                          )}
+                          {hasEvents && (() => {
+                            const depositCount = events.filter(v => isDepositViewing(v)).length;
+                            const allDeposit = depositCount === events.length && events.length > 0;
+                            const hasBoth = depositCount > 0 && !allDeposit;
+                            const label = allDeposit ? 'Lịch đặt cọc' : hasBoth ? 'Có lịch' : 'Lịch xem phòng';
+                            const baseClass = allDeposit ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                            return (
+                              <span className={`mt-0.5 relative inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${baseClass}`}>
+                                {label}
+                                {events.length >= 2 && (
+                                  <span className={`absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full ${allDeposit ? 'bg-cyan-600' : 'bg-emerald-600'} text-[10px] font-bold text-white`}>
+                                    {events.length}
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })()}
                         </button>
                       )
                     })}
@@ -414,9 +437,12 @@ function AdminViewingsPage() {
                         return (
                           <li key={v.id} className="rounded-xl border border-slate-100 bg-white p-2.5">
                             <div className="flex items-center gap-3 text-xs">
-                              <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                              <span className={`inline-flex items-center gap-1.5 ${isDepositViewing(v) ? 'text-cyan-700' : 'text-emerald-700'}`}>
                                 <Clock className="h-3.5 w-3.5" />
                                 <span className="font-semibold text-[13px]">{hhmm}</span>
+                                {isDepositViewing(v) && (
+                                  <span className="rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px] leading-none">Đặt cọc</span>
+                                )}
                               </span>
                               <span className="hidden sm:inline h-3 w-px bg-slate-200" />
                               <span className="inline-flex items-center gap-1.5 text-slate-700">
@@ -425,14 +451,17 @@ function AdminViewingsPage() {
                               <span className="inline-flex items-center gap-1.5 text-slate-700">
                                 <Phone className="h-3.5 w-3.5" /> {v.phone || '-'}
                               </span>
-                              {v.note && (
-                                <span className="truncate text-slate-600 max-w-[160px] sm:max-w-[260px]" title={v.note}>• {v.note}</span>
-                              )}
+                              {(() => {
+                                const note = viewingDisplayNote(v);
+                                return note ? (
+                                  <span className="truncate text-slate-600 max-w-[160px] sm:max-w-[260px]" title={note}>• {note}</span>
+                                ) : null;
+                              })()}
                               <span className="ml-auto" />
                               <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-xs">
-                                <option value="pending">Đang chờ</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã huỷ</option>
+                                <option value="pending">{isDepositViewing(v) ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
+                                <option value="confirmed">{isDepositViewing(v) ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
+                                <option value="cancelled">{isDepositViewing(v) ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
                                 <option value="visited">Đã xem</option>
                               </select>
                             </div>

@@ -8,26 +8,26 @@ import tiktok from "@/assets/tiktok.png";
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-gray-900 py-10 text-emerald-50">
+    <footer className="bg-white border-t border-emerald-100/60 py-12 text-emerald-800">
       <div className="max-w-screen-2xl mx-auto px-4">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <div className="flex items-center gap-2 font-semibold">
               <img src={logo.src} alt="Nhà Cộng" className="object-contain" />
             </div>
-            <p className="mt-2 text-sm">
-              Địa chỉ: số 27 liền kề 7, KĐT Văn Khê, La Khê, Hà Đông, Hà Nội
+            <p className="mt-3 max-w-xs text-base leading-relaxed text-emerald-700">
+              Địa chỉ: <span className="font-semibold text-emerald-900">số 27 liền kề 7, KĐT Văn Khê, La Khê, Hà Đông, Hà Nội</span>
             </p>
-            <p className="mt-1 text-sm">CSKH: 0968.345.486</p>
-            <p className="mt-1 text-sm">Email: hotro@nhacong.com.vn</p>
+            <p className="mt-1 text-base text-emerald-700">CSKH: <span className="font-semibold text-emerald-900">0968.345.486</span></p>
+            <p className="mt-1 text-base text-emerald-700">Email: <span className="font-semibold text-emerald-900">hotro@nhacong.com.vn</span></p>
             {/* Social icons */}
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-3">
               <a
                 href={"https://www.facebook.com/share/17gWbnK2gc/?mibextid=wwXIfr"}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="Facebook"
               >
                 <img src={facebook.src} alt="Facebook" className="h-6 w-6" />
@@ -37,7 +37,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Zalo"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="Zalo"
               >
                 <img src={zalo.src} alt="Zalo" className="h-6 w-6" />
@@ -47,7 +47,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="TikTok"
               >
                 <img src={tiktok.src} alt="TikTok" className="h-6 w-6" />
@@ -55,48 +55,54 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <p className="font-semibold">Về Nhà Cộng</p>
-            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
+            <p className="font-semibold text-emerald-900">Về Nhà Cộng</p>
+            <ul className="mt-3 space-y-1 text-base text-emerald-700">
               <li>
-                <Link href="/ve-chung-toi" className="hover:underline">Về chúng tôi</Link>
+                <Link href="/ve-chung-toi" className="font-medium text-emerald-700 transition hover:text-emerald-900">Về chúng tôi</Link>
               </li>
               <li>
-                <Link href="#" className="hover:underline">Dành cho chủ nhà</Link>
+                <Link href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Dành cho chủ nhà</Link>
               </li>
               <li>
-                <Link href="#" className="hover:underline">Dành cho khách thuê</Link>
+                <Link href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Dành cho khách thuê</Link>
               </li>
               <li>
-                <Link href="/tuyen-dung" className="hover:underline">Cơ hội nghề nghiệp</Link>
+                <Link href="/tuyen-dung" className="font-medium text-emerald-700 transition hover:text-emerald-900">Cơ hội nghề nghiệp</Link>
               </li>
               <li>
-                <Link href="#" className="hover:underline">Hỗ trợ</Link>
+                <Link href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Hỗ trợ</Link>
               </li>
             </ul>
           </div>
           <div>
-            <p className="font-semibold">Chính sách</p>
-            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
-              <li><a href="#" className="hover:underline">Điều khoản sử dụng</a></li>
-              <li><a href="#" className="hover:underline">Chính sách bảo mật</a></li>
+            <p className="font-semibold text-emerald-900">Chính sách</p>
+            <ul className="mt-3 space-y-1 text-base text-emerald-700">
+              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Điều khoản sử dụng</a></li>
+              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách bảo mật</a></li>
+              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách cộng đồng</a></li>
+              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách quyền riêng tư</a></li>
             </ul>
           </div>
           <div>
-            <p className="font-semibold">Tin tức</p>
-            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
-              <li><a href="/blog" className="hover:underline">Blog</a></li>
+            <p className="font-semibold text-emerald-900">Tin tức</p>
+            <ul className="mt-3 space-y-1 text-base text-emerald-700">
+              <li><a href="/blog" className="font-medium text-emerald-700 transition hover:text-emerald-900">Ưu đãi</a></li>
+              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Blog/Thuê nhà</a></li>
             </ul> 
           </div>
           <div>
-            <p className="font-semibold">Theo dõi chúng tôi</p>
-            <ul className="mt-2 space-y-1 text-sm text-emerald-100/90">
-              <li><a href="https://www.facebook.com/share/17gWbnK2gc/?mibextid=wwXIfr" className="hover:underline">Facebook</a></li>
-              <li><a href="https://www.tiktok.com/@nhacongolacong1?_r=1&_t=ZS-916loNG8MSI" className="hover:underline">Tiktok</a></li>
+            <p className="font-semibold text-emerald-900">Theo dõi chúng tôi</p>
+            <ul className="mt-3 space-y-1 text-base text-emerald-700">
+              <li><a href="https://www.facebook.com/share/17gWbnK2gc/?mibextid=wwXIfr" className="font-medium text-emerald-700 transition hover:text-emerald-900">Facebook</a></li>
+              <li><a href="https://www.tiktok.com/@nhacongolacong1?_r=1&_t=ZS-916loNG8MSI" className="font-medium text-emerald-700 transition hover:text-emerald-900">Tiktok</a></li>
+              <li><a href="https://www.tiktok.com/@nhacongolacong1?_r=1&_t=ZS-916loNG8MSI" className="font-medium text-emerald-700 transition hover:text-emerald-900">Instagram</a></li>
+              <li><a href="https://www.tiktok.com/@nhacongolacong1?_r=1&_t=ZS-916loNG8MSI" className="font-medium text-emerald-700 transition hover:text-emerald-900">Youtube</a></li>
+              <li><a href="https://zalo.me/2661388511949942518" className="font-medium text-emerald-700 transition hover:text-emerald-900">Zalo</a></li>
             </ul> 
           </div>
         </div>
-        <div className="mt-8 border-t border-white/10 pt-4 text-center text-xs text-emerald-100/70">
-          © {year} Nhà Cộng. All rights reserved.
+        <div className="mt-10 border-t border-emerald-100 pt-5 text-center text-sm text-emerald-700">
+          © {year} <span className="font-semibold text-emerald-900">Nhà Cộng</span>. All rights reserved.
         </div>
       </div>
     </footer>

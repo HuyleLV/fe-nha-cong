@@ -18,6 +18,7 @@ import type { Apartment } from "@/type/apartment";
 // Viewings calendar moved to dedicated page
 import LocationLookup from "../../components/locationLookup";
 import type { Location } from "@/type/location";
+import { tApartmentStatus } from "../../i18n";
 // Calendar UI moved to /admin/building/[id]/calendar
 
 const inputCls =
@@ -264,9 +265,9 @@ function BuildingAdminDetailInner() {
               <div>
                 <label className="block text-sm text-slate-600 mb-1">Trạng thái</label>
                 <select className={inputCls} value={form.status || "active"} onChange={(e) => onChange("status", e.target.value)}>
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                  <option value="draft">draft</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Ngừng hoạt động</option>
+                  <option value="draft">Nháp</option>
                 </select>
               </div>
             </div>
@@ -328,7 +329,9 @@ function BuildingAdminDetailInner() {
                     </div>
                   </td>
                   <td className="px-4 py-3">{a.rentPrice} {a.currency}</td>
-                  <td className="px-4 py-3">{a.status}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${a.status === 'published' ? 'bg-green-100 text-green-700' : a.status === 'draft' ? 'bg-slate-200 text-slate-700' : a.status === 'archived' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{tApartmentStatus(a.status)}</span>
+                  </td>
                   <td className="px-4 py-3">
                     <Link href={`/admin/apartment/${a.id}`} className="text-emerald-700 hover:underline">Sửa</Link>
                   </td>

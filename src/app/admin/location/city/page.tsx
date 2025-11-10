@@ -16,8 +16,13 @@ function LevelTag({ level }: { level: LocationLevel }) {
     City: "bg-sky-50 text-sky-700 border-sky-200",
     District: "bg-indigo-50 text-indigo-700 border-indigo-200",
   };
+  const viLabel: Record<LocationLevel, string> = {
+    Province: "Tỉnh",
+    City: "Thành phố",
+    District: "Quận",
+  };
   return (
-    <span className={`inline-block border px-2 py-0.5 rounded-full text-xs ${map[level]}`}>{level}</span>
+    <span className={`inline-block border px-2 py-0.5 rounded-full text-xs ${map[level]}`}>{viLabel[level] || level}</span>
   );
 }
 
@@ -87,13 +92,13 @@ export default function CityLocationPage() {
             <td className="px-4 py-2">
               <div className="flex justify-center gap-2">
                 <button
-                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-amber-500 text-white rounded-md hover:bg-amber-600 transition cursor-pointer"
                   onClick={() => router.push(`/admin/location/${loc.id}`)}
                 >
-                  <Edit size={15} /> Sửa
+                  <Edit size={14} /> Sửa
                 </button>
                 <button
-                  className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 transition cursor-pointer"
                   onClick={async () => {
                     const ok = confirm(`Xoá Thành phố "${loc.name}"?`);
                     if (!ok) return;

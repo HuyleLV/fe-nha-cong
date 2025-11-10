@@ -10,6 +10,7 @@ import { buildingService } from "@/services/buildingService";
 import { Building, BuildingStatus } from "@/type/building";
 import { locationService } from "@/services/locationService";
 import type { Location } from "@/type/location";
+import { tBuildingStatus } from "../i18n";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
@@ -94,9 +95,9 @@ function BuildingAdminListInner() {
           onChange={(e) => onFilterChange({ status: e.target.value || undefined, page: 1 })}
         >
           <option value="">Tất cả trạng thái</option>
-          <option value="active">active</option>
-          <option value="inactive">inactive</option>
-          <option value="draft">draft</option>
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Ngừng hoạt động</option>
+          <option value="draft">Nháp</option>
         </select>
         <select
           className={inputCls}
@@ -128,7 +129,11 @@ function BuildingAdminListInner() {
             <td className="px-4 py-3">{b.locationId ?? "-"}</td>
             <td className="px-4 py-3">{b.floors}</td>
             <td className="px-4 py-3">{b.units}</td>
-            <td className="px-4 py-3"><span className="px-2 py-1 rounded text-xs bg-slate-100">{b.status}</span></td>
+            <td className="px-4 py-3">
+              <span className={`px-2 py-1 rounded text-xs font-medium ${b.status === 'active' ? 'bg-green-100 text-green-700' : b.status === 'inactive' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-700'}`}>
+                {tBuildingStatus(b.status)}
+              </span>
+            </td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <Link
