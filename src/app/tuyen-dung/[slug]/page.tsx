@@ -16,17 +16,26 @@ export default async function JobDetailPage({ params }: { params: { slug: string
     return (
       <div className="mx-auto max-w-screen-2xl">
         {/* HERO */}
-        <div className="relative">
-          <div className="h-48 sm:h-60 md:h-72 w-full overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={(process.env.NEXT_PUBLIC_API_URL || "") + (job.coverImageUrl || '/images/hero-jobs-fallback.jpg')}
-              alt={job.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 px-4 sm:px-6 md:px-8 py-4 text-white">
+        <div className="relative w-full h-[280px] sm:h-[340px] md:h-[420px] lg:h-[460px] overflow-hidden rounded-b-2xl">
+          {/* Background: blurred fill */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={(process.env.NEXT_PUBLIC_API_URL || "") + (job.coverImageUrl || '/images/hero-jobs-fallback.jpg')}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70"
+          />
+          {/* Foreground: center the real image with object-contain (works well for ảnh dọc) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={(process.env.NEXT_PUBLIC_API_URL || "") + (job.coverImageUrl || '/images/hero-jobs-fallback.jpg')}
+            alt={job.title}
+            className="relative z-10 mx-auto h-full w-auto max-w-full object-contain drop-shadow-xl"
+          />
+          {/* Gradient for text readability */}
+          <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+          {/* Text overlay */}
+          <div className="absolute inset-x-0 bottom-0 z-30 px-4 sm:px-6 md:px-8 py-4 text-white">
             <div className="flex flex-wrap items-center gap-2 text-emerald-200 text-xs">
               {job.publishedAt && (
                 <span className="inline-flex items-center gap-1 bg-white/10 px-2 py-1 rounded">

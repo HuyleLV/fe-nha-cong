@@ -51,7 +51,7 @@ export default function JobsFeatureIndex() {
 	};
 
 	return (
-		<div className="mx-auto max-w-screen-2xl pt-10">
+		<div className="mx-auto max-w-screen-2xl py-10">
 			{/* Hero */}
 			<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 px-6 py-10 mb-8 text-white">
 				<div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.4),transparent_60%)]" />
