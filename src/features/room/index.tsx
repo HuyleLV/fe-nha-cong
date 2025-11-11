@@ -8,6 +8,8 @@ import {
   ChevronRight, Heart, Share2, MapPin, Home, ShowerHead, BedDouble, Ruler, Lock,
   Zap, Wifi, Car, ShieldCheck, Phone, CalendarDays, Copy, X, Sparkles, User,
   Clock, CheckCircle2, Calendar, Lightbulb, FileText, AlertCircle, MessageCircle,
+  Package, UtensilsCrossed, Hammer, Sofa, PawPrint, BatteryCharging,
+  ArrowUpDown, BadgeCheck, Wind
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
@@ -54,9 +56,11 @@ const toISOWithTZ = (dateStr: string, timeStr: string) => {
   return dt.toISOString();
 };
 
+// Các key tiện nghi cũ (giữ cho tương thích nếu cần)
 type AmenityKey =
   | "wifi" | "parking" | "private_bath" | "shared_kitchen" | "aircon"
-  | "water_heater" | "security" | "balcony" | "washing" | "elevator";
+  | "water_heater" | "security" | "balcony" | "washing" | "elevator"
+  | "pet" | "ev" | "wardrobe" | "fridge" | "range_hood" | "kitchen_table" | "desk" | "mezzanine" | "shared_bath" | "flexible_hours" | "no_owner";
 
 const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode } => {
   const meta: Record<AmenityKey, { label: string; icon: any }> = {
@@ -69,7 +73,18 @@ const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode
     security: { label: "An ninh", icon: ShieldCheck },
     balcony: { label: "Ban công", icon: Home },
     washing: { label: "Máy giặt", icon: Home },
-    elevator: { label: "Thang máy", icon: Home },
+    elevator: { label: "Thang máy", icon: ArrowUpDown },
+    pet: { label: "Cho nuôi pet", icon: PawPrint },
+    ev: { label: "Xe điện", icon: BatteryCharging },
+    wardrobe: { label: "Tủ quần áo", icon: Package },
+    fridge: { label: "Tủ lạnh", icon: Package },
+    range_hood: { label: "Hút mùi", icon: Wind },
+    kitchen_table: { label: "Bàn bếp", icon: UtensilsCrossed },
+    desk: { label: "Bàn làm việc", icon: Hammer },
+    mezzanine: { label: "Gác xép", icon: ArrowUpDown },
+    shared_bath: { label: "WC chung", icon: ShowerHead },
+    flexible_hours: { label: "Giờ linh hoạt", icon: Clock },
+    no_owner: { label: "Không chung chủ", icon: BadgeCheck },
   };
   const item = meta[key];
   const IconComponent = item.icon;
@@ -894,23 +909,38 @@ export default function RoomPage({ slug }: { slug: string }) {
   return asImageSrc(src || undefined) || undefined;
   }, [data, images]);
 
-  // Tiện nghi suy ra từ các cờ boolean của BE
-  const amenities: AmenityKey[] = useMemo(() => {
+  // Gom nhóm tiện nghi theo yêu cầu: "Nội thất" & "Tiện ích"
+  const furnitureAmenities: AmenityKey[] = useMemo(() => {
     if (!data) return [];
-    const list: AmenityKey[] = [];
-    
-    // Chỉ thêm những tiện nghi thực sự có
-    if ((data as any).hasAirConditioner) list.push("aircon");
-    if ((data as any).hasWaterHeater) list.push("water_heater");
-    if ((data as any).hasPrivateBathroom) list.push("private_bath");
-    if ((data as any).hasWashingMachine) list.push("washing");
-    if ((data as any).hasWardrobe) list.push("balcony"); // tạm map wardrobe -> balcony
-    if ((data as any).hasKitchenCabinet) list.push("shared_kitchen");
-    
-    // Luôn thêm wifi và parking làm tiện nghi mặc định
-    list.push("wifi", "parking");
-    
-    return Array.from(new Set(list));
+    const f: AmenityKey[] = [];
+    if ((data as any).hasAirConditioner) f.push("aircon");
+    if ((data as any).hasWaterHeater) f.push("water_heater");
+    if ((data as any).hasKitchenCabinet) f.push("shared_kitchen");
+    if ((data as any).hasWashingMachine) f.push("washing");
+    if ((data as any).hasWashingMachineShared) f.push("washing");
+    if ((data as any).hasWashingMachinePrivate) f.push("washing");
+    if ((data as any).hasWardrobe) f.push("wardrobe");
+    if ((data as any).hasFridge) f.push("fridge");
+    if ((data as any).hasRangeHood) f.push("range_hood");
+    if ((data as any).hasKitchenTable) f.push("kitchen_table");
+    if ((data as any).hasDesk) f.push("desk");
+    return Array.from(new Set(f));
+  }, [data]);
+
+  const serviceAmenities: AmenityKey[] = useMemo(() => {
+    if (!data) return [];
+    const a: AmenityKey[] = [];
+    if ((data as any).hasPrivateBathroom) a.push("private_bath");
+    if ((data as any).hasSharedBathroom) a.push("shared_bath");
+    if ((data as any).hasMezzanine) a.push("mezzanine");
+    if ((data as any).noOwnerLiving) a.push("no_owner");
+    if ((data as any).flexibleHours) a.push("flexible_hours");
+    if ((data as any).hasElevator) a.push("elevator");
+    if ((data as any).allowPet) a.push("pet");
+    if ((data as any).allowElectricVehicle) a.push("ev");
+    // mặc định wifi & parking luôn có (có thể bỏ nếu muốn chính xác tuyệt đối)
+    a.push("wifi", "parking");
+    return Array.from(new Set(a));
   }, [data]);
 
   // ===== Sticky tab bar logic (must be before any conditional returns) =====
@@ -1217,7 +1247,37 @@ export default function RoomPage({ slug }: { slug: string }) {
               </Section>
 
               <Section ref={featuresRef as any} title="Tiện nghi">
-                <AmenityGrid amenities={amenities} />
+                <div className="space-y-6">
+                  {/* Nội thất */}
+                  <div>
+                    <div className="flex items-center mb-2 gap-2">
+                      <Sofa className="h-4 w-4 text-emerald-600" />
+                      <span className="text-xs font-semibold text-emerald-700 tracking-wide">NỘI THẤT</span>
+                    </div>
+                    {furnitureAmenities.length ? (
+                      <AmenityGrid amenities={furnitureAmenities} />
+                    ) : (
+                      <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white px-3 py-3 text-xs text-emerald-700 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-emerald-500" /> Chưa có nội thất được đánh dấu.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tiện ích */}
+                  <div>
+                    <div className="flex items-center mb-2 gap-2">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                      <span className="text-xs font-semibold text-emerald-700 tracking-wide">TIỆN ÍCH</span>
+                    </div>
+                    {serviceAmenities.length ? (
+                      <AmenityGrid amenities={serviceAmenities} />
+                    ) : (
+                      <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white px-3 py-3 text-xs text-emerald-700 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-emerald-500" /> Chưa có tiện ích được đánh dấu.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </Section>
 
               <Section title="Chi phí chi tiết">

@@ -58,6 +58,9 @@ function FiltersSection(props: {
   hasWashingMachine: boolean; setHasWashingMachine: (v: boolean) => void;
   hasWardrobe: boolean; setHasWardrobe: (v: boolean) => void;
   flexibleHours: boolean; setFlexibleHours: (v: boolean) => void;
+  hasElevator: boolean; setHasElevator: (v: boolean) => void;
+  allowPet: boolean; setAllowPet: (v: boolean) => void;
+  allowElectricVehicle: boolean; setAllowElectricVehicle: (v: boolean) => void;
 
   sort: "newest" | "price_asc" | "price_desc" | "area_desc";
   setSort: (v: "newest" | "price_asc" | "price_desc" | "area_desc") => void;
@@ -79,6 +82,9 @@ function FiltersSection(props: {
     hasWashingMachine, setHasWashingMachine,
     hasWardrobe, setHasWardrobe,
     flexibleHours, setFlexibleHours,
+    hasElevator, setHasElevator,
+    allowPet, setAllowPet,
+    allowElectricVehicle, setAllowElectricVehicle,
     sort, setSort,
     onClearAll,
   } = props;
@@ -103,6 +109,9 @@ function FiltersSection(props: {
     hasWashingMachine,
     hasWardrobe,
     flexibleHours,
+    hasElevator,
+    allowPet,
+    allowElectricVehicle,
     sort !== "newest" ? "sort" : "",
   ].filter(Boolean).length;
 
@@ -252,6 +261,9 @@ function FiltersSection(props: {
             <div className="text-[13px]"><ToggleChip active={hasWashingMachine} onToggle={() => setHasWashingMachine(!hasWashingMachine)}>Máy giặt</ToggleChip></div>
             <div className="text-[13px]"><ToggleChip active={hasWardrobe} onToggle={() => setHasWardrobe(!hasWardrobe)}>Tủ quần áo</ToggleChip></div>
             <div className="text-[13px]"><ToggleChip active={flexibleHours} onToggle={() => setFlexibleHours(!flexibleHours)}>Giờ linh hoạt</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={hasElevator} onToggle={() => setHasElevator(!hasElevator)}>Thang máy</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={allowPet} onToggle={() => setAllowPet(!allowPet)}>Cho nuôi pet</ToggleChip></div>
+            <div className="text-[13px]"><ToggleChip active={allowElectricVehicle} onToggle={() => setAllowElectricVehicle(!allowElectricVehicle)}>Xe điện</ToggleChip></div>
           </div>
         </div>
       )}
@@ -294,6 +306,9 @@ export default function AdminApartmentsPage() {
   const [hasWashingMachine, setHasWashingMachine] = useState(false);
   const [hasWardrobe, setHasWardrobe] = useState(false);
   const [flexibleHours, setFlexibleHours] = useState(false);
+  const [hasElevator, setHasElevator] = useState(false);
+  const [allowPet, setAllowPet] = useState(false);
+  const [allowElectricVehicle, setAllowElectricVehicle] = useState(false);
 
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "area_desc">("newest");
 
@@ -320,6 +335,9 @@ export default function AdminApartmentsPage() {
         hasWashingMachine: hasWashingMachine || undefined,
         hasWardrobe: hasWardrobe || undefined,
         flexibleHours: flexibleHours || undefined,
+  hasElevator: hasElevator || undefined,
+  allowPet: allowPet || undefined,
+  allowElectricVehicle: allowElectricVehicle || undefined,
         sort,
       });
 
@@ -349,6 +367,9 @@ export default function AdminApartmentsPage() {
     hasWashingMachine,
     hasWardrobe,
     flexibleHours,
+    hasElevator,
+    allowPet,
+    allowElectricVehicle,
     sort,
   ]);
 
@@ -388,7 +409,10 @@ export default function AdminApartmentsPage() {
     setHasWaterHeater(false);
     setHasWashingMachine(false);
     setHasWardrobe(false);
-    setFlexibleHours(false);
+  setFlexibleHours(false);
+  setHasElevator(false);
+  setAllowPet(false);
+  setAllowElectricVehicle(false);
     setSort("newest");
     setPage(1);
     fetchData();
@@ -433,6 +457,9 @@ export default function AdminApartmentsPage() {
         hasWashingMachine={hasWashingMachine} setHasWashingMachine={setHasWashingMachine}
         hasWardrobe={hasWardrobe} setHasWardrobe={setHasWardrobe}
         flexibleHours={flexibleHours} setFlexibleHours={setFlexibleHours}
+        hasElevator={hasElevator} setHasElevator={setHasElevator}
+        allowPet={allowPet} setAllowPet={setAllowPet}
+        allowElectricVehicle={allowElectricVehicle} setAllowElectricVehicle={setAllowElectricVehicle}
         sort={sort} setSort={setSort}
         onClearAll={clearAll}
       />

@@ -65,6 +65,10 @@ export default function TimPhongQuanhDayPage() {
   const [hasKitchenCabinet, setHasKitchenCabinet] = useState(false);
   const [hasRangeHood, setHasRangeHood] = useState(false);
   const [hasFridge, setHasFridge] = useState(false);
+  // New amenities (2025-11)
+  const [hasElevator, setHasElevator] = useState(false);
+  const [allowPet, setAllowPet] = useState(false);
+  const [allowElectricVehicle, setAllowElectricVehicle] = useState(false);
 
   // “Ưu tiên giá tốt” (client-side)
   const [onlyHot, setOnlyHot] = useState(false);
@@ -111,6 +115,9 @@ export default function TimPhongQuanhDayPage() {
     hasKitchenCabinet: hasKitchenCabinet || undefined,
     hasRangeHood: hasRangeHood || undefined,
     hasFridge: hasFridge || undefined,
+  hasElevator: hasElevator || undefined,
+  allowPet: allowPet || undefined,
+  allowElectricVehicle: allowElectricVehicle || undefined,
     hasWardrobe: hasWardrobe || undefined,
     flexibleHours: flexibleHours || undefined,
     page,
@@ -152,6 +159,9 @@ export default function TimPhongQuanhDayPage() {
       setHasKitchenCabinet(readBool('hasKitchenCabinet'));
       setHasRangeHood(readBool('hasRangeHood'));
       setHasFridge(readBool('hasFridge'));
+  setHasElevator(readBool('hasElevator'));
+  setAllowPet(readBool('allowPet'));
+  setAllowElectricVehicle(readBool('allowElectricVehicle'));
 
       // reset page to 1 when params change
       setPage(1);
@@ -216,7 +226,7 @@ export default function TimPhongQuanhDayPage() {
     bedrooms, bathrooms, livingRooms, guests, status, sort,
     hasPrivateBathroom, hasSharedBathroom, hasMezzanine, noOwnerLiving, hasAirConditioner,
     hasWaterHeater, hasWashingMachine, hasWashingMachineShared, hasWashingMachinePrivate, hasWardrobe, hasDesk, hasKitchenTable, hasKitchenCabinet, hasRangeHood, hasFridge,
-    flexibleHours, page
+    flexibleHours, hasElevator, allowPet, allowElectricVehicle, page
   ]);
 
   // client-side “hot”
@@ -255,6 +265,9 @@ export default function TimPhongQuanhDayPage() {
   setHasKitchenCabinet(false);
   setHasRangeHood(false);
   setHasFridge(false);
+  setHasElevator(false);
+  setAllowPet(false);
+  setAllowElectricVehicle(false);
     setFlexibleHours(false);
     setOnlyHot(false);
     setSort("newest");
@@ -422,6 +435,9 @@ export default function TimPhongQuanhDayPage() {
                   <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>Tủ lạnh</ToggleChip>
 
                   <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
+                  <ToggleChip active={hasElevator} onToggle={() => { setHasElevator(!hasElevator); setPage(1); }}>Thang máy</ToggleChip>
+                  <ToggleChip active={allowPet} onToggle={() => { setAllowPet(!allowPet); setPage(1); }}>Cho nuôi pet</ToggleChip>
+                  <ToggleChip active={allowElectricVehicle} onToggle={() => { setAllowElectricVehicle(!allowElectricVehicle); setPage(1); }}>Xe điện (sạc/gửi)</ToggleChip>
                 </div>
             </Accordion>
           </div>

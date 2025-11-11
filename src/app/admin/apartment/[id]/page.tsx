@@ -109,6 +109,9 @@ export default function ApartmentFormPage() {
       hasMezzanine: false,
       noOwnerLiving: false,
       flexibleHours: false,
+  hasElevator: false,
+  allowPet: false,
+  allowElectricVehicle: false,
 
 
       focusKeyword: "", // ✅ chỉ để chấm điểm SEO, không gửi lên API
@@ -245,6 +248,9 @@ export default function ApartmentFormPage() {
           hasMezzanine: ap.hasMezzanine ?? false,
           noOwnerLiving: ap.noOwnerLiving ?? false,
           flexibleHours: ap.flexibleHours ?? false,
+          hasElevator: (ap as any).hasElevator ?? false,
+          allowPet: (ap as any).allowPet ?? false,
+          allowElectricVehicle: (ap as any).allowElectricVehicle ?? false,
 
           focusKeyword: "", // ✅ không load từ API
         });
@@ -502,6 +508,9 @@ export default function ApartmentFormPage() {
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasElevator")} /> Thang máy</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowPet")} /> Cho nuôi pet</label>
+          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowElectricVehicle")} /> Xe điện (sạc/gửi)</label>
             </div>
           </Section>
         </div>

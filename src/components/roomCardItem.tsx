@@ -112,7 +112,6 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
     const first = item.coverImageUrl || item.images?.[0] || undefined;
     return withBase(first);
   }, [item.coverImageUrl, item.images]);
-  console.log(item)
   const address = item.streetAddress || "";
   const detailHref = item.slug ? `/room/${item.slug}` : "#";
 

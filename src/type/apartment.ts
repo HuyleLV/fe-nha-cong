@@ -69,6 +69,11 @@ export type Apartment = {
   hasMezzanine: boolean;
   noOwnerLiving: boolean;
   flexibleHours: boolean;
+  
+  // ===== New amenities (2025-11) =====
+  hasElevator: boolean;
+  allowPet: boolean;
+  allowElectricVehicle: boolean;
 
   /** Whether this apartment is verified by admin/system */
   isVerified?: boolean;
@@ -135,6 +140,11 @@ export type ApartmentForm = {
   hasMezzanine?: boolean;
   noOwnerLiving?: boolean;
   flexibleHours?: boolean;
+  
+  // ===== New amenities (2025-11) =====
+  hasElevator?: boolean;
+  allowPet?: boolean;
+  allowElectricVehicle?: boolean;
 
   /** Admin flag: verified */
   isVerified?: boolean;
@@ -180,6 +190,11 @@ export type ApartmentQuery = {
   hasWashingMachine?: boolean;
   hasWardrobe?: boolean;
   flexibleHours?: boolean;
+  
+  // ===== New amenities filters (2025-11) =====
+  hasElevator?: boolean;
+  allowPet?: boolean;
+  allowElectricVehicle?: boolean;
 
   sort?: "newest" | "price_asc" | "price_desc" | "area_desc";
 

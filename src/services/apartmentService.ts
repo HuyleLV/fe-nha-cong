@@ -64,6 +64,22 @@ export const apartmentService = {
     }
   },
 
+  /** GET /api/apartments/most-interested → { items: Apartment[] } */
+  async getMostInterested(params?: { limit?: number; signal?: AbortSignal }): Promise<Apartment[]> {
+    try {
+      const payload = await axiosClient.get<{ items: Apartment[] }, { items: Apartment[] }>(
+        apiUrl('/api/apartments/most-interested'),
+        {
+          params: { limit: params?.limit ?? 10 },
+          signal: params?.signal,
+        }
+      );
+      return payload?.items ?? [];
+    } catch (err: any) {
+      throw new Error(err?.message || 'Không thể tải danh sách phòng quan tâm nhiều');
+    }
+  },
+
   /** GET /api/apartments/:idOrSlug → hỗ trợ trả trực tiếp entity hoặc { data: entity } */
   async getById(idOrSlug: number | string): Promise<Apartment> {
     try {

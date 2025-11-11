@@ -38,12 +38,12 @@ export default function Sidebar() {
 
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
     { href: "/admin/building", label: "Quản lý Tòa Nhà", icon: House },
     { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
-    { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
   ];
 

@@ -14,9 +14,8 @@ type LocalForm = {
 };
 
 const ROLE_OPTIONS = [
-  { id: "landlord", label: "Chủ nhà" },
-  { id: "customer", label: "Khách hàng" },
-  { id: "operator", label: "Đơn vị vận hành" },
+  { id: "customer", label: "Người thuê" },
+  { id: "landlord", label: "Người cho thuê" },
 ] as const;
 
 export default function HopTacPage() {

@@ -38,10 +38,18 @@ export default function DistrictListingSection({
   showTabs = true,
   variant = "grid",
 }: Props) {
+  // Khi ẩn tabs và không chỉ định onlyDistrict -> hiển thị tất cả items
+  const showAll = !showTabs && !onlyDistrict;
+
   // Chuẩn hoá items kèm district string
-  const items = useMemo(
-    () => (data ?? []).map((apt) => ({ apt, district: districtOf(apt) })).filter((x) => !!x.district),
+  const itemsRaw = useMemo(
+    () => (data ?? []).map((apt) => ({ apt, district: districtOf(apt) })),
     [data]
+  );
+  // Nếu showAll -> KHÔNG lọc theo district (kể cả rỗng). Ngược lại, bỏ item không có district.
+  const items = useMemo(
+    () => (showAll ? itemsRaw : itemsRaw.filter((x) => !!x.district)),
+    [itemsRaw, showAll]
   );
 
   // Danh sách quận (unique + theo thứ tự districtsOrder nếu có)
@@ -68,9 +76,10 @@ export default function DistrictListingSection({
 
   // Dữ liệu đã lọc theo quận đang active
   const filtered = useMemo(() => {
+    if (showAll) return items.map((x) => x.apt);
     if (!active) return [];
     return items.filter((x) => x.district === active).map((x) => x.apt);
-  }, [items, active]);
+  }, [items, active, showAll]);
 
   const showHeaderTabs = !onlyDistrict && showTabs;
 
@@ -119,11 +128,15 @@ export default function DistrictListingSection({
       )}
 
       {/* Empty state */}
-      {!active || filtered.length === 0 ? (
+      {(showAll ? items.length === 0 : !active || filtered.length === 0) ? (
         <div className="mt-6 rounded-xl bg-white/5 p-6 text-center text-white/80">
-          {districts.length === 0
-            ? "Chưa có dữ liệu khu vực để hiển thị."
-            : "Chưa có phòng khả dụng trong khu vực đã chọn."}
+          {showAll
+            ? (items.length === 0
+                ? "Chưa có dữ liệu để hiển thị."
+                : "")
+            : (districts.length === 0
+                ? "Chưa có dữ liệu khu vực để hiển thị."
+                : "Chưa có phòng khả dụng trong khu vực đã chọn.")}
         </div>
       ) : variant === "grid" ? (
         // GRID
