@@ -74,6 +74,11 @@ export default function AccountPage() {
     return `${y}-${m}-${day}`;
   });
   const [editing, setEditing] = useState(false);
+  const [showChangePwd, setShowChangePwd] = useState(false);
+  const [pwdCurrent, setPwdCurrent] = useState("");
+  const [pwdNew, setPwdNew] = useState("");
+  const [pwdConfirm, setPwdConfirm] = useState("");
+  const [changingPwd, setChangingPwd] = useState(false);
   const [emailOtpSent, setEmailOtpSent] = useState<{ sent: boolean; expiresAt?: string } | null>(null);
   const [emailCode, setEmailCode] = useState('');
   const [phoneOtpSent, setPhoneOtpSent] = useState<{ sent: boolean; expiresAt?: string } | null>(null);
@@ -475,12 +480,18 @@ export default function AccountPage() {
                 )}
               </div>
             </div>
-              <div className="w-full md:w-auto flex justify-center md:justify-end items-center gap-2 mt-2 md:mt-0 md:self-start md:ml-auto">
+              <div className="w-full md:w-auto flex flex-wrap justify-center md:justify-end items-center gap-2 mt-2 md:mt-0 md:self-start md:ml-auto">
                 <button
-                  onClick={() => setEditing((v) => !v)}
+                  onClick={() => { setEditing((v) => !v); if (!editing) setShowChangePwd(false); }}
                   className="h-10 rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 flex items-center gap-2 transition"
                 >
-                  {editing ? 'Đóng sửa' : 'Sửa thông tin'}
+                  {editing ? 'Đóng sửa' : 'Cập nhật thông tin'}
+                </button>
+                <button
+                  onClick={() => { setShowChangePwd((v) => !v); if (!showChangePwd) setEditing(false); }}
+                  className="h-10 rounded-xl border border-sky-200 text-sky-700 hover:bg-sky-50 px-4 py-2 flex items-center gap-2 transition"
+                >
+                  {showChangePwd ? 'Đóng đổi mật khẩu' : 'Đổi mật khẩu'}
                 </button>
                 <button
                   onClick={() => {
@@ -513,6 +524,67 @@ export default function AccountPage() {
                   setAuth(next);
                   setEditing(false);
                 }} />
+              </div>
+            )}
+
+            {showChangePwd && (
+              <div className="mt-6 border-t border-slate-100 pt-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <h3 className="text-base font-semibold text-slate-900">Đổi mật khẩu</h3>
+                  <p className="text-sm text-slate-600 mb-3">Vui lòng nhập mật khẩu hiện tại để đổi sang mật khẩu mới.</p>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <input
+                      type="password"
+                      placeholder="Mật khẩu hiện tại"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      value={pwdCurrent}
+                      onChange={(e) => setPwdCurrent(e.target.value)}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Mật khẩu mới"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      value={pwdNew}
+                      onChange={(e) => setPwdNew(e.target.value)}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Nhập lại mật khẩu mới"
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      value={pwdConfirm}
+                      onChange={(e) => setPwdConfirm(e.target.value)}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <button
+                      disabled={changingPwd}
+                      onClick={async () => {
+                        try {
+                          if (!pwdCurrent || !pwdNew || !pwdConfirm) {
+                            return toast.error('Vui lòng nhập đầy đủ thông tin');
+                          }
+                          if (pwdNew !== pwdConfirm) {
+                            return toast.error('Xác nhận mật khẩu mới không khớp');
+                          }
+                          setChangingPwd(true);
+                          const { userService } = await import('@/services/userService');
+                          await userService.postChangePassword({ currentPassword: pwdCurrent, newPassword: pwdNew, confirmNewPassword: pwdConfirm });
+                          toast.success('Đổi mật khẩu thành công');
+                          setPwdCurrent(''); setPwdNew(''); setPwdConfirm('');
+                        } catch (e: any) {
+                          const msg = e?.response?.data?.message || e?.message || 'Không đổi được mật khẩu';
+                          toast.error(msg);
+                        } finally {
+                          setChangingPwd(false);
+                        }
+                      }}
+                      className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {changingPwd ? 'Đang đổi...' : 'Đổi mật khẩu'}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">Lưu ý: Tài khoản đăng nhập mạng xã hội cần đặt mật khẩu trước ở phần Cập nhật thông tin.</p>
+                </div>
               </div>
             )}
 
@@ -584,16 +656,54 @@ export default function AccountPage() {
                     <span className="leading-none">{dayNum}</span>
                     {d && events.length > 0 && (() => {
                       const depositCount = events.filter(v => isDepositViewing(v)).length;
+                      const normalCount = events.length - depositCount;
                       const allDeposit = depositCount === events.length && events.length > 0;
-                      const hasBoth = depositCount > 0 && !allDeposit;
-                      const label = allDeposit ? 'Lịch đặt cọc' : hasBoth ? 'Có lịch' : 'Lịch xem phòng';
-                      const baseClass = allDeposit ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700';
+                      const allNormal = normalCount === events.length && events.length > 0;
+                      const hasBoth = depositCount > 0 && normalCount > 0;
+
+                      if (hasBoth) {
+                        return (
+                          <div className="mt-1 flex w-full flex-col items-center gap-1">
+                            <span className={`relative inline-flex w-25 justify-center items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium border-emerald-200 bg-emerald-50 text-emerald-700`}>
+                              Lịch xem phòng
+                              {normalCount >= 2 && (
+                                <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white`}>
+                                  {normalCount}
+                                </span>
+                              )}
+                            </span>
+                            <span className={`relative inline-flex w-25 justify-center items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium border-cyan-200 bg-cyan-50 text-cyan-700`}>
+                              Lịch đặt cọc
+                              {depositCount >= 2 && (
+                                <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-cyan-600 text-[10px] font-bold text-white`}>
+                                  {depositCount}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      if (allDeposit) {
+                        return (
+                          <span className={`mt-1 relative inline-flex w-full justify-center items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium border-cyan-200 bg-cyan-50 text-cyan-700`}>
+                            Lịch đặt cọc
+                            {depositCount >= 2 && (
+                              <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-cyan-600 text-[10px] font-bold text-white`}>
+                                {depositCount}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      }
+
+                      // only normal viewings
                       return (
-                        <span className={`mt-1 relative inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${baseClass}`}>
-                          {label}
-                          {events.length >= 2 && (
-                            <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full ${allDeposit ? 'bg-cyan-600' : 'bg-emerald-600'} text-[10px] font-bold text-white`}>
-                              {events.length}
+                        <span className={`mt-1 relative inline-flex w-full justify-center items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium border-emerald-200 bg-emerald-50 text-emerald-700`}>
+                          Lịch xem phòng
+                          {normalCount >= 2 && (
+                            <span className={`absolute -top-2 -right-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white`}>
+                              {normalCount}
                             </span>
                           )}
                         </span>

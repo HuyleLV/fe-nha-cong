@@ -20,6 +20,14 @@ export const userService = {
         ) as unknown as TokenAdmin;
         return res;
     },
+    async postChangePassword(data: { currentPassword: string; newPassword: string; confirmNewPassword: string }): Promise<{ message: string }>
+    {
+        const res = await axiosClient.post<{ message: string }>(
+            apiUrl(`/api/auth/change-password`),
+            data
+        ) as unknown as { message: string };
+        return res;
+    },
     
     async postLoginGoogleIdToken(idToken: string): Promise<resLoginUser> {
         const res = await axiosClient.post<resLoginUser>(

@@ -43,6 +43,20 @@ const hasLoginToken = () => {
   );
 };
 
+// Đọc thông tin người dùng đã đăng nhập (được lưu ở cookie/localStorage với key 'auth_user')
+function readAuthUser(): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    // Ưu tiên cookie để đồng bộ đa tab
+    const cookieMatch = document.cookie.match(/(^| )auth_user=([^;]+)/);
+    const raw = cookieMatch ? decodeURIComponent(cookieMatch[2]) : (localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user'));
+    if (!raw) return null;
+    const json = JSON.parse(raw);
+    if (json && typeof json === 'object') return json;
+  } catch {}
+  return null;
+}
+
 // ========== Reconstructed missing helpers & components (after refactor merge) ==========
 const parseNum = (v: any, fallback = 0): number => {
   if (v == null) return fallback;
@@ -399,6 +413,12 @@ function BaseViewingModal({
   useEffect(() => {
     if (open) {
       setFieldErrors(null);
+      // Prefill họ tên & SĐT từ tài khoản nếu chưa nhập
+      const u = readAuthUser();
+      if (u) {
+        if (!name && u.name) setName(u.name);
+        if (!phone && u.phone) setPhone(u.phone);
+      }
     }
   }, [open]);
 
@@ -485,11 +505,6 @@ function BaseViewingModal({
 
           {/* Body */}
           <div className="p-4 md:p-5">
-            {variant === "deposit" && (
-              <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-800">
-                Trạng thái dự kiến: <b>Chờ đặt cọc</b>
-              </div>
-            )}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="text-sm text-emerald-800">{variant === "deposit" ? "Ngày" : "Ngày xem"}</label>
@@ -600,6 +615,12 @@ function DepositModal({
   useEffect(() => {
     if (open) {
       setFieldErrors(null);
+      // Prefill họ tên & SĐT từ tài khoản nếu sẵn có
+      const u = readAuthUser();
+      if (u) {
+        if (!name && u.name) setName(u.name);
+        if (!phone && u.phone) setPhone(u.phone);
+      }
     }
   }, [open]);
 
@@ -678,9 +699,6 @@ function DepositModal({
 
           {/* Body */}
           <div className="p-4 md:p-5">
-            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-800">
-              Trạng thái dự kiến: <b>Chờ đặt cọc</b>
-            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="text-sm text-emerald-800">Ngày</label>

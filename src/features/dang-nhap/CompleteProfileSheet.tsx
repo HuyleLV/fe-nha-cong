@@ -2,14 +2,12 @@
 import { useMemo, useState } from "react";
 import { userService } from "@/services/userService";
 import { toast } from "react-toastify";
-import { User as UserIcon, Phone, Lock, MapPin, Calendar as CalendarIcon, ImageIcon } from "lucide-react";
+import { User as UserIcon, Phone, MapPin, Calendar as CalendarIcon, ImageIcon } from "lucide-react";
 import UploadPicker from "@/components/UploadPicker";
 
 export default function CompleteProfileSheet({ onDone, initialName, initialPhone, email, initialGender, initialDateOfBirth, initialAvatarUrl, initialAddress, }: { onDone?: () => void; initialName?: string; initialPhone?: string; email?: string; initialGender?: 'male' | 'female' | 'other' | null; initialDateOfBirth?: string | Date | null; initialAvatarUrl?: string | null; initialAddress?: string | null; }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [pw, setPw] = useState("");
-  const [pw2, setPw2] = useState("");
   const [loading, setLoading] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | "other" | "">("");
   const [dob, setDob] = useState<string>("");
@@ -42,20 +40,11 @@ export default function CompleteProfileSheet({ onDone, initialName, initialPhone
         return;
       }
     }
-    if (pw && pw.length < 6) {
-      toast.warning("Mật khẩu tối thiểu 6 ký tự");
-      return;
-    }
-    if (pw && pw !== pw2) {
-      toast.warning("Mật khẩu xác nhận không khớp");
-      return;
-    }
     try {
       setLoading(true);
       const res = await userService.postCompleteProfile({
         name: name || undefined,
         phone: phone || undefined,
-        password_hash: pw || undefined,
         gender: gender || undefined,
         dateOfBirth: dob || undefined,
         avatarUrl: avatarUrl || undefined,
@@ -165,36 +154,7 @@ export default function CompleteProfileSheet({ onDone, initialName, initialPhone
         <UploadPicker value={avatarUrl || null} onChange={setAvatarUrl} aspectClass="aspect-square" />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
-        <label className="block">
-          <span className="block text-xs font-medium text-slate-600">Mật khẩu (tuỳ chọn)</span>
-          <div className="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-            <Lock className="size-4 shrink-0 text-slate-400" />
-            <input
-              type="password"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              placeholder="Ít nhất 6 ký tự"
-              className="w-full outline-none bg-transparent text-slate-900 placeholder:text-slate-400"
-            />
-          </div>
-          <div className="mt-1 text-[11px] text-slate-500">Để trống nếu không muốn thay đổi mật khẩu.</div>
-        </label>
-
-        <label className="block">
-          <span className="block text-xs font-medium text-slate-600">Xác nhận mật khẩu</span>
-          <div className="mt-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-            <Lock className="size-4 shrink-0 text-slate-400" />
-            <input
-              type="password"
-              value={pw2}
-              onChange={(e) => setPw2(e.target.value)}
-              placeholder="Nhập lại mật khẩu"
-              className="w-full outline-none bg-transparent text-slate-900 placeholder:text-slate-400"
-            />
-          </div>
-        </label>
-      </div>
+      {null}
 
       <button
         type="submit"
