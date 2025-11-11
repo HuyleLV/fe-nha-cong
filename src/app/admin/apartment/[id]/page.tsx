@@ -91,8 +91,8 @@ export default function ApartmentFormPage() {
       internetPricePerRoom: null,
       commonServiceFeePerPerson: null,
       serviceFeeNote: "",
-  furnitureNote: "",
-  amenitiesNote: "",
+      furnitureNote: "",
+      amenitiesNote: "",
 
       hasAirConditioner: false,
       hasWaterHeater: false,
