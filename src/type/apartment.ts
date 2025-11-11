@@ -49,6 +49,9 @@ export type Apartment = {
   waterPricePerM3?: number | null;
   internetPricePerRoom?: number | null;
   commonServiceFeePerPerson?: number | null;
+  serviceFeeNote?: string | null;
+  furnitureNote?: string | null;
+  amenitiesNote?: string | null;
 
   // ===== Nội thất =====
   hasAirConditioner: boolean;
@@ -56,6 +59,12 @@ export type Apartment = {
   hasKitchenCabinet: boolean;
   hasWashingMachine: boolean;
   hasWardrobe: boolean;
+  // New furniture (2025-11)
+  hasBed?: boolean;
+  hasMattress?: boolean;
+  hasBedding?: boolean; // ga gối chăn
+  hasDressingTable?: boolean;
+  hasSofa?: boolean;
   hasSharedBathroom?: boolean;
   hasWashingMachineShared?: boolean;
   hasWashingMachinePrivate?: boolean;
@@ -120,6 +129,9 @@ export type ApartmentForm = {
   waterPricePerM3?: number | null;
   internetPricePerRoom?: number | null;
   commonServiceFeePerPerson?: number | null;
+  serviceFeeNote?: string | null;
+  furnitureNote?: string | null;
+  amenitiesNote?: string | null;
 
   // ===== Nội thất =====
   hasAirConditioner?: boolean;
@@ -127,6 +139,12 @@ export type ApartmentForm = {
   hasKitchenCabinet?: boolean;
   hasWashingMachine?: boolean;
   hasWardrobe?: boolean;
+  // New furniture (2025-11)
+  hasBed?: boolean;
+  hasMattress?: boolean;
+  hasBedding?: boolean; // ga gối chăn
+  hasDressingTable?: boolean;
+  hasSofa?: boolean;
   hasSharedBathroom?: boolean;
   hasWashingMachineShared?: boolean;
   hasWashingMachinePrivate?: boolean;

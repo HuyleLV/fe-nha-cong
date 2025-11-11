@@ -73,8 +73,9 @@ const toISOWithTZ = (dateStr: string, timeStr: string) => {
 // Các key tiện nghi cũ (giữ cho tương thích nếu cần)
 type AmenityKey =
   | "wifi" | "parking" | "private_bath" | "shared_kitchen" | "aircon"
-  | "water_heater" | "security" | "balcony" | "washing" | "elevator"
-  | "pet" | "ev" | "wardrobe" | "fridge" | "range_hood" | "kitchen_table" | "desk" | "mezzanine" | "shared_bath" | "flexible_hours" | "no_owner";
+  | "water_heater" | "security" | "balcony" | "elevator"
+  | "pet" | "ev" | "wardrobe" | "fridge" | "range_hood" | "kitchen_table" | "desk" | "mezzanine" | "shared_bath" | "flexible_hours" | "no_owner"
+  | "bed" | "mattress" | "bedding" | "dressing_table" | "sofa";
 
 const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode } => {
   const meta: Record<AmenityKey, { label: string; icon: any }> = {
@@ -86,7 +87,12 @@ const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode
     water_heater: { label: "Nóng lạnh", icon: ShowerHead },
     security: { label: "An ninh", icon: ShieldCheck },
     balcony: { label: "Ban công", icon: Home },
-    washing: { label: "Máy giặt", icon: Home },
+  // new furniture
+  bed: { label: "Giường", icon: BedDouble },
+  mattress: { label: "Đệm", icon: Package },
+  bedding: { label: "Ga gối", icon: Package },
+  dressing_table: { label: "Bàn trang điểm", icon: Hammer },
+  sofa: { label: "Sofa", icon: Sofa },
     elevator: { label: "Thang máy", icon: ArrowUpDown },
     pet: { label: "Cho nuôi pet", icon: PawPrint },
     ev: { label: "Xe điện", icon: BatteryCharging },
@@ -321,9 +327,9 @@ function AvailabilityBar({ availableFrom }: { availableFrom?: string | number | 
 }
 
 function PriceBreakdown({
-  roomPrice, deposit, electricPrice, waterPrice, internetFee, serviceFee,
+  roomPrice, deposit, electricPrice, waterPrice, internetFee, serviceFee, serviceFeeNote,
 }: {
-  roomPrice?: number; deposit?: number; electricPrice?: number; waterPrice?: number; internetFee?: number; serviceFee?: number;
+  roomPrice?: number; deposit?: number; electricPrice?: number; waterPrice?: number; internetFee?: number; serviceFee?: number; serviceFeeNote?: string | null;
 }) {
   const rows = [
     { k: "Tiền phòng/tháng", v: roomPrice, highlight: true },
@@ -369,6 +375,12 @@ function PriceBreakdown({
       </div>
       
       {/* Lưu ý khi thiếu thông tin */}
+      {(serviceFeeNote) && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-xs text-emerald-800 flex items-start gap-2">
+          <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+          <div><span className="font-medium">Ghi chú phí dịch vụ:</span> {serviceFeeNote}</div>
+        </div>
+      )}
       {(!electricPrice || !waterPrice || !internetFee) && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -934,14 +946,17 @@ export default function RoomPage({ slug }: { slug: string }) {
     if ((data as any).hasAirConditioner) f.push("aircon");
     if ((data as any).hasWaterHeater) f.push("water_heater");
     if ((data as any).hasKitchenCabinet) f.push("shared_kitchen");
-    if ((data as any).hasWashingMachine) f.push("washing");
-    if ((data as any).hasWashingMachineShared) f.push("washing");
-    if ((data as any).hasWashingMachinePrivate) f.push("washing");
     if ((data as any).hasWardrobe) f.push("wardrobe");
     if ((data as any).hasFridge) f.push("fridge");
     if ((data as any).hasRangeHood) f.push("range_hood");
     if ((data as any).hasKitchenTable) f.push("kitchen_table");
     if ((data as any).hasDesk) f.push("desk");
+    // new furniture flags
+    if ((data as any).hasBed) f.push("bed");
+    if ((data as any).hasMattress) f.push("mattress");
+    if ((data as any).hasBedding) f.push("bedding");
+    if ((data as any).hasDressingTable) f.push("dressing_table");
+    if ((data as any).hasSofa) f.push("sofa");
     return Array.from(new Set(f));
   }, [data]);
 
@@ -1065,6 +1080,7 @@ export default function RoomPage({ slug }: { slug: string }) {
   const waterPrice = parseNum((data as any).waterPricePerM3, 0) || undefined;
   const internetFee = parseNum((data as any).internetPricePerRoom, 0) || undefined;
   const serviceFee = parseNum((data as any).commonServiceFeePerPerson, 0) || undefined;
+  const serviceFeeNote = ((data as any)?.serviceFeeNote as string) || undefined;
   const availableFrom = (data as any)?.availableFrom as any;
   const rules = ((data as any)?.houseRules as string[]) || [];
   const landlordPhone = "0968.345.486"; // fixed hotline override per request
@@ -1279,6 +1295,12 @@ export default function RoomPage({ slug }: { slug: string }) {
                         <AlertCircle className="h-4 w-4 text-emerald-500" /> Chưa có nội thất được đánh dấu.
                       </div>
                     )}
+                    {(data as any)?.furnitureNote && (
+                      <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/40 px-3 py-2 text-xs text-emerald-800 flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                        <div><span className="font-medium">Ghi chú nội thất:</span> {(data as any).furnitureNote}</div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Tiện ích */}
@@ -1294,6 +1316,12 @@ export default function RoomPage({ slug }: { slug: string }) {
                         <AlertCircle className="h-4 w-4 text-emerald-500" /> Chưa có tiện ích được đánh dấu.
                       </div>
                     )}
+                    {(data as any)?.amenitiesNote && (
+                      <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/40 px-3 py-2 text-xs text-emerald-800 flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                        <div><span className="font-medium">Ghi chú tiện nghi:</span> {(data as any).amenitiesNote}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Section>
@@ -1306,6 +1334,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                   waterPrice={waterPrice}
                   internetFee={internetFee}
                   serviceFee={serviceFee}
+                  serviceFeeNote={serviceFeeNote}
                 />
               </Section>
 

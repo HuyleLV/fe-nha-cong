@@ -77,42 +77,49 @@ export default function ApartmentFormPage() {
       lat: "",
       lng: "",
       bedrooms: 0,
-      	bathrooms: 0,
-      	livingRooms: 0,
+      bathrooms: 0,
+      livingRooms: 0,
       areaM2: "",
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
       coverImageUrl: "",
-  images: [],
+      images: [],
 
       electricityPricePerKwh: null,
       waterPricePerM3: null,
       internetPricePerRoom: null,
       commonServiceFeePerPerson: null,
+      serviceFeeNote: "",
+  furnitureNote: "",
+  amenitiesNote: "",
 
       hasAirConditioner: false,
       hasWaterHeater: false,
       hasKitchenCabinet: false,
       hasWashingMachine: false,
       hasWardrobe: false,
+      hasBed: false,
+      hasMattress: false,
+      hasBedding: false,
+      hasDressingTable: false,
+      hasSofa: false,
 
-      	hasSharedBathroom: false,
-      	hasWashingMachineShared: false,
-      	hasWashingMachinePrivate: false,
-      	hasDesk: false,
-      	hasKitchenTable: false,
-      	hasRangeHood: false,
-      	hasFridge: false,
+      hasSharedBathroom: false,
+      hasWashingMachineShared: false,
+      hasWashingMachinePrivate: false,
+      hasDesk: false,
+      hasKitchenTable: false,
+      hasRangeHood: false,
+      hasFridge: false,
 
       hasPrivateBathroom: false,
       hasMezzanine: false,
       noOwnerLiving: false,
       flexibleHours: false,
-  hasElevator: false,
-  allowPet: false,
-  allowElectricVehicle: false,
-
+      hasElevator: false,
+      allowPet: false,
+      allowElectricVehicle: false,
 
       focusKeyword: "", // ✅ chỉ để chấm điểm SEO, không gửi lên API
       isVerified: false,
@@ -229,12 +236,20 @@ export default function ApartmentFormPage() {
           waterPricePerM3: ap.waterPricePerM3 ?? null,
           internetPricePerRoom: ap.internetPricePerRoom ?? null,
           commonServiceFeePerPerson: ap.commonServiceFeePerPerson ?? null,
+          serviceFeeNote: (ap as any).serviceFeeNote ?? "",
+          furnitureNote: (ap as any).furnitureNote ?? "",
+          amenitiesNote: (ap as any).amenitiesNote ?? "",
 
           hasAirConditioner: ap.hasAirConditioner ?? false,
           hasWaterHeater: ap.hasWaterHeater ?? false,
           hasKitchenCabinet: ap.hasKitchenCabinet ?? false,
           hasWashingMachine: ap.hasWashingMachine ?? false,
           hasWardrobe: ap.hasWardrobe ?? false,
+          hasBed: (ap as any).hasBed ?? false,
+          hasMattress: (ap as any).hasMattress ?? false,
+          hasBedding: (ap as any).hasBedding ?? false,
+          hasDressingTable: (ap as any).hasDressingTable ?? false,
+          hasSofa: (ap as any).hasSofa ?? false,
 
           	hasSharedBathroom: ap.hasSharedBathroom ?? false,
           	hasWashingMachineShared: ap.hasWashingMachineShared ?? false,
@@ -331,6 +346,9 @@ export default function ApartmentFormPage() {
       waterPricePerM3: toIntOrNull(values.waterPricePerM3),
       internetPricePerRoom: toIntOrNull(values.internetPricePerRoom),
       commonServiceFeePerPerson: toIntOrNull(values.commonServiceFeePerPerson),
+  serviceFeeNote: values.serviceFeeNote?.trim() || undefined,
+      furnitureNote: values.furnitureNote?.trim() || undefined,
+      amenitiesNote: values.amenitiesNote?.trim() || undefined,
     };
 
   // Remove local-only fields
@@ -480,7 +498,12 @@ export default function ApartmentFormPage() {
                 <input type="number" min={0} placeholder="130000" className={inputCls} {...register("commonServiceFeePerPerson", { valueAsNumber: true })} />
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-2">Để trống nếu không áp dụng.</p>
+            <div className="mt-3">
+              <label className="block text-sm text-slate-600 mb-1">Ghi chú phí dịch vụ (hiển thị cho khách)</label>
+              <textarea rows={3} className={textAreaCls} placeholder="Ví dụ: Điện nước tính theo hoá đơn nhà nước, free dọn vệ sinh hành lang..." {...register("serviceFeeNote")} />
+              <p className="text-xs text-slate-500 mt-1">Để trống nếu không có ghi chú.</p>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Để trống các ô phí nếu không áp dụng.</p>
           </Section>
 
           {/* Furniture */}
@@ -489,14 +512,22 @@ export default function ApartmentFormPage() {
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasAirConditioner")} /> Điều hoà</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWaterHeater")} /> Nóng lạnh</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenCabinet")} /> Kệ bếp</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachine")} /> Máy giặt (chung/riêng)</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachineShared")} /> Máy giặt (chung)</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachinePrivate")} /> Máy giặt (riêng)</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWardrobe")} /> Tủ quần áo</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasFridge")} /> Tủ lạnh</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasRangeHood")} /> Hút mùi</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenTable")} /> Bàn bếp</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasDesk")} /> Bàn làm việc</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWardrobe")} /> Tủ quần áo</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasFridge")} /> Tủ lạnh</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasRangeHood")} /> Hút mùi</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasKitchenTable")} /> Bàn bếp</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasDesk")} /> Bàn làm việc</label>
+              {/* New furniture items */}
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasBed")} /> Giường</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMattress")} /> Đệm</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasBedding")} /> Ga gối</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasDressingTable")} /> Bàn trang điểm</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasSofa")} /> Sofa</label>
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm text-slate-600 mb-1">Ghi chú nội thất (hiển thị cho khách)</label>
+              <textarea rows={3} className={textAreaCls} placeholder="Ví dụ: Nội thất có thể thay đổi theo phòng, vui lòng xem ảnh chi tiết hoặc liên hệ." {...register("furnitureNote")} />
+              <p className="text-xs text-slate-500 mt-1">Để trống nếu không có ghi chú.</p>
             </div>
           </Section>
 
@@ -511,6 +542,11 @@ export default function ApartmentFormPage() {
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasElevator")} /> Thang máy</label>
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowPet")} /> Cho nuôi pet</label>
           <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowElectricVehicle")} /> Xe điện (sạc/gửi)</label>
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm text-slate-600 mb-1">Ghi chú tiện nghi (hiển thị cho khách)</label>
+              <textarea rows={3} className={textAreaCls} placeholder="Ví dụ: Một số tiện nghi thuộc khu vực chung của toà nhà, giờ giấc sử dụng theo nội quy." {...register("amenitiesNote")} />
+              <p className="text-xs text-slate-500 mt-1">Để trống nếu không có ghi chú.</p>
             </div>
           </Section>
         </div>
@@ -580,7 +616,7 @@ export default function ApartmentFormPage() {
                   <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true })} />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Phòng tắm</label>
+                  <label className="block text-sm text-slate-600 mb-1">Vệ sinh</label>
                   <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true })} />
                 </div>
                 <div>

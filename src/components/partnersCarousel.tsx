@@ -4,6 +4,11 @@ import clsx from "clsx";
 import { Slide } from "react-slideshow-image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "react-slideshow-image/dist/styles.css";
+import doitac1 from "@/assets/easyhome.png";
+import doitac2 from "@/assets/hienhome.png";
+import doitac3 from "@/assets/inhome.png";
+import doitac4 from "@/assets/salahomes.png";
+import doitac5 from "@/assets/vifahome.png";
 
 export interface PartnerLogo {
   /** Nếu có ảnh thì dùng src; nếu không có ảnh, render label text */
