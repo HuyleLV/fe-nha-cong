@@ -8,17 +8,21 @@ export default function JobCard({ job }: { job: Job }) {
     ? `${job.salaryMin ? job.salaryMin.toLocaleString() : ''}${job.salaryMax ? ' - ' + job.salaryMax.toLocaleString() : ''} ${job.currency || 'VND'}`
     : 'Thoả thuận';
 
+  const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');
+  const cover = job.coverImageUrl || '';
+  const coverSrc = cover ? (cover.startsWith('http') ? cover : `${base}${cover}`) : '';
+
   return (
     <Link
       href={`/tuyen-dung/${job.slug || job.id}`}
       className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-xl hover:border-emerald-300 transition duration-300"
     >
       {/* Cover image */}
-      {job.coverImageUrl ? (
+      {coverSrc ? (
         <div className="relative w-full aspect-[16/9]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={(process.env.NEXT_PUBLIC_API_URL || "") + job.coverImageUrl}
+            src={coverSrc}
             alt={job.title}
             className="w-full h-full object-cover"
           />

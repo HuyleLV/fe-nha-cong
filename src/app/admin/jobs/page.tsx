@@ -95,12 +95,24 @@ function AdminJobsPage() {
       </form>
 
       {/* Table */}
-      <AdminTable headers={['ID','Tiêu đề','Trạng thái','Đăng','Thao tác']} loading={loading} emptyText="Không có tin tuyển dụng">
+      <AdminTable headers={['ID','Ảnh','Tiêu đề','Trạng thái','Đăng','Thao tác']} loading={loading} emptyText="Không có tin tuyển dụng">
         {items.map(j => {
           const color = j.status === 'published' ? 'bg-green-100 text-green-700' : j.status === 'draft' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-700';
           return (
             <tr key={j.id} className="hover:bg-slate-50 transition-colors text-sm">
               <td className="px-4 py-3">{j.id}</td>
+              <td className="px-4 py-3">
+                {j.coverImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={(process.env.NEXT_PUBLIC_API_URL || '') + j.coverImageUrl}
+                    alt="cover"
+                    className="h-12 w-20 object-cover rounded-md border border-slate-200"
+                  />
+                ) : (
+                  <div className="h-12 w-20 flex items-center justify-center rounded-md border border-dashed border-slate-200 text-[10px] text-slate-400">—</div>
+                )}
+              </td>
               <td className="px-4 py-3 align-top">
                 <div className="font-medium line-clamp-1" title={j.title}>{j.title}</div>
                 <div className="text-xs text-gray-500">/{j.slug}</div>

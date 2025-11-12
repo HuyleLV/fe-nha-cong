@@ -74,22 +74,40 @@ axiosClient.interceptors.response.use(
     // Nếu token hết hạn, bạn có thể xử lý refresh hoặc logout
     if (error?.response?.status === 401) {
       if (typeof window !== "undefined") {
-        try {
-          const cfg = error?.config || {};
-          const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
-          const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
-          if (isAdminEndpoint) {
-            localStorage.removeItem("tokenAdmin");
-          } else {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("tokenUser");
+        const safeLogout = () => {
+          try {
+            const cfg = error?.config || {};
+            const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
+            // Regex sửa: (\b|/) không cần escape thêm slash trong character group
+            const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
+
+            // Xoá token theo scope
+            if (isAdminEndpoint) {
+              localStorage.removeItem("tokenAdmin");
+            } else {
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("tokenUser");
+            }
+            // Dọn cookie auth_user nếu có
+            document.cookie = "auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+
+            // Chặn vòng lặp redirect: flag trong sessionStorage 3s
+            const FLAG = "auth_logout_inflight";
+            const last = Number(sessionStorage.getItem(FLAG) || 0);
+            const now = Date.now();
+            if (!last || now - last > 3000) {
+              sessionStorage.setItem(FLAG, String(now));
+              const loginPath = isAdminEndpoint ? "/dang-nhap?role=admin" : "/dang-nhap";
+              const atLogin = window.location.pathname.includes('/dang-nhap');
+              if (!atLogin) window.location.href = loginPath;
+            }
+          } catch (e) {
+            // Nuốt lỗi an toàn
+            console.warn('[AUTH LOGOUT ERROR]', e);
           }
-        } catch {
-          // Fallback: không xoá gì thêm
-        }
+        };
+        safeLogout();
       }
-      // Option: điều hướng về login
-      // window.location.href = "/auth/login";
     }
 
     return Promise.reject(error);

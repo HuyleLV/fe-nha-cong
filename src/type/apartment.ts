@@ -28,6 +28,8 @@ export type Apartment = {
   bedrooms: number;
   bathrooms: number;
   livingRooms?: number;
+  /** Sức chứa (số người ở tối đa) */
+  guests?: number;
   areaM2?: string | null;
 
   /** numeric string */
@@ -114,6 +116,8 @@ export type ApartmentForm = {
   bedrooms?: number;
   bathrooms?: number;
   livingRooms?: number;
+  /** Sức chứa (số người ở tối đa) */
+  guests?: number;
   areaM2?: string | null;
 
   /** numeric string */

@@ -157,11 +157,11 @@ function FancyHeader({
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="mb-2 inline-flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Vào ở ngay</span>
               {isNew && <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> Tin mới</span>}
               {noOwnerLiving && <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-200 inline-flex items-center gap-1"><User className="h-3.5 w-3.5" /> Không chung chủ</span>}
               {flexibleHours && <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Giờ giấc tự do</span>}
               {isVerified && <span className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Đã xác minh</span>}
-              <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Vào ở ngay</span>
             </div>
             <h1 className="text-3xl font-bold leading-tight text-emerald-950 md:text-4xl">{title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-emerald-800/80">
@@ -1088,6 +1088,7 @@ export default function RoomPage({ slug }: { slug: string }) {
   const serviceFeeNote = ((data as any)?.serviceFeeNote as string) || undefined;
   const availableFrom = (data as any)?.availableFrom as any;
   const rules = ((data as any)?.houseRules as string[]) || [];
+  const guests = parseNum((data as any)?.guests, 0) || undefined;
   const landlordPhone = "0968.345.486"; // fixed hotline override per request
   const landlordName = (data as any)?.contactName || (data as any)?.landlordName || "Chủ nhà";
   const updatedAt = (data as any)?.updatedAt as any;
@@ -1096,8 +1097,7 @@ export default function RoomPage({ slug }: { slug: string }) {
 
   const normalizePhone = (p: string) => p.replace(/\D/g, "");
   const phoneRaw = normalizePhone(landlordPhone);
-  const phone84 = phoneRaw.startsWith("0") ? `84${phoneRaw.slice(1)}` : (phoneRaw.startsWith("84") ? phoneRaw : `84${phoneRaw}`);
-  const zaloUrl = `https://zalo.me/${phone84}`;
+  const zaloUrl = `https://zalo.me/2661388511949942518`;
 
   return (
     <>
@@ -1271,10 +1271,12 @@ export default function RoomPage({ slug }: { slug: string }) {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="rounded-lg border border-emerald-100 bg-white px-3 py-2">
-                      <div className="text-xs text-emerald-700">Mã tin</div>
-                      <div className="mt-0.5 font-semibold text-emerald-900">#{data.id}</div>
-                    </div>
+                    {typeof guests === 'number' && guests > 0 && (
+                      <div className="rounded-lg border border-emerald-100 bg-white px-3 py-2">
+                        <div className="text-xs text-emerald-700">Số người ở tối đa</div>
+                        <div className="mt-0.5 font-semibold text-emerald-900">{guests} người</div>
+                      </div>
+                    )}
                     <div className="rounded-lg border border-emerald-100 bg-white px-3 py-2">
                       <div className="text-xs text-emerald-700">Trạng thái</div>
                       <div className="mt-0.5 font-semibold text-emerald-900">

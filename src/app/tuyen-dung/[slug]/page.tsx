@@ -1,6 +1,7 @@
 import { jobService } from '@/services/jobService';
 import { notFound } from 'next/navigation';
-import { MapPin, Clock, Target, CalendarDays, ArrowLeft, Wallet } from 'lucide-react';
+import { MapPin, Clock, Target, CalendarDays, ArrowLeft, Wallet, Phone, Mail, Globe } from 'lucide-react';
+import JobApplyModal from '@/components/JobApplyModal';
 import Link from 'next/link';
 import ShareCopyButton from '@/components/ShareCopyButton';
 
@@ -13,18 +14,26 @@ export default async function JobDetailPage({ params }: { params: { slug: string
       ? `${job.salaryMin ? job.salaryMin.toLocaleString() : ''}${job.salaryMax ? ' - ' + job.salaryMax.toLocaleString() : ''} ${job.currency || 'VND'}`
       : 'Thoả thuận';
 
+    const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');
+    const banner = (job as any).bannerImageUrl || '';
+    const cover = job.coverImageUrl || '';
+    const rawHero = banner || cover;
+    const heroSrc = rawHero
+      ? (rawHero.startsWith('http') ? rawHero : `${base}${rawHero}`)
+      : '/logo.png'; // fallback ảnh công khai trong public
+
     return (
-      <div className="mx-auto max-w-screen-2xl">
+      <div className="mx-auto max-w-screen-2xl pb-5">
         {/* HERO */}
         <div className="relative w-full h-[280px] sm:h-[340px] md:h-[420px] lg:h-[460px] overflow-hidden rounded-b-2xl">
           <img
-            src={(process.env.NEXT_PUBLIC_API_URL || "") + (job.coverImageUrl || '/images/hero-jobs-fallback.jpg')}
+            src={heroSrc}
             alt=""
             aria-hidden
             className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70"
           />
           <img
-            src={(process.env.NEXT_PUBLIC_API_URL || "") + (job.coverImageUrl || '/images/hero-jobs-fallback.jpg')}
+            src={heroSrc}
             alt={job.title}
             className="relative z-10 mx-auto h-full w-auto max-w-full object-contain drop-shadow-xl"
           />
@@ -64,7 +73,7 @@ export default async function JobDetailPage({ params }: { params: { slug: string
         </div>
 
         {/* BODY */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-4">
           {/* MAIN */}
           <div className="lg:col-span-2 space-y-6">
             {job.description && (
@@ -74,17 +83,17 @@ export default async function JobDetailPage({ params }: { params: { slug: string
               </section>
             )}
 
-            {job.requirements && (
-              <section className="bg-white rounded-xl border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-800 mb-2">Yêu cầu</h2>
-                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: job.requirements }} />
-              </section>
-            )}
-
             {job.benefits && (
               <section className="bg-white rounded-xl border border-slate-200 p-5">
                 <h2 className="text-lg font-semibold text-slate-800 mb-2">Quyền lợi</h2>
                 <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: job.benefits }} />
+              </section>
+            )}
+
+            {job.requirements && (
+              <section className="bg-white rounded-xl border border-slate-200 p-5">
+                <h2 className="text-lg font-semibold text-slate-800 mb-2">Yêu cầu</h2>
+                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: job.requirements }} />
               </section>
             )}
 
@@ -101,9 +110,10 @@ export default async function JobDetailPage({ params }: { params: { slug: string
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <div className="text-sm text-slate-600 mb-2">Mức lương</div>
                 <div className="text-emerald-600 font-semibold">{salary}</div>
-                <button className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
-                  Ứng tuyển ngay
-                </button>
+                {/* Apply via popup modal */}
+                <div className="mt-3">
+                  <JobApplyModal jobIdOrSlug={params.slug} />
+                </div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <ShareCopyButton />
                   <Link href="/tuyen-dung" className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded border border-slate-200 hover:bg-slate-50 text-sm w-full">
@@ -114,6 +124,31 @@ export default async function JobDetailPage({ params }: { params: { slug: string
             </div>
           </aside>
         </div>
+
+        {/* Fixed info section */}
+        <section className="mb-10 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4">Thời gian & Địa điểm làm việc</h2>
+          <div className="space-y-3 text-sm text-slate-700">
+            <div className="flex items-start gap-2">
+              <Clock className="w-4 h-4 mt-0.5 text-emerald-600" />
+              <div><span className="font-medium">Thời gian:</span> Thứ 2 – sáng Thứ 7 | 8h30–17h00</div>
+            </div>
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 mt-0.5 text-emerald-600" />
+              <div><span className="font-medium">Địa điểm:</span> Số 27, liền kề 7, KĐT Văn Khê, Hà Đông, Hà Nội</div>
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed bg-emerald-50/60 border border-emerald-100 rounded-xl p-3 text-emerald-800">
+              📍 Văn phòng Nhà Cộng là nơi bạn vừa chill vừa sáng tạo, mang vibe thoải mái nhưng luôn đòi hỏi chất lượng nội dung đỉnh cao!
+            </p>
+          </div>
+          <hr className="my-5 border-slate-200" />
+          <h3 className="text-md font-semibold text-slate-800 mb-3">Cách ứng tuyển & Thông tin liên hệ</h3>
+          <div className="space-y-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-600" /> <span><span className="font-medium">Hotline:</span> 0968.345.486</span></div>
+            <div className="flex items-center gap-2"><Globe className="w-4 h-4 text-emerald-600" /> <span><span className="font-medium">Website:</span> nhacong.com.vn</span></div>
+            <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-600" /> <span><span className="font-medium">Email:</span> hotro@nhacong.com.vn</span></div>
+          </div>
+        </section>
 
         {/* SEO JSON-LD */}
         <script
@@ -140,7 +175,7 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                     },
                   }
                 : undefined,
-              image: job.coverImageUrl || undefined,
+              image: (job as any).bannerImageUrl || job.coverImageUrl || undefined,
               url: typeof window !== 'undefined' ? window.location.href : undefined,
             }),
           }}

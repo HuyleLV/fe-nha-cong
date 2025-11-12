@@ -45,6 +45,7 @@ export default function JobFormPage() {
     salaryMax?: number;
     currency: string;
     coverImageUrl: string;
+    bannerImageUrl: string;
     status: 'draft' | 'published' | 'archived';
   };
 
@@ -70,6 +71,7 @@ export default function JobFormPage() {
       salaryMax: undefined,
       currency: 'VND',
       coverImageUrl: '',
+      bannerImageUrl: '',
       status: 'draft',
     },
   });
@@ -78,6 +80,7 @@ export default function JobFormPage() {
   const title = watch('title');
   const slug = watch('slug');
   const cover = watch('coverImageUrl') ?? '';
+  const banner = watch('bannerImageUrl') ?? '';
   const descriptionHtml = watch('description') || '';
   const location = watch('location') || '';
   const employmentType = watch('employmentType') || '';
@@ -110,6 +113,7 @@ export default function JobFormPage() {
           salaryMax: j.salaryMax ?? undefined,
           currency: j.currency ?? 'VND',
           coverImageUrl: j.coverImageUrl ?? '',
+          bannerImageUrl: (j as any).bannerImageUrl ?? '',
           status: (j.status as any) ?? 'draft',
         });
         // Suggest focus keyword from title if empty
@@ -149,6 +153,7 @@ export default function JobFormPage() {
       salaryMax: values.salaryMax ?? undefined,
       currency: values.currency || 'VND',
       coverImageUrl: values.coverImageUrl || '',
+      bannerImageUrl: values.bannerImageUrl || '',
       status: values.status,
       pointSeo: seoRes.score,
       focusKeyword: focusKeyword || '',
@@ -261,11 +266,24 @@ export default function JobFormPage() {
               </div>
             </div>
           </Section>
+          
+          {/* Ảnh bìa riêng cho trang chi tiết */}
+          <Section title="Ảnh bìa">
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Ảnh bìa</label>
+              <UploadPicker
+                value={banner || ''}
+                onChange={(v) => setValue('bannerImageUrl', v || '', { shouldDirty: true })}
+                aspectClass="aspect-[16/9]"
+              />
+              <p className="mt-2 text-xs text-slate-500">Gợi ý: Tỉ lệ 16:9, dung lượng &lt; 2MB. Ảnh này sẽ hiển thị ở hero trang chi tiết.</p>
+            </div>
+          </Section>
 
           <Section title="Thông tin công việc">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm text-slate-600 mb-1">Ảnh đại diện (tùy chọn)</label>
+                <label className="block text-sm text-slate-600 mb-1">Ảnh đại diện</label>
                 <UploadPicker
                   value={cover || ''}
                   onChange={(v) => setValue('coverImageUrl', v || '', { shouldDirty: true })}
@@ -325,22 +343,28 @@ export default function JobFormPage() {
             </div>
           </Section>
 
-          <Section title="Yêu cầu">
-            <textarea
-              rows={5}
-              className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-              {...register('requirements')}
-              placeholder="Liệt kê kỹ năng bắt buộc, kinh nghiệm tối thiểu, công cụ…"
-            />
+          <Section title="Quyền lợi">
+            <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
+              <Controller
+                name="benefits"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <CustomSunEditor value={value || ''} onChange={onChange} />
+                )}
+              />
+            </div>
           </Section>
 
-          <Section title="Quyền lợi">
-            <textarea
-              rows={5}
-              className="w-full rounded border border-dashed border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
-              {...register('benefits')}
-              placeholder="Lương thưởng, bảo hiểm, du lịch, thiết bị, đào tạo…"
-            />
+          <Section title="Yêu cầu">
+            <div className="rounded-lg border-2 border-dashed border-slate-300 p-2">
+              <Controller
+                name="requirements"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <CustomSunEditor value={value || ''} onChange={onChange} />
+                )}
+              />
+            </div>
           </Section>
         </div>
 

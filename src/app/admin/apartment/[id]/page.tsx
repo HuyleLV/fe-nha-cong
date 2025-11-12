@@ -79,6 +79,7 @@ export default function ApartmentFormPage() {
       bedrooms: 0,
       bathrooms: 0,
       livingRooms: 0,
+  guests: 0,
       areaM2: "",
       rentPrice: "0",
       currency: "VND",
@@ -135,6 +136,9 @@ export default function ApartmentFormPage() {
     images: 'Ảnh',
     coverImageUrl: 'Ảnh bìa',
     status: 'Trạng thái',
+    areaM2: 'Diện tích',
+    bedrooms: 'Phòng ngủ',
+    bathrooms: 'Vệ sinh',
   };
 
   // Called by header Save button. Runs validation, shows toast errors if invalid,
@@ -221,6 +225,7 @@ export default function ApartmentFormPage() {
           lng: ap.lng || "",
           bedrooms: ap.bedrooms,
           	livingRooms: ap.livingRooms ?? 0,
+            guests: (ap as any).guests ?? 0,
           bathrooms: ap.bathrooms,
           areaM2: ap.areaM2 || "",
           rentPrice: ap.rentPrice,
@@ -455,7 +460,7 @@ export default function ApartmentFormPage() {
           {/* Title & slug */}
           <Section title="Tiêu đề & Permalink">
             <div className="space-y-3">
-              <input className={inputCls} placeholder="Nhập tiêu đề căn hộ…" {...register("title", { required: "Vui lòng nhập tiêu đề" })} />
+              <input className={inputCls} placeholder="Nhập tiêu đề căn hộ…" {...register("title", { required: "Vui lòng nhập tiêu đề căn hộ" })} />
               {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
 
               <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 flex items-center gap-2">
@@ -607,11 +612,14 @@ export default function ApartmentFormPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Trạng thái</label>
-                  <select className={inputCls} {...register("status", { required: true })}>
-                    <option value="draft">draft</option>
-                    <option value="published">published</option>
-                    <option value="archived">archived</option>
+                  <select className={inputCls} {...register("status", { required: "Vui lòng chọn trạng thái" })}>
+                    <option value="draft">Nháp</option>
+                    <option value="published">Công khai</option>
+                    <option value="archived">Lưu trữ</option>
                   </select>
+                  {errors.status && (
+                    <p className="text-red-600 text-sm mt-1">{String(errors.status.message)}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Đơn vị tiền tệ</label>
@@ -631,21 +639,25 @@ export default function ApartmentFormPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Phòng ngủ</label>
-                  <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true })} />
+                  <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng ngủ không hợp lệ" } })} />
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Vệ sinh</label>
-                  <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true })} />
+                  <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng vệ sinh không hợp lệ" } })} />
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Phòng khách</label>
-                  <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true })} />
+                  <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng khách không hợp lệ" } })} />
                 </div>
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">Số người ở tối đa</label>
+                    <input type="number" min={0} className={inputCls} {...register("guests", { valueAsNumber: true, min: { value: 0, message: "Số người ở tối đa không hợp lệ" } })} />
+                  </div>
               </div>
 
               <div>
                 <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
-                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê" })} />
+                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
                 {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
               </div>
             </div>

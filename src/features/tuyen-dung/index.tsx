@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { jobService } from '@/services/jobService';
 import { Job } from '@/type/job';
 import JobCard from '@/components/JobCard';
+import coverImg from '@/assets/banner-01.jpg';
 
 export default function JobsFeatureIndex() {
 	const searchParams = useSearchParams();
@@ -55,6 +56,11 @@ export default function JobsFeatureIndex() {
 			{/* Hero */}
 			<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 px-6 py-10 mb-8 text-white">
 				<div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.4),transparent_60%)]" />
+				{/* Mobile cover image */}
+				<div className="relative -mx-2 mb-4 lg:hidden">
+					{/* eslint-disable-next-line @next/next/no-img-element */}
+					<img src={coverImg.src} alt="Tuyển dụng" className="h-48 w-full rounded-xl object-cover" />
+				</div>
 				<div className="relative flex flex-col lg:flex-row lg:items-center gap-6">
 					<div className="flex-1 space-y-3">
 						<h1 className="text-3xl lg:text-4xl font-bold tracking-tight flex items-center gap-3">
@@ -64,7 +70,7 @@ export default function JobsFeatureIndex() {
 							Khám phá các vị trí đang mở và cùng xây dựng sản phẩm nhà trọ thông minh. Chúng tôi tìm kiếm những con người ham học hỏi, chủ động và yêu thích tối ưu trải nghiệm.
 						</p>
 					</div>
-					<div className="w-full max-w-md">
+					<div className="w-full max-w-md order-2 lg:order-none">
 						<form onSubmit={onSearch} className="bg-white/10 backdrop-blur rounded-xl p-3 border border-white/20 flex flex-col gap-3">
 							<div className="relative">
 								<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
@@ -84,6 +90,13 @@ export default function JobsFeatureIndex() {
 								</button>
 							</div>
 						</form>
+					</div>
+					{/* Desktop cover image on the right */}
+					<div className="hidden lg:block w-[360px] shrink-0">
+						<div className="overflow-hidden rounded-2xl ring-1 ring-white/30 shadow-xl bg-white/10 backdrop-blur-sm">
+							{/* eslint-disable-next-line @next/next/no-img-element */}
+							<img src={coverImg.src} alt="Tuyển dụng" className="h-[420px] w-full object-cover" />
+						</div>
 					</div>
 				</div>
 			</div>
