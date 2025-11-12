@@ -163,6 +163,23 @@ export default function TrangChu() {
         />
       </div>
 
+      {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
+      <PromoSection />
+      
+      {/* ===== Section tái dùng (ẩn tabs) ===== */}
+      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
+        {!loading && !err && popular.length > 0 && (
+          <DistrictListingSection
+            title="Các phòng đang được quan tâm nhiều nhất"
+            subtitle="Khám phá những căn hộ được yêu thích nhất"
+            data={popular}
+            showTabs={false}
+            variant="scroll"
+            onBook={(apt) => console.log("book:", apt)}
+          />
+        )}
+      </div>
+
       {/* ===== Section nhiều quận (có tabs) ===== */}
       <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
         {loading ? (
@@ -220,26 +237,9 @@ export default function TrangChu() {
           />
         )}
       </div>
-
-      {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
-      <PromoSection />
-      
-      {/* ===== Section tái dùng (ẩn tabs) ===== */}
-      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
-        {!loading && !err && popular.length > 0 && (
-          <DistrictListingSection
-            title="Các phòng đang được quan tâm nhiều nhất"
-            subtitle="Khám phá những căn hộ được yêu thích nhất"
-            data={popular}
-            showTabs={false}
-            variant="scroll"
-            onBook={(apt) => console.log("book:", apt)}
-          />
-        )}
-      </div>
       
       {/* ===== Đối tác & FAQ ===== */}
-      <PartnersCarousel items={PARTNERS} perSlide={6} />
+      {/* <PartnersCarousel items={PARTNERS} perSlide={6} /> */}
 
       {/* ===== FAQ ===== */}
       <FaqCarousel items={FAQS} />

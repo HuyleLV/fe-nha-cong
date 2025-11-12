@@ -351,6 +351,22 @@ export default function ApartmentFormPage() {
       amenitiesNote: values.amenitiesNote?.trim() || undefined,
     };
 
+    // Clean up fields that should not be sent as null to satisfy BE DTO (@IsOptional + @IsInt)
+    // - If buildingId is null/NaN, drop it so BE treats as undefined
+    if ((payload as any).buildingId == null || Number.isNaN((payload as any).buildingId)) {
+      delete (payload as any).buildingId;
+    }
+    // - For fee fields, remove if null so validation skips them
+    const feeKeys: Array<keyof ApartmentForm> = [
+      'electricityPricePerKwh',
+      'waterPricePerM3',
+      'internetPricePerRoom',
+      'commonServiceFeePerPerson',
+    ];
+    for (const k of feeKeys) {
+      if ((payload as any)[k] == null) delete (payload as any)[k];
+    }
+
   // Remove local-only fields
   delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
   delete (payload as any).videoUrl; // ✅ chỉ dùng để sắp xếp, không gửi riêng
@@ -523,6 +539,8 @@ export default function ApartmentFormPage() {
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasBedding")} /> Ga gối</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasDressingTable")} /> Bàn trang điểm</label>
               <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasSofa")} /> Sofa</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachineShared")} /> Máy giặt (chung)</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasWashingMachinePrivate")} /> Máy giặt (riêng)</label>
             </div>
             <div className="mt-3">
               <label className="block text-sm text-slate-600 mb-1">Ghi chú nội thất (hiển thị cho khách)</label>

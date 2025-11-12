@@ -75,7 +75,7 @@ type AmenityKey =
   | "wifi" | "parking" | "private_bath" | "shared_kitchen" | "aircon"
   | "water_heater" | "security" | "balcony" | "elevator"
   | "pet" | "ev" | "wardrobe" | "fridge" | "range_hood" | "kitchen_table" | "desk" | "mezzanine" | "shared_bath" | "flexible_hours" | "no_owner"
-  | "bed" | "mattress" | "bedding" | "dressing_table" | "sofa";
+  | "bed" | "mattress" | "bedding" | "dressing_table" | "sofa" | "washing_machine_shared" | "washing_machine_private";
 
 const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode } => {
   const meta: Record<AmenityKey, { label: string; icon: any }> = {
@@ -93,6 +93,8 @@ const getAmenityMeta = (key: AmenityKey): { label: string; icon: React.ReactNode
   bedding: { label: "Ga gối", icon: Package },
   dressing_table: { label: "Bàn trang điểm", icon: Hammer },
   sofa: { label: "Sofa", icon: Sofa },
+  washing_machine_shared: { label: "Máy giặt (chung)", icon: Package },
+  washing_machine_private: { label: "Máy giặt (riêng)", icon: Package },
     elevator: { label: "Thang máy", icon: ArrowUpDown },
     pet: { label: "Cho nuôi pet", icon: PawPrint },
     ev: { label: "Xe điện", icon: BatteryCharging },
@@ -957,6 +959,9 @@ export default function RoomPage({ slug }: { slug: string }) {
     if ((data as any).hasBedding) f.push("bedding");
     if ((data as any).hasDressingTable) f.push("dressing_table");
     if ((data as any).hasSofa) f.push("sofa");
+    // washing machine variants (furniture section per latest requirement)
+    if ((data as any).hasWashingMachineShared) f.push("washing_machine_shared");
+    if ((data as any).hasWashingMachinePrivate) f.push("washing_machine_private");
     return Array.from(new Set(f));
   }, [data]);
 
