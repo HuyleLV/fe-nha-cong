@@ -3,7 +3,9 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Calendar as CalendarIcon, Eye } from "lucide-react";
+import { Plus, Search, CalendarDays, Edit, Trash2 } from "lucide-react";
+import Spinner from "@/components/spinner";
+import { toast } from "react-toastify";
 import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import { buildingService } from "@/services/buildingService";
@@ -21,6 +23,7 @@ function BuildingAdminListInner() {
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Building[]>([]);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [meta, setMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
   const [locations, setLocations] = useState<Location[]>([]);
 
@@ -136,22 +139,44 @@ function BuildingAdminListInner() {
             </td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
-                <Link
-                  href={`/admin/building/${b.id}`}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs"
-                  title="Xem chi tiết tòa nhà"
+                <button
+                  type="button"
+                  onClick={() => router.push(`/admin/building/${b.id}`)}
+                  className="flex items-center gap-1 px-4 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  title="Sửa tòa nhà"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Chi tiết</span>
-                </Link>
-                <Link
-                  href={`/admin/building/${b.id}/calendar`}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs"
-                  title="Xem lịch đặt phòng của tòa nhà"
+                  <Edit className="w-4 h-4" />
+                  Sửa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/admin/building/${b.id}/calendar`)}
+                  className="flex items-center gap-1 px-4 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
+                  title="Lịch xem"
                 >
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  <span>Xem lịch</span>
-                </Link>
+                  <CalendarDays className="w-4 h-4" />
+                  Lịch xem
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = confirm(`Xóa tòa nhà '${b.name}'?`);
+                    if (!ok) return;
+                    try {
+                      await buildingService.remove(b.id);
+                      setItems((prev) => prev.filter((x) => x.id !== b.id));
+                      setMeta((m) => ({ ...m, total: Math.max(0, m.total - 1) }));
+                      toast.success('Đã xóa');
+                    } catch (e: any) {
+                      toast.error(e?.message || 'Xóa thất bại');
+                    }
+                  }}
+                  className="flex items-center gap-1 px-4 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  title="Xóa tòa nhà"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa
+                </button>
               </div>
             </td>
           </tr>

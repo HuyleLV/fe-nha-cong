@@ -17,6 +17,7 @@ import { Location } from "@/type/location";
 
 const LIMIT = 10;
 
+
 /** helpers */
 const toNum = (v?: string | number | null) => {
   if (v === null || v === undefined) return undefined;
@@ -518,6 +519,7 @@ export default function AdminApartmentsPage() {
                   <button
                     onClick={() => router.push(`/admin/apartment/${it.id}`)}
                     className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                    title="Sửa căn hộ"
                   >
                     <Edit size={15} />
                     Sửa
@@ -525,6 +527,7 @@ export default function AdminApartmentsPage() {
                   <button
                     onClick={() => router.push(`/admin/viewings?apartmentId=${it.id}`)}
                     className="flex items-center gap-1 px-4 py-1 text-[15px] bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
+                    title="Lịch xem"
                   >
                     <CalendarDays size={15} />
                     Lịch xem
@@ -543,6 +546,7 @@ export default function AdminApartmentsPage() {
                       }
                     }}
                     className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                    title="Xóa căn hộ"
                   >
                     <Trash2 size={15} />
                     Xoá

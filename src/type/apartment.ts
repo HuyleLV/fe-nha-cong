@@ -28,6 +28,9 @@ export type Apartment = {
   bedrooms: number;
   bathrooms: number;
   livingRooms?: number;
+  roomCode?: string | null; // Mã phòng/căn hộ nội bộ (ví dụ P302)
+  /** Số tầng trong toà nhà (>=1). Null nếu không rõ hoặc không thuộc toà */
+  floorNumber?: number | null;
   /** Sức chứa (số người ở tối đa) */
   guests?: number;
   areaM2?: string | null;
@@ -116,6 +119,8 @@ export type ApartmentForm = {
   bedrooms?: number;
   bathrooms?: number;
   livingRooms?: number;
+  roomCode?: string; // Mã phòng/căn hộ nội bộ (ví dụ P302)
+  floorNumber?: number; // Tầng (>=1) nếu thuộc toà nhà
   /** Sức chứa (số người ở tối đa) */
   guests?: number;
   areaM2?: string | null;
@@ -180,6 +185,8 @@ export type ApartmentQuery = {
   // ===== Khóa ngoại =====
   locationId?: number;
   buildingId?: number;           
+  /** Lọc theo tầng cụ thể (>=1) */
+  floorNumber?: number;
   locationSlug?: string;        
 
   // ===== Giá thuê =====

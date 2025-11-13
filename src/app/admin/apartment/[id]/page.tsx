@@ -79,7 +79,9 @@ export default function ApartmentFormPage() {
       bedrooms: 0,
       bathrooms: 0,
       livingRooms: 0,
+    roomCode: "",
   guests: 0,
+  floorNumber: undefined as unknown as number, // chỉ áp dụng nếu thuộc toà nhà
       areaM2: "",
       rentPrice: "0",
       currency: "VND",
@@ -139,6 +141,8 @@ export default function ApartmentFormPage() {
     areaM2: 'Diện tích',
     bedrooms: 'Phòng ngủ',
     bathrooms: 'Vệ sinh',
+    roomCode: 'Mã phòng',
+    floorNumber: 'Tầng',
   };
 
   // Called by header Save button. Runs validation, shows toast errors if invalid,
@@ -225,8 +229,10 @@ export default function ApartmentFormPage() {
           lng: ap.lng || "",
           bedrooms: ap.bedrooms,
           	livingRooms: ap.livingRooms ?? 0,
+            roomCode: (ap as any).roomCode ?? "",
             guests: (ap as any).guests ?? 0,
           bathrooms: ap.bathrooms,
+          floorNumber: (ap as any).floorNumber ?? (undefined as unknown as number),
           areaM2: ap.areaM2 || "",
           rentPrice: ap.rentPrice,
           currency: ap.currency,
@@ -360,6 +366,10 @@ export default function ApartmentFormPage() {
     // - If buildingId is null/NaN, drop it so BE treats as undefined
     if ((payload as any).buildingId == null || Number.isNaN((payload as any).buildingId)) {
       delete (payload as any).buildingId;
+    }
+    // Remove floorNumber if invalid or not provided (<=0 or NaN)
+    if ((payload as any).floorNumber == null || Number.isNaN((payload as any).floorNumber) || (payload as any).floorNumber <= 0) {
+      delete (payload as any).floorNumber;
     }
     // - For fee fields, remove if null so validation skips them
     const feeKeys: Array<keyof ApartmentForm> = [
@@ -649,10 +659,33 @@ export default function ApartmentFormPage() {
                   <label className="block text-sm text-slate-600 mb-1">Phòng khách</label>
                   <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng khách không hợp lệ" } })} />
                 </div>
+				<div>
+				  <label className="block text-sm text-slate-600 mb-1">Mã phòng (tuỳ chọn)</label>
+				  <input type="text" className={inputCls} placeholder="VD: P302" {...register("roomCode", { maxLength: { value: 50, message: "Mã phòng quá dài" } })} />
+				</div>
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Số người ở tối đa</label>
                     <input type="number" min={0} className={inputCls} {...register("guests", { valueAsNumber: true, min: { value: 0, message: "Số người ở tối đa không hợp lệ" } })} />
                   </div>
+                    {/* Floor number only when buildingId is selected */}
+                    {watch("buildingId") ? (
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1">Tầng (≥1)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className={inputCls}
+                          placeholder="Ví dụ: 3"
+                          {...register("floorNumber", {
+                            valueAsNumber: true,
+                            min: { value: 1, message: "Tầng phải >= 1" },
+                          })}
+                        />
+                        {errors.floorNumber && (
+                          <p className="text-red-600 text-sm mt-1">{String(errors.floorNumber.message)}</p>
+                        )}
+                      </div>
+                    ) : null}
               </div>
 
               <div>

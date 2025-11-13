@@ -53,6 +53,22 @@ function BuildingAdminDetailInner() {
   // Viewings calendar removed from this page
 
   const [apartments, setApartments] = useState<Apartment[]>([]);
+  // Grouped by floor for display
+  const groupedByFloor = useMemo(() => {
+    const map = new Map<number | 'unknown', Apartment[]>();
+    apartments.forEach((a) => {
+      const floor = (a as any).floorNumber;
+      const key: number | 'unknown' = floor && floor > 0 ? floor : 'unknown';
+      map.set(key, [...(map.get(key) || []), a]);
+    });
+    // sort numeric floors ascending, unknown last
+    return Array.from(map.entries()).sort((a, b) => {
+      if (a[0] === 'unknown' && b[0] === 'unknown') return 0;
+      if (a[0] === 'unknown') return 1;
+      if (b[0] === 'unknown') return -1;
+      return Number(a[0]) - Number(b[0]);
+    });
+  }, [apartments]);
   const [aMeta, setAMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
 
   // const [viewings, setViewings] = useState<Viewing[]>([]);
@@ -314,30 +330,39 @@ function BuildingAdminDetailInner() {
         </div>
       </div>
 
-      {/* Apartments list */}
+      {/* Apartments list grouped by floor */}
       {isEdit && (
         <div className="p-4">
-          <Section title="Danh sách căn hộ thuộc tòa nhà">
-            <AdminTable headers={["ID", "Tiêu đề", "Giá", "Trạng thái", "Hành động"]}>
-              {apartments.map((a) => (
-                <tr key={a.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{a.id}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-800">{a.title}</span>
-                      <span className="text-xs text-slate-500">/{a.slug}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">{a.rentPrice} {a.currency}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${a.status === 'published' ? 'bg-green-100 text-green-700' : a.status === 'draft' ? 'bg-slate-200 text-slate-700' : a.status === 'archived' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{tApartmentStatus(a.status)}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/apartment/${a.id}`} className="text-emerald-700 hover:underline">Sửa</Link>
-                  </td>
-                </tr>
-              ))}
-            </AdminTable>
+          <Section title="Danh sách căn hộ theo tầng">
+            {groupedByFloor.map(([floor, list]) => (
+              <div key={String(floor)} className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-slate-700">
+                    {floor === 'unknown' ? 'Chưa rõ tầng' : `Tầng ${floor}`} <span className="text-slate-500 font-normal">({list.length} căn)</span>
+                  </h4>
+                </div>
+                <AdminTable headers={["ID", "Tiêu đề", "Giá", "Trạng thái", "Hành động"]}>
+                  {list.map((a) => (
+                    <tr key={a.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">{a.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-slate-800">{a.title}</span>
+                          <span className="text-xs text-slate-500">/{a.slug}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">{a.rentPrice} {a.currency}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${a.status === 'published' ? 'bg-green-100 text-green-700' : a.status === 'draft' ? 'bg-slate-200 text-slate-700' : a.status === 'archived' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{tApartmentStatus(a.status)}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link href={`/admin/apartment/${a.id}`} className="text-emerald-700 hover:underline">Sửa</Link>
+                      </td>
+                    </tr>
+                  ))}
+                </AdminTable>
+              </div>
+            ))}
             <Pagination
               page={aMeta.page}
               totalPages={aMeta.pageCount}
@@ -370,6 +395,7 @@ function AttachUnassignedApartments({ buildingId, locationId, onAttached }: { bu
   const [page, setPage] = useState(1);
   const limit = 10;
   const [pageCount, setPageCount] = useState(1);
+  const [attachFloor, setAttachFloor] = useState<number | ''>('');
 
   const fetchList = async () => {
     setLoading(true);
@@ -395,7 +421,12 @@ function AttachUnassignedApartments({ buildingId, locationId, onAttached }: { bu
     const ids = Object.entries(selected).filter(([, v]) => v).map(([k]) => Number(k));
     if (!ids.length) return;
     try {
-      await Promise.all(ids.map((aid) => apartmentService.update(aid, { buildingId: buildingId, imagesStrategy: "merge" })));
+      await Promise.all(ids.map((aid) => apartmentService.update(aid, {
+        buildingId: buildingId,
+        imagesStrategy: "merge",
+        // only apply floorNumber if valid >=1
+        ...(attachFloor && attachFloor > 0 ? { floorNumber: attachFloor } : {}),
+      })));
       toast.success("Đã gán căn hộ vào tòa nhà");
       setSelected({});
       await fetchList();
@@ -423,9 +454,22 @@ function AttachUnassignedApartments({ buildingId, locationId, onAttached }: { bu
           ))}
         </AdminTable>
         <div className="mt-3 flex items-center justify-between">
-          <button onClick={attach} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">
-            Gán vào tòa
-          </button>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              value={attachFloor === '' ? '' : attachFloor}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) setAttachFloor(''); else setAttachFloor(Number(v));
+              }}
+              placeholder="Tầng (tuỳ chọn)"
+              className="h-10 w-32 rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white text-sm"
+            />
+            <button onClick={attach} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">
+              Gán vào tòa
+            </button>
+          </div>
           <div>
             <Pagination page={page} totalPages={pageCount} onPrev={() => setPage(Math.max(1, page - 1))} onNext={() => setPage(Math.min(pageCount, page + 1))} onPageChange={(p) => setPage(p)} />
           </div>
