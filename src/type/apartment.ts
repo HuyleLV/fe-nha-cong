@@ -38,6 +38,8 @@ export type Apartment = {
   /** numeric string */
   rentPrice: string;
   currency: string;
+  /** Ưu đãi theo phần trăm (0-100). Null/undefined nếu không có ưu đãi */
+  discountPercent?: number | null;
 
   status: ApartmentStatus;
 
@@ -129,6 +131,7 @@ export type ApartmentForm = {
   rentPrice: string;
   currency?: string;              // default "VND" ở BE
   status?: ApartmentStatus;       // default "draft" ở BE
+  discountPercent?: number | null; // Ưu đãi (%), 0-100
 
   coverImageUrl?: string | null;
   images?: string[];              // NEW
@@ -225,7 +228,11 @@ export type ApartmentQuery = {
   allowPet?: boolean;
   allowElectricVehicle?: boolean;
 
-  sort?: "newest" | "price_asc" | "price_desc" | "area_desc";
+  // Ưu đãi
+  hasDiscount?: boolean;
+  minDiscount?: number;
+
+  sort?: "newest" | "price_asc" | "price_desc" | "area_desc" | "discount_desc";
 
   page?: number;
   limit?: number;

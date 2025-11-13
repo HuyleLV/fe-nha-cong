@@ -39,6 +39,7 @@ export default function TrangChu() {
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
   const [popular, setPopular] = useState<Apartment[]>([]);
+  const [discounted, setDiscounted] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -69,7 +70,7 @@ export default function TrangChu() {
   setCity(rawCity);
         setSections(patchedSections);
 
-        // Load popular apartments (most interested)
+  // Load popular apartments (most interested)
   const topRaw = await apartmentService.getMostInterested({ limit: 5, signal: controller.signal });
         // Enrich popular items with district/city so DistrictListingSection can derive a "district" label
         const top: Apartment[] = (topRaw || []).map((a) => {
@@ -80,6 +81,27 @@ export default function TrangChu() {
           return { ...a, addressPath } as Apartment;
         });
         setPopular(top);
+
+        // Load discounted apartments (highest discount first)
+        try {
+          const discRes = await apartmentService.getAll({
+            status: 'published',
+            minDiscount: 1,
+            sort: 'discount_desc',
+            page: 1,
+            limit: 12,
+          });
+          const discountedItems = (discRes.items || []).map((a) => {
+            const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
+            const districtName = secFound?.district?.name || a.location?.name || "";
+            const cityName = rawCity?.name || "";
+            const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
+            return { ...a, addressPath } as Apartment;
+          });
+          setDiscounted(discountedItems);
+        } catch (e) {
+          // im lặng nếu lỗi phần ưu đãi
+        }
       } catch (e: any) {
         if (e?.name !== "CanceledError" && e?.message !== "canceled") {
           setErr(e?.message || "Không tải được dữ liệu");
@@ -161,6 +183,20 @@ export default function TrangChu() {
             router.push(`/tim-phong-quanh-day?${params.toString()}`);
           }}
         />
+      </div>
+
+      {/* ===== Ưu đãi giảm giá (trước PromoSection) ===== */}
+      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
+        {!loading && !err && discounted.length > 0 && (
+          <DistrictListingSection
+            title="Ưu đãi hấp dẫn"
+            subtitle="Các căn hộ giảm giá nhiều nhất"
+            data={discounted}
+            showTabs={false}
+            variant="scroll"
+            onBook={(apt) => console.log("book:", apt)}
+          />
+        )}
       </div>
 
       {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}

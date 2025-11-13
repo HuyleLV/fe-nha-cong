@@ -86,6 +86,7 @@ export default function ApartmentFormPage() {
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
+  discountPercent: 0,
       coverImageUrl: "",
       images: [],
 
@@ -237,6 +238,7 @@ export default function ApartmentFormPage() {
           rentPrice: ap.rentPrice,
           currency: ap.currency,
           status: ap.status,
+          discountPercent: (ap as any).discountPercent ?? 0,
           coverImageUrl: ap.coverImageUrl || "",
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
@@ -349,6 +351,7 @@ export default function ApartmentFormPage() {
       locationId: Number(values.locationId || selectedLocation?.id),
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
+  discountPercent: typeof (values as any).discountPercent === 'number' ? Math.max(0, Math.min(100, (values as any).discountPercent)) : undefined,
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
       images: imagesOrdered.length ? imagesOrdered : undefined,
       description: values.description || "",
@@ -380,6 +383,10 @@ export default function ApartmentFormPage() {
     ];
     for (const k of feeKeys) {
       if ((payload as any)[k] == null) delete (payload as any)[k];
+    }
+    // Normalize discount: if NaN, remove; allow 0 to clear
+    if ((payload as any).discountPercent != null && Number.isNaN((payload as any).discountPercent)) {
+      delete (payload as any).discountPercent;
     }
 
   // Remove local-only fields
@@ -692,6 +699,11 @@ export default function ApartmentFormPage() {
                 <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
                 <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
                 {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Ưu đãi (%)</label>
+                <input type="number" min={0} max={100} className={inputCls} placeholder="Ví dụ: 15" {...register("discountPercent" as any, { valueAsNumber: true, min: { value: 0, message: "Ưu đãi tối thiểu 0%" }, max: { value: 100, message: "Ưu đãi tối đa 100%" } })} />
+                { (errors as any)?.discountPercent && <p className="text-red-600 text-sm">{String((errors as any).discountPercent.message)}</p> }
               </div>
             </div>
           </Section>

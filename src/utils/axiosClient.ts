@@ -62,54 +62,61 @@ axiosClient.interceptors.request.use(
 );
 
 // ====== RESPONSE Interceptor ======
+let logoutNotified = false; // tránh hiện toast nhiều lần cho loạt request 401
 axiosClient.interceptors.response.use(
   (response) => {
-    // Trả về data luôn cho tiện
     return response.data ?? response;
   },
   (error) => {
-    // Log lỗi chi tiết
-    // console.error("[API ERROR]", error?.response || error.message);
+    const status = error?.response?.status;
+    if (status === 401 && typeof window !== 'undefined') {
+      // Chỉ thông báo nếu trước đó có token => nghĩa là phiên đã từng đăng nhập
+      const hadToken = !!(
+        localStorage.getItem('access_token') ||
+        localStorage.getItem('tokenUser') ||
+        localStorage.getItem('tokenAdmin') ||
+        document.cookie.includes('auth_user=')
+      );
+      const cfg = error?.config || {};
+      const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
+      const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
 
-    // Nếu token hết hạn, bạn có thể xử lý refresh hoặc logout
-    if (error?.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        const safeLogout = () => {
-          try {
-            const cfg = error?.config || {};
-            const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
-            // Regex sửa: (\b|/) không cần escape thêm slash trong character group
-            const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
+      // Xoá token theo scope
+      try {
+        if (isAdminEndpoint) {
+          localStorage.removeItem('tokenAdmin');
+        } else {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('tokenUser');
+        }
+        document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      } catch {}
 
-            // Xoá token theo scope
-            if (isAdminEndpoint) {
-              localStorage.removeItem("tokenAdmin");
-            } else {
-              localStorage.removeItem("access_token");
-              localStorage.removeItem("tokenUser");
-            }
-            // Dọn cookie auth_user nếu có
-            document.cookie = "auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      // Hiện toast một lần
+      if (hadToken && !logoutNotified) {
+        logoutNotified = true;
+        try {
+          const { toast } = require('react-toastify');
+          toast.info('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại!');
+        } catch {}
+        // Reset cờ sau 5s để nếu người dùng đăng nhập lại rồi lại hết hạn sau này vẫn hiện được
+        setTimeout(() => { logoutNotified = false; }, 5000);
+      }
 
-            // Chặn vòng lặp redirect: flag trong sessionStorage 3s
-            const FLAG = "auth_logout_inflight";
-            const last = Number(sessionStorage.getItem(FLAG) || 0);
-            const now = Date.now();
-            if (!last || now - last > 3000) {
-              sessionStorage.setItem(FLAG, String(now));
-              const loginPath = isAdminEndpoint ? "/dang-nhap?role=admin" : "/dang-nhap";
-              const atLogin = window.location.pathname.includes('/dang-nhap');
-              if (!atLogin) window.location.href = loginPath;
-            }
-          } catch (e) {
-            // Nuốt lỗi an toàn
-            console.warn('[AUTH LOGOUT ERROR]', e);
-          }
-        };
-        safeLogout();
+      // Redirect nếu chưa ở trang login
+      const atLogin = window.location.pathname.includes('/dang-nhap');
+      const loginPath = isAdminEndpoint ? '/dang-nhap?role=admin' : '/dang-nhap';
+      if (!atLogin) {
+        // Chặn vòng lặp nhanh nhiều redirect
+        const FLAG = 'auth_logout_inflight';
+        const last = Number(sessionStorage.getItem(FLAG) || 0);
+        const now = Date.now();
+        if (!last || now - last > 1500) {
+          sessionStorage.setItem(FLAG, String(now));
+          window.location.href = loginPath;
+        }
       }
     }
-
     return Promise.reject(error);
   }
 );
