@@ -9,7 +9,7 @@ import {
   Zap, Wifi, Car, ShieldCheck, Phone, CalendarDays, Copy, X, Sparkles, User,
   Clock, CheckCircle2, Calendar, Lightbulb, FileText, AlertCircle, MessageCircle,
   Package, UtensilsCrossed, Hammer, Sofa, PawPrint, BatteryCharging,
-  ArrowUpDown, BadgeCheck, Wind
+  ArrowUpDown, BadgeCheck, Wind, Check
 } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
@@ -161,7 +161,14 @@ function FancyHeader({
               {isNew && <span className="rounded-full bg-emerald-600/10 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" /> Tin mới</span>}
               {noOwnerLiving && <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-200 inline-flex items-center gap-1"><User className="h-3.5 w-3.5" /> Không chung chủ</span>}
               {flexibleHours && <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Giờ giấc tự do</span>}
-              {isVerified && <span className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Đã xác minh</span>}
+              {isVerified && (
+                <span className="rounded-full bg-sky-50/80 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200 inline-flex items-center gap-1">
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white ring-1 ring-white/40">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  Nhà đã xác minh
+                </span>
+              )}
             </div>
             <h1 className="text-3xl font-bold leading-tight text-emerald-950 md:text-4xl">{title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-emerald-800/80">

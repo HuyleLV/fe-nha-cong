@@ -80,6 +80,7 @@ axiosClient.interceptors.response.use(
       const cfg = error?.config || {};
       const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
       const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
+      const method = String(cfg.method || 'get').toLowerCase();
 
       // Xoá token theo scope
       try {
@@ -92,28 +93,27 @@ axiosClient.interceptors.response.use(
         document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
       } catch {}
 
-      // Hiện toast một lần
-      if (hadToken && !logoutNotified) {
-        logoutNotified = true;
-        try {
-          const { toast } = require('react-toastify');
-          toast.info('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại!');
-        } catch {}
-        // Reset cờ sau 5s để nếu người dùng đăng nhập lại rồi lại hết hạn sau này vẫn hiện được
-        setTimeout(() => { logoutNotified = false; }, 5000);
-      }
+      // Chỉ thông báo + chuyển trang khi là hành động đòi hỏi đăng nhập (non-GET)
+      if (method !== 'get') {
+        if (hadToken && !logoutNotified) {
+          logoutNotified = true;
+          try {
+            const { toast } = require('react-toastify');
+            toast.info('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại!');
+          } catch {}
+          setTimeout(() => { logoutNotified = false; }, 5000);
+        }
 
-      // Redirect nếu chưa ở trang login
-      const atLogin = window.location.pathname.includes('/dang-nhap');
-      const loginPath = isAdminEndpoint ? '/dang-nhap?role=admin' : '/dang-nhap';
-      if (!atLogin) {
-        // Chặn vòng lặp nhanh nhiều redirect
-        const FLAG = 'auth_logout_inflight';
-        const last = Number(sessionStorage.getItem(FLAG) || 0);
-        const now = Date.now();
-        if (!last || now - last > 1500) {
-          sessionStorage.setItem(FLAG, String(now));
-          window.location.href = loginPath;
+        const atLogin = window.location.pathname.includes('/dang-nhap');
+        const loginPath = isAdminEndpoint ? '/dang-nhap?role=admin' : '/dang-nhap';
+        if (!atLogin) {
+          const FLAG = 'auth_logout_inflight';
+          const last = Number(sessionStorage.getItem(FLAG) || 0);
+          const now = Date.now();
+          if (!last || now - last > 1500) {
+            sessionStorage.setItem(FLAG, String(now));
+            window.location.href = loginPath;
+          }
         }
       }
     }

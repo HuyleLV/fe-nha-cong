@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MapPin, BedDouble, Bath, CheckCircle2, Sofa, Tag } from "lucide-react";
+import { Heart, MapPin, BedDouble, Bath, Sofa, Tag, Check } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { formatMoneyVND } from "@/utils/format-number";
@@ -211,10 +211,11 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
         <div className="absolute right-2 top-2 z-20 inline-flex items-center gap-2">
           {item.isVerified && (
             <span
-              title="Đã xác minh"
-              className="inline-flex items-center justify-center rounded-full bg-white/90 p-1 shadow-lg"
+              title="Nhà đã xác minh"
+              aria-label="Nhà đã xác minh"
+              className="inline-flex items-center justify-center rounded-full bg-blue-500 text-white p-1.5 shadow-lg ring-1 ring-white/40"
             >
-              <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              <Check className="w-5 h-5" />
             </span>
           )}
           <button
