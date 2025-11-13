@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MapPin, BedDouble, Bath, CheckCircle2, Sofa } from "lucide-react";
+import { Heart, MapPin, BedDouble, Bath, CheckCircle2, Sofa, Tag } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "react-toastify";
 import { formatMoneyVND } from "@/utils/format-number";
@@ -102,6 +102,13 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
 
   // Giá/diện tích/ảnh/địa chỉ
   const price = toNumber(item.rentPrice);
+  const discountPercent = typeof (item as any).discountPercent === 'number' ? (item as any).discountPercent : 0;
+  const discountAmountRaw = (item as any).discountAmount ? toNumber((item as any).discountAmount) : 0;
+  // Tính giá sau ưu đãi: ưu tiên phần trăm nếu >0, nếu không dùng số tiền. Nếu cả hai >0: lấy mức giảm lớn hơn.
+  const discountFromPercent = discountPercent > 0 ? Math.round(price * discountPercent / 100) : 0;
+  const chosenDiscount = Math.max(discountFromPercent, discountAmountRaw);
+  const finalPrice = chosenDiscount > 0 ? Math.max(0, price - chosenDiscount) : price;
+  const isPercentDominant = chosenDiscount === discountFromPercent && discountFromPercent > 0;
   const area = item.areaM2 ? toNumber(item.areaM2) : undefined;
   const beds = item.bedrooms;
   const baths = item.bathrooms;
@@ -183,12 +190,22 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
           )}
         </Link>
 
-        {/* Overlay clusters */}
-        {extraBadge && (
-          <div
-            className="absolute left-3 top-3 z-20 inline-flex max-w-[180px] items-center gap-1 rounded-full bg-gradient-to-r from-white/95 to-white/70 px-2 py-1 text-[11px] font-medium text-slate-700 shadow backdrop-blur-md ring-1 ring-white/50"
-          >
-            {extraBadge}
+        {/* Overlay clusters (ưu đãi + extra badge) */}
+        {(chosenDiscount > 0 || extraBadge) && (
+          <div className="absolute left-3 top-3 z-20 flex flex-col gap-2">
+            {chosenDiscount > 0 && (
+              <div className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-600 to-pink-500 px-2 py-1 text-[11px] font-semibold text-white shadow ring-1 ring-white/40">
+                <Tag className="w-3 h-3" />
+                {isPercentDominant
+                  ? `-${discountPercent}%`
+                  : `-${formatMoneyVND(chosenDiscount).replace(/\s*₫/, '').replace(/\s+/g,'')}đ`}
+              </div>
+            )}
+            {extraBadge && (
+              <div className="inline-flex max-w-[180px] items-center gap-1 rounded-full bg-gradient-to-r from-white/95 to-white/70 px-2 py-1 text-[11px] font-medium text-slate-700 shadow backdrop-blur-md ring-1 ring-white/50">
+                {extraBadge}
+              </div>
+            )}
           </div>
         )}
         <div className="absolute right-2 top-2 z-20 inline-flex items-center gap-2">
@@ -256,8 +273,15 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
         </div>
 
         <div className="mt-auto pt-3 flex items-center justify-between">
-          <div className="font-extrabold text-emerald-700">
-            {formatMoneyVND(toNumber(item.rentPrice))}
+          <div className="flex flex-col">
+            {chosenDiscount > 0 ? (
+              <>
+                <div className="text-xs line-through text-slate-400">{formatMoneyVND(price)}</div>
+                <div className="font-extrabold text-emerald-700">{formatMoneyVND(finalPrice)}</div>
+              </>
+            ) : (
+              <div className="font-extrabold text-emerald-700">{formatMoneyVND(price)}</div>
+            )}
           </div>
           <Link
             href={detailHref}

@@ -86,7 +86,7 @@ export default function TrangChu() {
         try {
           const discRes = await apartmentService.getAll({
             status: 'published',
-            minDiscount: 1,
+            hasDiscount: true,
             sort: 'discount_desc',
             page: 1,
             limit: 12,

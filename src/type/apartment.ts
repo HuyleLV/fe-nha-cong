@@ -40,6 +40,7 @@ export type Apartment = {
   currency: string;
   /** Ưu đãi theo phần trăm (0-100). Null/undefined nếu không có ưu đãi */
   discountPercent?: number | null;
+  discountAmount?: string | null; // số tiền giảm trực tiếp (VND) numeric string
 
   status: ApartmentStatus;
 
@@ -132,6 +133,7 @@ export type ApartmentForm = {
   currency?: string;              // default "VND" ở BE
   status?: ApartmentStatus;       // default "draft" ở BE
   discountPercent?: number | null; // Ưu đãi (%), 0-100
+  discountAmount?: string | null; // Ưu đãi cố định VND
 
   coverImageUrl?: string | null;
   images?: string[];              // NEW
