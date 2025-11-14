@@ -41,7 +41,16 @@ export const AdminRoomCard: React.FC<AdminRoomCardProps> = ({ apartment, apiBase
   <div className="relative w-full h-40 md:h-44 overflow-hidden">
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt={apartment.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.05]" />
+          <img
+            src={img}
+            alt={apartment.title}
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.05]"
+            onError={(e) => {
+              const t = e.currentTarget as HTMLImageElement;
+              t.onerror = null;
+              t.src = "/logo.png";
+            }}
+          />
         ) : (
           <div className="h-full w-full grid place-items-center text-[11px] text-slate-400 bg-slate-50">Không ảnh</div>
         )}
@@ -50,7 +59,11 @@ export const AdminRoomCard: React.FC<AdminRoomCardProps> = ({ apartment, apiBase
             <Tag className="w-3 h-3" />{isPercent ? `-${discountPercent}%` : `-${formatMoneyVND(chosen).replace(/\s*₫/, "").replace(/\s+/g, "")}đ`}
           </div>
         )}
-        {/* Verified tick moved to badges row */}
+        {(apartment as any).isVerified && (
+          <span className="absolute right-1 top-1 inline-flex items-center justify-center rounded-full bg-white/90 p-1 shadow-sm ring-1 ring-white/40" title="Nhà đã xác minh">
+            <Check className="w-3 h-3 text-emerald-700" />
+          </span>
+        )}
       </div>
       {/* Content */}
   <div className="flex flex-1 flex-col p-3 min-w-0">
@@ -65,11 +78,6 @@ export const AdminRoomCard: React.FC<AdminRoomCardProps> = ({ apartment, apiBase
           <span className={`inline-flex items-center gap-0.5 rounded px-1.5 py-[2px] ring-1 font-medium ${STATUS_STYLES[status] || 'bg-slate-100 text-slate-600 ring-slate-200'}`}>
             {status === 'published' ? 'Cho thuê' : status === 'draft' ? 'Nháp' : 'Lưu trữ'}
           </span>
-          {(apartment as any).isVerified && (
-            <span className="inline-flex items-center gap-0.5 rounded bg-emerald-600/10 text-emerald-700 px-1.5 py-[2px] ring-1 ring-emerald-300" title="Đã xác minh">
-              <Check className="w-3 h-3" /> Xác minh
-            </span>
-          )}
         </div>
         {/* Title */}
         <div className="min-w-0">

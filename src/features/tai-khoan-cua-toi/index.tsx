@@ -341,7 +341,7 @@ export default function AccountPage() {
   /* ---------- HANDLERS ---------- */
   const handleRemoveFav = async (id: number) => {
     const prev = [...saved];
-    const next = saved.filter((x) => x.apartment.id !== id);
+    const next = saved.filter((x) => (x?.apartment?.id ?? null) !== id);
     setSaved(next);
     writeSavedLocal(next);
 
@@ -361,7 +361,10 @@ export default function AccountPage() {
     writeSavedLocal([]);
     try {
       if (hasToken()) {
-        await Promise.all(prev.map((a) => favoriteService.removeFavorite(a.apartment.id)));
+        const ids = prev
+          .map((a) => a?.apartment?.id)
+          .filter((id): id is number => typeof id === 'number');
+        await Promise.all(ids.map((id) => favoriteService.removeFavorite(id)));
       }
       toast.info("Đã xóa toàn bộ phòng yêu thích");
       window.dispatchEvent(new CustomEvent("fav:changed"));
@@ -791,13 +794,13 @@ export default function AccountPage() {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            {saved.map((fav) => (
+            {saved.filter(f => !!f?.apartment?.id).map((fav, idx) => (
               <RoomCardItem
-                key={fav.apartment.id}
-                item={{ ...fav.apartment, favorited: true }}
+                key={fav.apartment!.id}
+                item={{ ...(fav.apartment as Apartment), favorited: true }}
                 isFav={true}
                 onToggleFav={handleRemoveFav}
-                onBook={() => router.push(`/room/${fav.apartment.slug}`)}
+                onBook={() => router.push(`/room/${(fav.apartment as Apartment).slug}`)}
               />
             ))}
           </div>

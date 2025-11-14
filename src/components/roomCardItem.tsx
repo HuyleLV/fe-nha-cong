@@ -182,6 +182,11 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
               src={imageUrl}
               alt={item.title}
               className="aspect-[4/3] h-auto w-full object-cover"
+              onError={(e) => {
+                const t = e.currentTarget as HTMLImageElement;
+                t.onerror = null; // prevent loop
+                t.src = "/logo.png";
+              }}
             />
           ) : (
             <div className="aspect-[4/3] bg-gray-100 grid place-items-center text-gray-400 text-sm">
