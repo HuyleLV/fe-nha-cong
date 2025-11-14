@@ -185,6 +185,15 @@ export default function Header() {
     } catch {}
   };
 
+  const ensureAuthAnd = (action: () => void) => {
+    if (!auth) {
+      toast.info("Vui lòng đăng nhập để sử dụng chức năng này");
+      router.push("/dang-nhap");
+      return;
+    }
+    action();
+  };
+
   return (
     <>
       {/* Header */}
@@ -483,33 +492,51 @@ export default function Header() {
           <div className="px-5 pt-4">
             <div className="grid grid-cols-2 gap-3">
               <Link
-                href="/phong-quan-tam"
-                onClick={() => setOpenNavDesktop(false)}
+                href={auth ? "/phong-quan-tam" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => {
+                    setOpenNavDesktop(false);
+                    router.push("/phong-quan-tam");
+                  });
+                }}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
                 Phòng quan tâm
               </Link>
               <Link
-                href="/phong-da-xem"
-                onClick={() => setOpenNavDesktop(false)}
+                href={auth ? "/phong-da-xem" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => {
+                    setOpenNavDesktop(false);
+                    router.push("/phong-da-xem");
+                  });
+                }}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
                 Phòng đã xem
               </Link>
               <Link
-                href="#"
-                onClick={() => setOpenNavDesktop(false)}
+                href={auth ? "/phong-quan-tam" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => {
+                    setOpenNavDesktop(false);
+                    router.push("/phong-quan-tam");
+                  });
+                }}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
-                Đã lưu
+                Phòng yêu thích
               </Link>
-              <Link
+              {/* <Link
                 href="#"
                 onClick={() => setOpenNavDesktop(false)}
                 className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
               >
                 So sánh
-              </Link>
+              </Link> */}
             </div>
           </div>
 

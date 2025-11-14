@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, CalendarDays, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, CalendarDays, Edit, Trash2, Grid2X2 } from "lucide-react";
 import Spinner from "@/components/spinner";
 import { toast } from "react-toastify";
 import AdminTable from "@/components/AdminTable";
@@ -156,6 +156,15 @@ function BuildingAdminListInner() {
                 >
                   <CalendarDays className="w-4 h-4" />
                   Lịch xem
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/admin/building/${b.id}/rooms`)}
+                  className="flex items-center gap-1 px-4 py-1 text-sm bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
+                  title="Xem phòng dạng lưới"
+                >
+                  <Grid2X2 className="w-4 h-4" />
+                  Xem phòng
                 </button>
                 <button
                   type="button"

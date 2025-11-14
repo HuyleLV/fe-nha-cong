@@ -11,6 +11,8 @@ import { Trash2, Clock } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import 'dayjs/locale/vi';
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 dayjs.locale('vi');
 dayjs.extend(relativeTime);
@@ -29,6 +31,7 @@ function readLocalRecent(): { apartmentId: number; slug?: string; title?: string
 }
 
 export default function ViewedRoomsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<{ apartment: Apartment | null; viewedAt: string; apartmentId: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -36,54 +39,34 @@ export default function ViewedRoomsPage() {
   useEffect(() => {
     const hasToken = typeof document !== "undefined" && (document.cookie.includes("access_token=") || !!localStorage.getItem("access_token"));
     setIsAuthed(!!hasToken);
+    // Require login: if not authed, notify and redirect, don't show local fallback
+    if (!hasToken) {
+      toast.info("Vui lòng đăng nhập để xem Phòng quan tâm");
+      router.replace("/dang-nhap");
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         setLoading(true);
-        if (hasToken) {
-          // Fetch server-side recent views
-          let res = await viewingService.recent({ limit: 50 });
-          let serverItems = res.items || [];
+        // Fetch server-side recent views only when authed
+        let res = await viewingService.recent({ limit: 50 });
+        let serverItems = res.items || [];
 
-          // Optional sync: push local recent (pre-login) to server
-          const local = readLocalRecent();
-          if (local.length) {
-            const serverIds = new Set(serverItems.map((it) => it.apartmentId));
-            const needSync = local.filter((r) => r.apartmentId && !serverIds.has(r.apartmentId));
-            if (needSync.length) {
-              const toPush = needSync.slice(0, 20); // limit to avoid burst
-              await Promise.allSettled(toPush.map((r) => viewingService.recordVisit(r.apartmentId)));
-              // refetch after sync
-              res = await viewingService.recent({ limit: 50 });
-              serverItems = res.items || [];
-            }
-          }
-          setItems(serverItems);
-        } else {
-          // Fallback to local recent: fetch apartment details to show full cards
-          const local = readLocalRecent();
-          if (local.length === 0) {
-            setItems([]);
-          } else {
-            const limited = local.slice(0, 50);
-            // Fetch details in parallel (avoid overloading server)
-            const results = await Promise.all(
-              limited.map(async (r) => {
-                try {
-                  let apt: Apartment | null = null;
-                  if (r.slug) {
-                    apt = await apartmentService.getBySlug(r.slug);
-                  } else if (r.apartmentId) {
-                    apt = await apartmentService.getById(r.apartmentId);
-                  }
-                  return { apartment: apt, viewedAt: r.viewedAt, apartmentId: r.apartmentId };
-                } catch {
-                  return { apartment: null, viewedAt: r.viewedAt, apartmentId: r.apartmentId };
-                }
-              })
-            );
-            setItems(results);
+        // Optional sync: push local recent (pre-login) to server
+        const local = readLocalRecent();
+        if (local.length) {
+          const serverIds = new Set(serverItems.map((it) => it.apartmentId));
+          const needSync = local.filter((r) => r.apartmentId && !serverIds.has(r.apartmentId));
+          if (needSync.length) {
+            const toPush = needSync.slice(0, 20); // limit to avoid burst
+            await Promise.allSettled(toPush.map((r) => viewingService.recordVisit(r.apartmentId)));
+            // refetch after sync
+            res = await viewingService.recent({ limit: 50 });
+            serverItems = res.items || [];
           }
         }
+        setItems(serverItems);
       } catch {
         setItems([]);
       } finally {

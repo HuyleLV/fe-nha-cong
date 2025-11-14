@@ -91,13 +91,6 @@ export default function JobsFeatureIndex() {
 							</div>
 						</form>
 					</div>
-					{/* Desktop cover image on the right */}
-					<div className="hidden lg:block w-[360px] shrink-0">
-						<div className="overflow-hidden rounded-2xl ring-1 ring-white/30 shadow-xl bg-white/10 backdrop-blur-sm">
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img src={coverImg.src} alt="Tuyển dụng" className="h-[420px] w-full object-cover" />
-						</div>
-					</div>
 				</div>
 			</div>
 

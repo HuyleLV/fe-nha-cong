@@ -191,7 +191,7 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
         </Link>
 
         {/* Overlay clusters (ưu đãi + extra badge) */}
-        {(chosenDiscount > 0 || extraBadge) && (
+        {(chosenDiscount > 0 || extraBadge || item.isVerified) && (
           <div className="absolute left-3 top-3 z-20 flex flex-col gap-2">
             {chosenDiscount > 0 && (
               <div className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-600 to-pink-500 px-2 py-1 text-[11px] font-semibold text-white shadow ring-1 ring-white/40">
@@ -201,6 +201,15 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
                   : `-${formatMoneyVND(chosenDiscount).replace(/\s*₫/, '').replace(/\s+/g,'')}đ`}
               </div>
             )}
+            {item.isVerified && (
+              <span
+                title="Nhà đã xác thực"
+                aria-label="Nhà đã xác thực"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2 py-1 text-[11px] font-semibold text-white shadow ring-1 ring-white/40"
+              >
+                <Check className="w-3.5 h-3.5" /> <span>Xác thực</span>
+              </span>
+            )}
             {extraBadge && (
               <div className="inline-flex max-w-[180px] items-center gap-1 rounded-full bg-gradient-to-r from-white/95 to-white/70 px-2 py-1 text-[11px] font-medium text-slate-700 shadow backdrop-blur-md ring-1 ring-white/50">
                 {extraBadge}
@@ -209,15 +218,6 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
           </div>
         )}
         <div className="absolute right-2 top-2 z-20 inline-flex items-center gap-2">
-          {item.isVerified && (
-            <span
-              title="Nhà đã xác minh"
-              aria-label="Nhà đã xác minh"
-              className="inline-flex items-center justify-center rounded-full bg-blue-500 text-white p-1.5 shadow-lg ring-1 ring-white/40"
-            >
-              <Check className="w-5 h-5" />
-            </span>
-          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -242,8 +242,8 @@ export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBa
       </div>
 
       {/* Nội dung */}
-      <div className="p-3 md:p-4 flex-1 flex flex-col">
-        <h3 className="line-clamp-2 min-h-[3.25rem] font-semibold text-slate-800">
+      <div className="p-3 flex-1 flex flex-col">
+        <h3 className="line-clamp-2 font-semibold text-slate-800 mb-1">
           <Link href={detailHref} className="hover:underline">
             {item.title}
           </Link>

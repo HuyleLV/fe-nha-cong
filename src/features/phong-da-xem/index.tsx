@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { viewingService } from "@/services/viewingService";
 import RoomCardItem from "@/components/roomCardItem";
 import { Apartment } from "@/type/apartment";
@@ -12,11 +14,19 @@ dayjs.locale('vi');
 dayjs.extend(relativeTime);
 
 export default function VisitedRoomsPage() {
+  const router = useRouter();
   const [items, setItems] = useState<{ apartment: Apartment | null; apartmentId: number; viewingId: number; visitedAt: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Require login: if no token, notify and redirect to login
+    const authed = typeof document !== "undefined" && (document.cookie.includes("access_token=") || !!localStorage.getItem("access_token"));
+    if (!authed) {
+      toast.info("Vui lòng đăng nhập để xem danh sách phòng đã xem");
+      router.replace("/dang-nhap");
+      return;
+    }
     let mounted = true;
     (async () => {
       try {

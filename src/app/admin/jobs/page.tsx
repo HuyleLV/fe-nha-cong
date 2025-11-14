@@ -2,10 +2,11 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, RotateCcw, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, RotateCcw, Edit, Trash2, Eye, Users } from 'lucide-react';
 import AdminTable from '@/components/AdminTable';
 import Pagination from '@/components/Pagination';
 import { jobService } from '@/services/jobService';
+import { jobApplicationService } from '@/services/jobApplicationService';
 import { Job } from '@/type/job';
 
 function AdminJobsPage() {
@@ -18,12 +19,23 @@ function AdminJobsPage() {
   const limit = 20;
   const [q, setQ] = React.useState<string>(searchParams.get('q') || '');
 
+  const [counts, setCounts] = React.useState<Record<number,{ total:number; byStatus: Record<string, number> }>>({});
+
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
       const res = await jobService.adminList({ page, limit, q });
       setItems(res.items);
       setMeta(res.meta);
+      // Fetch application counts in parallel
+      if (res.items.length) {
+        try {
+          const c = await jobApplicationService.adminCounts(res.items.map(i=>i.id));
+          setCounts(c);
+        } catch (err) { /* silent */ }
+      } else {
+        setCounts({});
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -95,9 +107,12 @@ function AdminJobsPage() {
       </form>
 
       {/* Table */}
-      <AdminTable headers={['ID','Ảnh','Tiêu đề','Trạng thái','Đăng','Thao tác']} loading={loading} emptyText="Không có tin tuyển dụng">
+      <AdminTable headers={['ID','Ảnh','Tiêu đề','Ứng tuyển','Trạng thái','Đăng','Thao tác']} loading={loading} emptyText="Không có tin tuyển dụng">
         {items.map(j => {
           const color = j.status === 'published' ? 'bg-green-100 text-green-700' : j.status === 'draft' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-700';
+          const c = counts[j.id];
+          const newCount = c?.byStatus?.new || 0;
+          const totalCount = c?.total || 0;
           return (
             <tr key={j.id} className="hover:bg-slate-50 transition-colors text-sm">
               <td className="px-4 py-3">{j.id}</td>
@@ -115,7 +130,19 @@ function AdminJobsPage() {
               </td>
               <td className="px-4 py-3 align-top">
                 <div className="font-medium line-clamp-1" title={j.title}>{j.title}</div>
-                <div className="text-xs text-gray-500">/{j.slug}</div>
+                <div className="text-[11px] text-gray-500">/{j.slug}</div>
+              </td>
+              <td className="px-4 py-3 text-xs">
+                {totalCount ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-slate-100 text-slate-700">
+                      <Users size={12}/> {totalCount}
+                    </span>
+                    {newCount > 0 && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 bg-amber-500 text-white text-[11px]">Mới {newCount}</span>
+                    )}
+                  </div>
+                ) : <span className="text-slate-400">—</span>}
               </td>
               <td className="px-4 py-3">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${color}`}>
@@ -124,14 +151,14 @@ function AdminJobsPage() {
               </td>
               <td className="px-4 py-3 text-xs text-gray-600">{j.publishedAt ? new Date(j.publishedAt).toLocaleDateString() : '—'}</td>
               <td className="px-4 py-3">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Link href={`/admin/jobs/${j.id}/ung-tuyen`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-emerald-500 text-white hover:bg-emerald-600">
+                    Đơn ứng tuyển
+                  </Link>
                   <Link href={`/admin/jobs/${j.id}`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600"> <Edit size={14}/> Sửa</Link>
                   <button onClick={() => handleDelete(j.id)} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700">
                     <Trash2 size={14}/> Xoá
                   </button>
-                  <Link href={`/tuyen-dung/${j.slug || j.id}`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100">
-                    <Eye size={14}/> Xem
-                  </Link>
                 </div>
               </td>
             </tr>

@@ -6,7 +6,10 @@ export type JobApplication = {
   phone?: string | null;
   cvUrl?: string | null;
   message?: string | null;
+  status?: string;
+  internalNote?: string | null;
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type JobApplicationForm = {
@@ -15,4 +18,9 @@ export type JobApplicationForm = {
   phone?: string;
   cvUrl?: string | null;
   message?: string;
+};
+
+export type JobApplicationUpdate = {
+  status?: string;
+  internalNote?: string | null;
 };

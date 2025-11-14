@@ -189,26 +189,9 @@ export default function TrangChu() {
       <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
         {!loading && !err && discounted.length > 0 && (
           <DistrictListingSection
-            title="Ưu đãi hấp dẫn"
+            title="Các phòng đang có ưu đãi"
             subtitle="Các căn hộ giảm giá nhiều nhất"
             data={discounted}
-            showTabs={false}
-            variant="scroll"
-            onBook={(apt) => console.log("book:", apt)}
-          />
-        )}
-      </div>
-
-      {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
-      <PromoSection />
-      
-      {/* ===== Section tái dùng (ẩn tabs) ===== */}
-      <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
-        {!loading && !err && popular.length > 0 && (
-          <DistrictListingSection
-            title="Các phòng đang được quan tâm nhiều nhất"
-            subtitle="Khám phá những căn hộ được yêu thích nhất"
-            data={popular}
             showTabs={false}
             variant="scroll"
             onBook={(apt) => console.log("book:", apt)}
@@ -258,9 +241,23 @@ export default function TrangChu() {
           </div>
         </section>
       </div>
-
+      
       {/* ===== Section tái dùng (ẩn tabs) ===== */}
       <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
+        {!loading && !err && popular.length > 0 && (
+          <DistrictListingSection
+            title="Các phòng đang được quan tâm nhiều nhất"
+            subtitle="Khám phá những căn hộ được yêu thích nhất"
+            data={popular}
+            showTabs={false}
+            variant="scroll"
+            onBook={(apt) => console.log("book:", apt)}
+          />
+        )}
+      </div>
+
+      {/* ===== Section tái dùng (ẩn tabs) ===== */}
+      {/* <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
         {!loading && !err && (
           <DistrictListingSection
             title="Khu vực nổi bật"
@@ -272,10 +269,13 @@ export default function TrangChu() {
             onBook={(apt) => console.log("book:", apt)}
           />
         )}
-      </div>
+      </div> */}
       
       {/* ===== Đối tác & FAQ ===== */}
       {/* <PartnersCarousel items={PARTNERS} perSlide={6} /> */}
+
+      {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
+      <PromoSection />
 
       {/* ===== FAQ ===== */}
       <FaqCarousel items={FAQS} />

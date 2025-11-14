@@ -5,7 +5,7 @@ import { jobApplicationService } from '@/services/jobApplicationService';
 import Spinner from '@/components/spinner';
 import JobCvUploadPicker from '@/components/JobCvUploadPicker';
 
-export default function JobApplyForm({ jobIdOrSlug }: { jobIdOrSlug: number | string }) {
+export default function JobApplyForm({ jobIdOrSlug, onSuccess }: { jobIdOrSlug: number | string, onSuccess?: () => void }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -21,9 +21,11 @@ export default function JobApplyForm({ jobIdOrSlug }: { jobIdOrSlug: number | st
     if (!name.trim()) { toast.error('Vui lòng nhập họ tên'); return; }
     try {
       setSubmitting(true);
-      const res = await jobApplicationService.apply(jobIdOrSlug, { name: name.trim(), email: email || undefined, phone: phone || undefined, cvUrl: cvUrl || undefined, message: message || undefined });
-      toast.success('Đã gửi ứng tuyển! Chúng tôi sẽ liên hệ sớm.');
+      await jobApplicationService.apply(jobIdOrSlug, { name: name.trim(), email: email || undefined, phone: phone || undefined, cvUrl: cvUrl || undefined, message: message || undefined });
+      // Hiển thị toast ngắn gọn và chuyển sang màn hình cảm ơn dạng popup cha
+      toast.success('Ứng tuyển thành công!');
       setName(''); setEmail(''); setPhone(''); setCvUrl(null); setMessage('');
+      onSuccess?.();
     } catch (err: any) {
       toast.error(err?.message || 'Gửi ứng tuyển thất bại');
     } finally {
