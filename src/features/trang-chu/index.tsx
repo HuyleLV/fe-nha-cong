@@ -28,7 +28,7 @@ const PARTNERS: PartnerLogo[] = [
 export default function TrangChu() {
   const { isMobile } = useDevice();
   const router = useRouter();
-  const [mode, setMode] = useState<'phong'|'nha'|'mat-bang'|undefined>(undefined);
+  const [mode, setMode] = useState<'phong'|'nha'|'mat-bang'|undefined>('phong');
 
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
@@ -61,11 +61,11 @@ export default function TrangChu() {
           })),
         }));
 
-  setCity(rawCity);
+        setCity(rawCity);
         setSections(patchedSections);
 
-  // Load popular apartments (most interested)
-  const topRaw = await apartmentService.getMostInterested({ limit: 5, signal: controller.signal });
+        // Load popular apartments (most interested)
+        const topRaw = await apartmentService.getMostInterested({ limit: 5, signal: controller.signal });
         // Enrich popular items with district/city so DistrictListingSection can derive a "district" label
         const top: Apartment[] = (topRaw || []).map((a) => {
           const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
