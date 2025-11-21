@@ -26,7 +26,8 @@ export const viAdmin = {
   locationLevels: {
     Province: 'Tỉnh',
     City: 'Thành phố',
-    District: 'Quận'
+    District: 'Quận',
+    Street: 'Khu vực'
   },
   jobStatus: {
     published: 'Công khai',

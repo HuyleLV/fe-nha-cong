@@ -103,7 +103,7 @@ export default function LocationFormPage() {
   useEffect(() => {
     if (isEdit) return;
     const lv = searchParams.get('level');
-    if (lv && (lv === 'Province' || lv === 'City' || lv === 'District')) {
+    if (lv && (lv === 'Province' || lv === 'City' || lv === 'District' || lv === 'Street')) {
       setValue('level', lv as any, { shouldDirty: true });
     }
   }, [isEdit, searchParams, setValue]);
@@ -128,6 +128,12 @@ export default function LocationFormPage() {
     } else if (level === 'District') {
       // District yêu cầu parent là City
       if (selectedParent && selectedParent.level !== 'City') {
+        setSelectedParent(null);
+        setValue('parentId', null, { shouldDirty: true });
+      }
+    } else if (level === 'Street') {
+      // Street yêu cầu parent là District
+      if (selectedParent && selectedParent.level !== 'District') {
         setSelectedParent(null);
         setValue('parentId', null, { shouldDirty: true });
       }
@@ -309,7 +315,8 @@ export default function LocationFormPage() {
                 >
                   <option value="Province">Tỉnh</option>
                   <option value="City">Thành phố</option>
-                  <option value="District">Quận</option>
+                    <option value="District">Quận</option>
+                    <option value="Street">Khu vực</option>
                 </select>
               </div>
 
@@ -322,6 +329,7 @@ export default function LocationFormPage() {
                       if (level === 'Province' && val) return 'Tỉnh không được có cấp cha';
                       if (level === 'City' && !val) return 'Thành phố cần chọn Tỉnh cha';
                       if (level === 'District' && !val) return 'Quận cần chọn Thành phố cha';
+                      if (level === 'Street' && !val) return 'Khu vực cần chọn Quận cha';
                       return true;
                     },
                   }}
@@ -344,6 +352,7 @@ export default function LocationFormPage() {
             {level === 'Province' && 'Tỉnh không có cấp cha.'}
             {level === 'City' && 'Chọn Tỉnh cha cho Thành phố.'}
             {level === 'District' && 'Chọn Thành phố cha cho Quận.'}
+            {level === 'Street' && 'Chọn Quận cha cho Khu vực.'}
                       </p>
                     </div>
                   )}

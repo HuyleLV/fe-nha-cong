@@ -64,4 +64,24 @@ export const partnerService = {
       throw new Error(msg);
     }
   },
+
+  async approve(id: number | string): Promise<{ ok?: boolean; message?: string }> {
+    try {
+      const res = await axiosClient.post<any, any>(apiUrl(`/api/partners/${encodeURIComponent(String(id))}/approve`));
+      return (res?.data ?? res) as any;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể phê duyệt đối tác";
+      throw new Error(msg);
+    }
+  },
+
+  async cancel(id: number | string): Promise<{ ok?: boolean; message?: string }> {
+    try {
+      const res = await axiosClient.post<any, any>(apiUrl(`/api/partners/${encodeURIComponent(String(id))}/cancel`));
+      return (res?.data ?? res) as any;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Không thể huỷ đối tác";
+      throw new Error(msg);
+    }
+  },
 };

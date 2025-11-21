@@ -17,7 +17,6 @@ import { Location } from "@/type/location";
 
 const LIMIT = 10;
 
-
 /** helpers */
 const toNum = (v?: string | number | null) => {
   if (v === null || v === undefined) return undefined;
@@ -433,9 +432,11 @@ export default function AdminApartmentsPage() {
         <h1 className="text-xl font-semibold text-emerald-900">QUẢN LÝ CĂN HỘ</h1>
         <button
           onClick={() => router.push("/admin/apartment/create")}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+          title="Thêm căn hộ"
+          aria-label="Thêm căn hộ"
+          className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
         >
-          <Plus className="size-4" /> Thêm căn hộ
+          <Plus className="size-4" />
         </button>
       </div>
 
@@ -518,19 +519,19 @@ export default function AdminApartmentsPage() {
                 <div className="flex justify-center gap-2">
                   <button
                     onClick={() => router.push(`/admin/apartment/${it.id}`)}
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
                     title="Sửa căn hộ"
+                    aria-label="Sửa căn hộ"
+                    className="flex items-center justify-center p-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
                   >
-                    <Edit size={15} />
-                    Sửa
+                    <Edit size={16} />
                   </button>
                   <button
                     onClick={() => router.push(`/admin/viewings?apartmentId=${it.id}`)}
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
                     title="Lịch xem"
+                    aria-label="Lịch xem"
+                    className="flex items-center justify-center p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
                   >
-                    <CalendarDays size={15} />
-                    Lịch xem
+                    <CalendarDays size={16} />
                   </button>
                   <button
                     onClick={async () => {
@@ -545,11 +546,11 @@ export default function AdminApartmentsPage() {
                         toast.error(e?.response?.data?.message || "Không xoá được");
                       }
                     }}
-                    className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
                     title="Xóa căn hộ"
+                    aria-label="Xóa căn hộ"
+                    className="flex items-center justify-center p-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
                   >
-                    <Trash2 size={15} />
-                    Xoá
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </td>

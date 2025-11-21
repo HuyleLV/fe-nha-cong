@@ -24,10 +24,13 @@ function normalizeList<T = any>(payload: any, params?: { page?: number; limit?: 
 }
 
 export const locationService = {
-    async getAll(params?: { page?: number; limit?: number; q?: string; level?: LocationLevel; parentId?: number }): Promise<{ items: Location[]; meta: PaginationMeta }>
+    async getAll(params?: { page?: number; limit?: number; q?: string; level?: LocationLevel; parentId?: number; ownerOnly?: boolean }): Promise<{ items: Location[]; meta: PaginationMeta }>
     {
         try {
-            const payload = await axiosClient.get<any, any>(apiUrl("/api/locations"), { params });
+            // if caller requests ownerOnly, include that flag in query params (backend should honor it)
+            const reqParams = { ...(params || {}) } as any;
+            if (params?.ownerOnly) reqParams.ownerOnly = true;
+            const payload = await axiosClient.get<any, any>(apiUrl("/api/locations"), { params: reqParams });
             return normalizeList<Location>(payload, params);
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.message || "Không thể tải danh sách khu vực";

@@ -1,13 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Ban, Check, Edit, Trash2 } from "lucide-react";
 import { partnerService } from "@/services/partnerService";
 import { formatDateTime } from "@/utils/format-time";
 import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import AdminTable from "@/components/AdminTable";
 import { toast } from "react-toastify";
-import type { PartnerLead, PartnerRole } from "@/type/partners";
+import type { PartnerLead, PartnerRole, PartnerStatus } from "@/type/partners";
 import Pagination from "@/components/Pagination";
 
 export default function PartnerAdminPage() {
@@ -16,6 +16,7 @@ export default function PartnerAdminPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [role, setRole] = useState<PartnerRole | "">("");
+  const [status, setStatus] = useState<PartnerStatus | "">("");
   const [q, setQ] = useState<string>("");
   const router = useRouter();
   const limit = 10;
@@ -27,6 +28,7 @@ export default function PartnerAdminPage() {
         page,
         limit,
         role: role || undefined,
+        status: status || undefined,
         q: q || undefined,
       });
       setPartners(items || []);
@@ -42,7 +44,7 @@ export default function PartnerAdminPage() {
   useEffect(() => {
     fetchPartners();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, role]);
+  }, [page, role, status]);
 
   const roleText = (r: PartnerRole) => {
     switch (r) {
@@ -50,8 +52,6 @@ export default function PartnerAdminPage() {
         return "Chủ nhà";
       case "customer":
         return "Khách hàng";
-      case "operator":
-        return "Đơn vị vận hành";
       default:
         return r;
     }
@@ -63,10 +63,24 @@ export default function PartnerAdminPage() {
         return "bg-purple-100 text-purple-700";
       case "customer":
         return "bg-blue-100 text-blue-700";
-      case "operator":
-        return "bg-emerald-100 text-emerald-700";
       default:
         return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const statusText = (s?: PartnerStatus) => {
+    switch (s) {
+      case "approved": return "Đã duyệt";
+      case "cancelled": return "Đã huỷ";
+      default: return "Chờ duyệt";
+    }
+  };
+
+  const statusClass = (s?: PartnerStatus) => {
+    switch (s) {
+      case "approved": return "bg-emerald-100 text-emerald-700";
+      case "cancelled": return "bg-rose-100 text-rose-700";
+      default: return "bg-amber-100 text-amber-700";
     }
   };
 
@@ -94,7 +108,19 @@ export default function PartnerAdminPage() {
             <option value="">Tất cả vai trò</option>
             <option value="landlord">Chủ nhà</option>
             <option value="customer">Khách hàng</option>
-            <option value="operator">Đơn vị vận hành</option>
+          </select>
+          <select
+            value={status}
+            onChange={(e) => {
+              setPage(1);
+              setStatus(e.target.value as PartnerStatus | "");
+            }}
+            className="rounded-lg border px-3 py-2 bg-white shadow-sm text-sm"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="cancelled">Đã huỷ</option>
           </select>
         </div>
 
@@ -126,7 +152,7 @@ export default function PartnerAdminPage() {
       </div>
 
       <AdminTable
-        headers={["ID","Họ tên","Vai trò","SĐT","Email","Nhu cầu","Ngày tạo","Thao tác"]}
+        headers={["ID","Họ tên","Vai trò","Trạng thái","SĐT","Email","Nhu cầu","Ngày tạo","Thao tác"]}
         loading={loading}
         emptyText="Chưa có dữ liệu."
       >
@@ -139,6 +165,9 @@ export default function PartnerAdminPage() {
             <td className="px-4 py-2">
               <span className={`px-2 py-1 rounded-md text-xs font-semibold ${roleClass(p.role)}`}>{roleText(p.role)}</span>
             </td>
+            <td className="px-4 py-2">
+              <span className={`px-2 py-1 rounded-md text-xs font-semibold ${statusClass(p.status)}`}>{statusText(p.status)}</span>
+            </td>
             <td className="px-4 py-2 text-gray-700">{p.phone || "—"}</td>
             <td className="px-4 py-2 text-gray-700">{p.email || "—"}</td>
             <td className="px-4 py-2 text-gray-700 max-w-[240px]">
@@ -148,10 +177,36 @@ export default function PartnerAdminPage() {
             <td className="px-4 py-2">
               <div className="flex justify-center gap-2">
                 <button
-                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-amber-500 text-white rounded-md hover:bg-amber-600 transition cursor-pointer"
-                  onClick={() => router.push(`/admin/partners/${p.id}`)}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={p.status === 'approved' || p.status === 'cancelled'}
+                  onClick={async () => {
+                    try {
+                      await partnerService.approve(p.id);
+                      toast.success("Đã duyệt lead và gửi email tài khoản (nếu là Chủ nhà)");
+                      fetchPartners();
+                    } catch (err: any) {
+                      toast.error(err?.message || "Duyệt thất bại");
+                    }
+                  }}
                 >
-                  <Edit size={14} /> Xem/Sửa
+                  <Check size={14} />
+                </button>
+                <button
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-amber-500 text-white rounded-md hover:bg-amber-600 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={p.status === 'approved' || p.status === 'cancelled'}
+                  onClick={async () => {
+                    const ok = confirm('Huỷ lead này?');
+                    if (!ok) return;
+                    try {
+                      await partnerService.cancel(p.id);
+                      toast.success("Đã huỷ lead");
+                      fetchPartners();
+                    } catch (err: any) {
+                      toast.error(err?.message || "Huỷ thất bại");
+                    }
+                  }}
+                >
+                  <Ban size={14} />
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 transition cursor-pointer"
@@ -168,7 +223,7 @@ export default function PartnerAdminPage() {
                     }
                   }}
                 >
-                  <Trash2 size={14} /> Xoá
+                  <Trash2 size={14} />
                 </button>
               </div>
             </td>

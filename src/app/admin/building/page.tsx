@@ -12,7 +12,6 @@ import { buildingService } from "@/services/buildingService";
 import { Building, BuildingStatus } from "@/type/building";
 import { locationService } from "@/services/locationService";
 import type { Location } from "@/type/location";
-import { tBuildingStatus } from "../i18n";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
@@ -73,7 +72,7 @@ function BuildingAdminListInner() {
           href="/admin/building/create"
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
         >
-          <Plus className="w-4 h-4" /> Tạo tòa nhà
+          <Plus className="w-4 h-4" />
         </Link>
       </div>
 
@@ -116,55 +115,46 @@ function BuildingAdminListInner() {
 
       {/* Table */}
       <AdminTable
-        headers={["ID", "Tên tòa", "Khu vực", "Số tầng", "Số căn", "Trạng thái", "Hành động"]}
+        headers={["Mã", "Tên tòa nhà", "Địa chỉ", "Số căn hộ", "Ngày thanh toán", "Hành động"]}
         loading={loading}
       >
         {items.map((b) => (
           <tr key={b.id} className="hover:bg-slate-50">
-            <td className="px-4 py-3">{b.id}</td>
-            <td className="px-4 py-3">
+            <td className="px-4 py-2">{b.id}</td>
+            <td className="px-4 py-2">
               <div className="flex flex-col">
                 <span className="font-medium text-slate-800">{b.name}</span>
                 <span className="text-xs text-slate-500">/{b.slug}</span>
-                {b.address && <span className="text-xs text-slate-500">{b.address}</span>}
               </div>
             </td>
-            <td className="px-4 py-3">{b.locationId ?? "-"}</td>
-            <td className="px-4 py-3">{b.floors}</td>
-            <td className="px-4 py-3">{b.units}</td>
-            <td className="px-4 py-3">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${b.status === 'active' ? 'bg-green-100 text-green-700' : b.status === 'inactive' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-700'}`}>
-                {tBuildingStatus(b.status)}
-              </span>
-            </td>
-            <td className="px-4 py-3">
+            <td className="px-4 py-2">{b.address ?? '-'}</td>
+            <td className="px-4 py-2">{(b as any).apartmentCount ?? b.units ?? 0}</td>
+            <td className="px-4 py-2">{(b as any).paymentDate ? new Date((b as any).paymentDate).toLocaleDateString() : '-'}</td>
+            <td className="px-4 py-2">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => router.push(`/admin/building/${b.id}`)}
-                  className="flex items-center gap-1 px-4 py-1 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
                   title="Sửa tòa nhà"
                 >
                   <Edit className="w-4 h-4" />
-                  Sửa
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push(`/admin/building/${b.id}/calendar`)}
-                  className="flex items-center gap-1 px-4 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
                   title="Lịch xem"
                 >
                   <CalendarDays className="w-4 h-4" />
-                  Lịch xem
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push(`/admin/building/${b.id}/rooms`)}
-                  className="flex items-center gap-1 px-4 py-1 text-sm bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
                   title="Xem phòng dạng lưới"
                 >
                   <Grid2X2 className="w-4 h-4" />
-                  Xem phòng
                 </button>
                 <button
                   type="button"
@@ -180,11 +170,10 @@ function BuildingAdminListInner() {
                       toast.error(e?.message || 'Xóa thất bại');
                     }
                   }}
-                  className="flex items-center gap-1 px-4 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
                   title="Xóa tòa nhà"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Xóa
                 </button>
               </div>
             </td>

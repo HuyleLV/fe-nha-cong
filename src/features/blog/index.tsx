@@ -34,6 +34,7 @@ export default function BlogPage() {
     Province: "Tỉnh/Thành",
     City: "Thành phố",
     District: "Quận/Huyện",
+    Street: "Khu vực",
   };
   
     

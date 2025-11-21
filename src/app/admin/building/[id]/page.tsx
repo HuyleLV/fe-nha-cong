@@ -15,6 +15,7 @@ import UploadPicker from "@/components/UploadPicker";
 import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
 import type { Apartment } from "@/type/apartment";
+import { formatMoneyVND } from "@/utils/format-number";
 // Viewings calendar moved to dedicated page
 import LocationLookup from "../../components/locationLookup";
 import type { Location } from "@/type/location";
@@ -351,7 +352,7 @@ function BuildingAdminDetailInner() {
                           <span className="text-xs text-slate-500">/{a.slug}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3">{a.rentPrice} {a.currency}</td>
+                      <td className="px-4 py-3">{a.rentPrice ? formatMoneyVND(Number(String(a.rentPrice).replace(/,/g, ''))) : '-'} {a.currency}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${a.status === 'published' ? 'bg-green-100 text-green-700' : a.status === 'draft' ? 'bg-slate-200 text-slate-700' : a.status === 'archived' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{tApartmentStatus(a.status)}</span>
                       </td>
@@ -448,7 +449,7 @@ function AttachUnassignedApartments({ buildingId, locationId, onAttached }: { bu
               </td>
               <td className="px-4 py-3">{a.id}</td>
               <td className="px-4 py-3">{a.title}</td>
-              <td className="px-4 py-3">{a.rentPrice} {a.currency}</td>
+              <td className="px-4 py-3">{a.rentPrice ? formatMoneyVND(Number(String(a.rentPrice).replace(/,/g, ''))) : '-'} {a.currency}</td>
               <td className="px-4 py-3">{a.locationId ?? "-"}</td>
             </tr>
           ))}

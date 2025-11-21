@@ -1,5 +1,6 @@
 export type Gender = "male" | "female" | "other";
-export type Role = "customer" | "owner" | "admin";
+// Roles chuẩn: customer | host | admin (legacy 'owner' đã bỏ)
+export type Role = "customer" | "host" | "admin";
 
 export interface User {
     id: number;               

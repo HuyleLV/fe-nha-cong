@@ -86,6 +86,7 @@ export default function ApartmentFormPage() {
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
+  depositAmount: "",
   discountPercent: 0,
   discountAmount: "",
   discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
@@ -254,6 +255,7 @@ export default function ApartmentFormPage() {
             return "";
           })(),
           coverImageUrl: ap.coverImageUrl || "",
+          depositAmount: (ap as any).depositAmount ?? "",
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
@@ -365,6 +367,7 @@ export default function ApartmentFormPage() {
       locationId: Number(values.locationId || selectedLocation?.id),
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
+      depositAmount: values.depositAmount ? String(values.depositAmount) : undefined,
   // discount sẽ được phân tích từ discountInput bên dưới
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
       images: imagesOrdered.length ? imagesOrdered : undefined,
@@ -729,6 +732,11 @@ export default function ApartmentFormPage() {
                 <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
                 <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
                 {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Tiền đặt cọc (VND)</label>
+                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 1300000" {...register("depositAmount")} />
+                <p className="text-xs text-slate-500 mt-1">Để trống nếu không có đặt cọc.</p>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm text-slate-600 mb-1">Ưu đãi (% hoặc số tiền)</label>

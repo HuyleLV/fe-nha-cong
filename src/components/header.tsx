@@ -300,6 +300,16 @@ export default function Header() {
                       <UserIcon className="w-4 h-4 mr-3" /> Tài khoản của tôi
                     </Link>
 
+                    {auth?.role === 'host' && (
+                      <Link
+                        href="/quan-ly-chu-nha"
+                        className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                        onClick={() => setOpenUser(false)}
+                      >
+                        <Building2 className="w-4 h-4 mr-3" /> Quản lý chủ nhà
+                      </Link>
+                    )}
+
                     <div className="my-2 h-px bg-slate-200" />
 
                     <button
@@ -423,6 +433,16 @@ export default function Header() {
                   <div className="text-xs text-slate-500">{auth.email}</div>
                 </div>
               </div>
+
+              {auth?.role === 'host' && (
+                <Link
+                  href="/quan-ly-chu-nha"
+                  onClick={() => setOpenNavMobile(false)}
+                  className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  <Building2 className="w-4 h-4 mr-3" /> Quản lý chủ nhà
+                </Link>
+              )}
               <button
                 onClick={() => {
                   setOpenNavMobile(false);
@@ -464,33 +484,45 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Khối CTA đối tác */}
-          <div className="p-5">
-            <div className="rounded-2xl border bg-emerald-50/60 p-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl p-2 bg-emerald-100">
-                  <Building2 className="w-5 h-5 text-emerald-700" />
+          {/* Khối CTA đối tác (ẩn nếu đã là chủ nhà) */}
+          {/* Ẩn CTA nếu đã là host */}
+          {(!auth || auth.role !== 'host') && (
+            <div className="p-5">
+              <div className="rounded-2xl border bg-emerald-50/60 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl p-2 bg-emerald-100">
+                    <Building2 className="w-5 h-5 text-emerald-700" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-emerald-800">Trở thành đối tác</div>
+                    <p className="text-sm text-emerald-700/80 mt-1">
+                      Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt.
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-emerald-800">Trở thành đối tác</div>
-                  <p className="text-sm text-emerald-700/80 mt-1">
-                    Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt.
-                  </p>
-                </div>
+                <Link
+                  href="/hop-tac-cung-chung-toi"
+                  onClick={() => setOpenNavDesktop(false)}
+                  className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
+                >
+                  Bắt đầu ngay <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-              <Link
-                href="/hop-tac-cung-chung-toi"
-                onClick={() => setOpenNavDesktop(false)}
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
-              >
-                Bắt đầu ngay <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
-          </div>
+          )}
 
           {/* Quick items (2 columns) */}
           <div className="px-5 pt-4">
             <div className="grid grid-cols-2 gap-3">
+              {auth?.role === 'host' && (
+                <Link
+                  href="/quan-ly-chu-nha"
+                  onClick={() => setOpenNavDesktop(false)}
+                  className="rounded-xl border px-4 py-3 text-sm font-medium hover:bg-emerald-50 hover:text-emerald-700"
+                >
+                  Quản lý chủ nhà
+                </Link>
+              )}
               <Link
                 href={auth ? "/phong-quan-tam" : "/dang-nhap"}
                 onClick={(e) => {

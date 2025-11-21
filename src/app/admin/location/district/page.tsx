@@ -15,14 +15,16 @@ function LevelTag({ level }: { level: LocationLevel }) {
     Province: "bg-teal-50 text-teal-700 border-teal-200",
     City: "bg-sky-50 text-sky-700 border-sky-200",
     District: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    Street: "bg-rose-50 text-rose-700 border-rose-200",
   };
   const viLabel: Record<LocationLevel, string> = {
     Province: "Tỉnh",
     City: "Thành phố",
     District: "Quận",
+    Street: "Khu vực",
   };
   return (
-    <span className={`inline-block border px-2 py-0.5 rounded-full text-xs ${map[level]}`}>{viLabel[level] || level}</span>
+    <span className={`inline-block border px-2 py-0.5 rounded-full text-xs ${map[level] ?? 'bg-gray-50 text-gray-700 border-gray-200'}`}>{viLabel[level] || level}</span>
   );
 }
 
@@ -73,7 +75,7 @@ export default function DistrictLocationPage() {
           className="px-4 py-2 bg-emerald-600 text-white rounded-lg shadow hover:bg-emerald-700 cursor-pointer inline-flex items-center gap-1"
           onClick={() => router.push("/admin/location/create?level=District")}
         >
-          <Plus size={16} /> Tạo Quận
+          <Plus size={16} />
         </button>
       </div>
       <AdminTable
@@ -100,7 +102,7 @@ export default function DistrictLocationPage() {
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-amber-500 text-white rounded-md hover:bg-amber-600 transition cursor-pointer"
                   onClick={() => router.push(`/admin/location/${loc.id}`)}
                 >
-                  <Edit size={14} /> Sửa
+                  <Edit size={14} />
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 transition cursor-pointer"
@@ -117,7 +119,7 @@ export default function DistrictLocationPage() {
                     }
                   }}
                 >
-                  <Trash2 size={15} /> Xoá
+                  <Trash2 size={15} />
                 </button>
               </div>
             </td>

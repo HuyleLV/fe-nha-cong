@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { blogService } from "@/services/blogService";
 import { formatDateTime } from "@/utils/format-time";
 import Spinner from "@/components/spinner";
@@ -84,10 +84,10 @@ export default function BlogPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">QUẢN LÝ BLOG</h1>
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 cursor-pointer"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
           onClick={() => router.push("/admin/blog/create")}
         >
-          + Tạo bài viết
+          <Plus className="w-4 h-4" />
         </button>
       </div>
       <AdminTable
@@ -126,10 +126,10 @@ export default function BlogPage() {
               <td className="px-4 py-2 text-gray-500">{formatDateTime(b.updatedAt)}</td>
               <td className="px-4 py-2">
                 <div className="flex justify-center gap-2">
-                  <button className="flex items-center gap-1 px-4 py-1 text-[15px] bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer" onClick={() => router.push(`/admin/blog/${b.id}`)}>
-                    <Edit size={15} /> Sửa
+                  <button title="Sửa" className="flex items-center gap-1 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer" onClick={() => router.push(`/admin/blog/${b.id}`)}>
+                    <Edit size={15} />
                   </button>
-                  <button className="flex items-center gap-1 px-4 py-1 text-[15px] bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer" onClick={async () => {
+                  <button title="Xóa" className="flex items-center gap-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer" onClick={async () => {
                     const ok = confirm("Bạn có chắc chắn muốn xoá bài viết này?");
                     if (!ok) return;
                     try {
@@ -142,7 +142,7 @@ export default function BlogPage() {
                       toast.error("Xoá thất bại, vui lòng thử lại!");
                     }
                   }}>
-                    <Trash2 size={15} /> Xoá
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </td>

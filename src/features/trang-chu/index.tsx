@@ -25,16 +25,10 @@ const PARTNERS: PartnerLogo[] = [
   { label: "OW" }, { label: "YOKO" }, { label: "URBAN" },
 ];
 
-const FAQS: FaqItem[] = [
-  { text: "Làm sao tìm phòng gần trường và theo ngân sách?" },
-  { text: "Có thể đặt phòng online và huỷ miễn phí không?" },
-  { text: "Tiêu chí kiểm duyệt tin đăng gồm những gì?" },
-  { text: "Phí dịch vụ khi ký hợp đồng là bao nhiêu?" },
-];
-
 export default function TrangChu() {
   const { isMobile } = useDevice();
   const router = useRouter();
+  const [mode, setMode] = useState<'phong'|'nha'|'mat-bang'|undefined>(undefined);
 
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
@@ -130,8 +124,8 @@ export default function TrangChu() {
 
   return (
     <div className="w-full bg-emerald-50">
-      {/* ===== Banner (Slideshow) ===== */}
-      <div className="w-full">
+      {/* ===== Banner (Slideshow) with overlay search ===== */}
+      <div className="w-full relative">
         <Slide
           autoplay
           indicators
@@ -168,22 +162,62 @@ export default function TrangChu() {
             </div>
           ))}
         </Slide>
+
+        {/* Overlay search card (Agoda-style) */}
+        <div className="pointer-events-none absolute inset-x-0 -bottom-10 md:-bottom-12 flex justify-center px-4 md:px-6 z-10">
+          <div className="pointer-events-auto w-full max-w-5xl">
+            <div className="rounded-2xl bg-white/95 backdrop-blur shadow-2xl ring-1 ring-black/5 p-3 md:p-4">
+              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                <button
+                  type="button"
+                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='phong' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
+                  onClick={() => setMode('phong')}
+                >
+                  Thuê phòng
+                </button>
+                <button
+                  type="button"
+                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='nha' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
+                  onClick={() => setMode('nha')}
+                >
+                  Thuê nhà
+                </button>
+                <button
+                  type="button"
+                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='mat-bang' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
+                  onClick={() => setMode('mat-bang')}
+                >
+                  Thuê mặt bằng
+                </button>
+              </div>
+              <SearchBar
+                className="mt-3"
+                mode={mode}
+                onOpenLocation={() => console.log('open location picker')}
+                onSearch={(q, opts) => {
+                  const params = new URLSearchParams();
+                  if (q) params.set('q', q);
+                  if (opts?.guests !== undefined) params.set('guests', String(opts.guests));
+                  if (opts?.beds !== undefined) params.set('beds', String(opts.beds));
+                  if (opts?.type) {
+                    params.set('type', opts.type);
+                    params.set('q', q ? `${q} ${opts.type}` : opts.type);
+                  }
+                  if (opts?.locationSlug) params.set('locationSlug', opts.locationSlug);
+                  if (opts?.priceMin !== undefined) params.set('minPrice', String(opts.priceMin));
+                  if (opts?.priceMax !== undefined) params.set('maxPrice', String(opts.priceMax));
+                  if (opts?.areaMin !== undefined) params.set('minArea', String(opts.areaMin));
+                  if (opts?.areaMax !== undefined) params.set('maxArea', String(opts.areaMax));
+                  router.push(`/tim-phong-quanh-day?${params.toString()}`);
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ===== Search ===== */}
-      <div className="p-4">
-        <SearchBar
-          className="max-w-4xl mx-auto mt-6"
-          onOpenLocation={() => console.log("open location picker")}
-          onSearch={(q, opts) => {
-            const params = new URLSearchParams();
-            if (q) params.set("q", q);
-            if (opts?.guests !== undefined) params.set("guests", String(opts.guests));
-            if (opts?.beds !== undefined) params.set("beds", String(opts.beds));
-            router.push(`/tim-phong-quanh-day?${params.toString()}`);
-          }}
-        />
-      </div>
+      {/* Spacer to accommodate overlay */}
+      <div className="h-12 md:h-16" />
 
       {/* ===== Ưu đãi giảm giá (trước PromoSection) ===== */}
       <div className="max-w-screen-2xl mx-auto mt-6 px-4 md:px-0">
@@ -278,7 +312,7 @@ export default function TrangChu() {
       <PromoSection />
 
       {/* ===== FAQ ===== */}
-      <FaqCarousel items={FAQS} />
+      <FaqCarousel />
 
       {/* ===== Bản đồ ===== */}
       <section className="py-10">

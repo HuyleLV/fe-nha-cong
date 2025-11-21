@@ -72,15 +72,17 @@ function AdminUsersPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={fetchData}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded border text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 cursor-pointer"
+            title="Tải lại"
           >
-            <RotateCcw className="size-4" /> Tải lại
+            <RotateCcw className="size-4" />
           </button>
           <Link
+            title="Thêm người dùng"
             href="/admin/users/create"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
           >
-            <Plus className="size-4" /> Thêm người dùng
+            <Plus className="size-4" />
           </Link>
         </div>
       </div>
@@ -102,12 +104,12 @@ function AdminUsersPage() {
                 className={`px-2 py-0.5 rounded text-sm capitalize ${
                   u.role === "admin"
                     ? "bg-red-100 text-red-700"
-                    : u.role === "owner"
+                    : u.role === "host"
                     ? "bg-amber-100 text-amber-700"
                     : "bg-slate-200 text-slate-700"
                 }`}
               >
-                {u.role}
+                {u.role === 'host' ? 'host' : u.role}
               </span>
             </td>
             <td className="px-4 py-3">
@@ -128,18 +130,18 @@ function AdminUsersPage() {
             <td className="px-4 py-3">
               <div className="flex justify-center gap-2">
                 <Link
+                  title="Sửa"
                   href={`/admin/users/${u.id}`}
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600 cursor-pointer"
                 >
                   <Edit size={14} />
-                  Sửa
                 </Link>
                 <button
+                  title="Xóa"
                   onClick={() => onDelete(u.id)}
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
                 >
                   <Trash2 size={14} />
-                  Xoá
                 </button>
               </div>
             </td>

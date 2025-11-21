@@ -1,24 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Header from "../components/header";
 import Footer from "../components/footer";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const pathname = window.location.pathname;
-      setIsAdmin(pathname.startsWith("/admin"));
-    }
-  }, []);
+  const pathname = usePathname();
+  const isAdmin = !!pathname && pathname.startsWith("/admin");
+  const isHostArea = !!pathname && pathname.startsWith("/quan-ly-chu-nha");
 
   return (
     <>
       {!isAdmin && <Header />}
       <main className="min-h-screen bg-gray-50">{children}</main>
-      {!isAdmin && <Footer />}
+      {!isAdmin && !isHostArea && <Footer />}
     </>
   );
 }

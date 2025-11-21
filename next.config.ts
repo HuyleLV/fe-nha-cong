@@ -1,5 +1,6 @@
 // next.config.ts
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -31,6 +32,11 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: isProd ? { exclude: ['error'] } : false,
   },
+
+  // When multiple lockfiles exist in a workspace, Next may infer the wrong root.
+  // Set outputFileTracingRoot to explicitly tell Next where the workspace root is.
+  // Here we point it to this app folder so Next treats `fe-nha-cong` as the root.
+  outputFileTracingRoot: path.join(__dirname),
 
   // Không fail build vì ESLint/TS
   eslint: { ignoreDuringBuilds: true },

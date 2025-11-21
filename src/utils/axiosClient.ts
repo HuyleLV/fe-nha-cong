@@ -33,8 +33,14 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
   // Một số hành động write trên tài nguyên nhạy cảm (có thể là admin/partner)
   const isPotentialAdminWrite = (m === 'post' || m === 'patch' || m === 'put' || m === 'delete') && /\/apartments(\b|\/)/.test(p) && !/home-sections/.test(p);
 
-  if (isAdminEndpoint || isPotentialAdminWrite) {
-    // Admin endpoint → ưu tiên token admin
+  // If the current browser page is an admin UI route, prefer admin token so
+  // admin UI requests are not accidentally sent with a host/user token.
+  // This is important because GET /apartments is a shared endpoint and the
+  // backend will restrict results to the caller when a host token is used.
+  const isAdminUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/admin');
+
+  if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
+    // Admin endpoint or admin UI → ưu tiên token admin
     return adminToken || userToken || null;
   }
 

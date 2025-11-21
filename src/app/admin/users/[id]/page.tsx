@@ -15,7 +15,7 @@ type FormValues = {
   email: string;
   phone?: string;
   password?: string;
-  role: User["role"]; // UI role: customer | owner | admin
+  role: User["role"]; // UI role: customer | host | admin
 };
 
 const inputCls =
@@ -67,9 +67,8 @@ export default function AdminUserEditPage() {
     if (!isEdit) return setLoading(false);
     (async () => {
       try {
-        const u = await userService.getAdminUser(Number(id));
-        // Backend may store role 'host'; UI shows 'owner'
-        const uiRole = (u.role === "owner" || (u as any).role === "host") ? ("owner" as User["role"]) : (u.role as User["role"]);
+  const u = await userService.getAdminUser(Number(id));
+  const uiRole = u.role as User['role'];
         reset({
           name: u.name || "",
           email: u.email || "",
@@ -121,7 +120,7 @@ export default function AdminUserEditPage() {
 
   async function onSubmit(values: FormValues) {
     try {
-      const backendRole = (values.role === "owner" ? "host" : values.role) as "customer" | "host" | "admin" | undefined;
+  const backendRole = (values.role === "host" ? "host" : values.role) as "customer" | "host" | "admin" | undefined;
       const payload = {
         name: values.name?.trim() || undefined,
         email: values.email.trim(),
@@ -237,12 +236,12 @@ export default function AdminUserEditPage() {
                 <label className={textMuted}>Quyền</label>
                 <select className={inputCls} {...register("role", { required: true })}>
                   <option value="customer">customer</option>
-                  <option value="owner">host</option>
+                  <option value="host">host</option>
                   <option value="admin">admin</option>
                 </select>
                 {errors.role && <p className="text-red-600 text-sm mt-1">Vui lòng chọn quyền</p>}
               </div>
-              <p className="text-xs text-slate-500">Lưu ý: Quyền "host" sẽ hiển thị là "owner" trong giao diện.</p>
+              <p className="text-xs text-slate-500">Quyền "host" dành cho Chủ nhà có thể đăng tin và quản lý căn hộ.</p>
             </div>
           </Section>
         </div>

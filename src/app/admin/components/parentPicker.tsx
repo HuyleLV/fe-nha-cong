@@ -5,14 +5,11 @@ import { Search, X, Loader2 } from "lucide-react";
 import { locationService } from "@/services/locationService";
 import { Location, LocationLevel } from "@/type/location";
 
-// Quan hệ parent hợp lệ cho từng child level
-// - Province: không có parent
-// - City: parent phải là Province
-// - District: parent phải là City
 const allowedParents: Record<LocationLevel, LocationLevel[]> = {
   Province: [],
   City: ["Province"],
   District: ["City"],
+  Street: ["District"],
 };
 
 type ParentPickerProps = {
@@ -38,7 +35,13 @@ export default function ParentPicker({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const parentLevels = useMemo<LocationLevel[]>(() => allowedParents[childLevel] ?? [], [childLevel]);
-  const viLabel = (lv: LocationLevel) => (lv === 'Province' ? 'Tỉnh' : lv === 'City' ? 'Thành phố' : 'Quận');
+  const viLabel = (lv: LocationLevel) => {
+    if (lv === 'Province') return 'Tỉnh';
+    if (lv === 'City') return 'Thành phố';
+    if (lv === 'District') return 'Quận';
+    if (lv === 'Street') return 'Khu vực';
+    return lv;
+  };
 
   const fetchParents = async (kw: string) => {
     // Nếu level hiện tại không cần parent hoặc component bị vô hiệu hoá, không fetch

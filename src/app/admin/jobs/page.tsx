@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, RotateCcw, Edit, Trash2, Eye, Users } from 'lucide-react';
+import { Plus, RotateCcw, Edit, Trash2, Eye, Users, Clipboard } from 'lucide-react';
 import AdminTable from '@/components/AdminTable';
 import Pagination from '@/components/Pagination';
 import { jobService } from '@/services/jobService';
@@ -90,7 +90,7 @@ function AdminJobsPage() {
             href="/admin/jobs/create"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
           >
-            <Plus className="size-4" /> Thêm tin
+            <Plus className="size-4" />
           </Link>
         </div>
       </div>
@@ -152,12 +152,12 @@ function AdminJobsPage() {
               <td className="px-4 py-3 text-xs text-gray-600">{j.publishedAt ? new Date(j.publishedAt).toLocaleDateString() : '—'}</td>
               <td className="px-4 py-3">
                 <div className="flex gap-2 flex-wrap">
-                  <Link href={`/admin/jobs/${j.id}/ung-tuyen`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-emerald-500 text-white hover:bg-emerald-600">
-                    Đơn ứng tuyển
+                  <Link href={`/admin/jobs/${j.id}/ung-tuyen`} title="Danh sách ứng tuyển" className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-emerald-500 text-white hover:bg-emerald-600">
+                    <Clipboard size={14}/>
                   </Link>
-                  <Link href={`/admin/jobs/${j.id}`} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600"> <Edit size={14}/> Sửa</Link>
-                  <button onClick={() => handleDelete(j.id)} className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700">
-                    <Trash2 size={14}/> Xoá
+                  <Link href={`/admin/jobs/${j.id}`} title="Chỉnh sửa" className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-amber-500 text-white hover:bg-amber-600"> <Edit size={14}/></Link>
+                  <button onClick={() => handleDelete(j.id)} title="Xoá" className="inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
+                    <Trash2 size={14}/> 
                   </button>
                 </div>
               </td>

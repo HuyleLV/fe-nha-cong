@@ -1,4 +1,4 @@
-export type LocationLevel = "Province" | "City" | "District";
+export type LocationLevel = "Province" | "City" | "District" | "Street";
 
 export type Location = {
   id: number;

@@ -77,8 +77,8 @@ export default function Footer() {
           <div>
             <p className="font-semibold text-emerald-900">Chính sách</p>
             <ul className="mt-3 space-y-1 text-base text-emerald-700">
-              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Điều khoản sử dụng</a></li>
-              <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách bảo mật</a></li>
+              <li><Link href="/dieu-khoan-su-dung" className="font-medium text-emerald-700 transition hover:text-emerald-900">Điều khoản sử dụng</Link></li>
+              <li><Link href="/chinh-sach-bao-mat" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách bảo mật</Link></li>
               <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách cộng đồng</a></li>
               <li><a href="#" className="font-medium text-emerald-700 transition hover:text-emerald-900">Chính sách quyền riêng tư</a></li>
             </ul>
