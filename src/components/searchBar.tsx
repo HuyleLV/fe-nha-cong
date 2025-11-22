@@ -15,8 +15,9 @@ type Props = {
   className?: string;
   defaultGuests?: number;
   defaultBeds?: number;
+  defaultOccupants?: number;
   mode?: Mode; // điều khiển các lựa chọn hiển thị trong ô search
-  onSearch?: (q: string, opts?: { guests?: number; beds?: number; type?: string; priceMin?: number; priceMax?: number; areaMin?: number; areaMax?: number; mode?: Mode; locationSlug?: string; locationName?: string }) => void;      // mở rộng
+  onSearch?: (q: string, opts?: { guests?: number; beds?: number; occupants?: number; type?: string; priceMin?: number; priceMax?: number; areaMin?: number; areaMax?: number; mode?: Mode; locationSlug?: string; locationName?: string }) => void;      // mở rộng
   onOpenLocation?: () => void;         // ✅ thêm
 };
 
@@ -28,11 +29,13 @@ export default function SearchBar({
   onOpenLocation,
   defaultGuests,
   defaultBeds,
+  defaultOccupants,
   mode,
 }: Props) {
   const [q, setQ] = useState(defaultValue);
   const [guests, setGuests] = useState<string>(defaultGuests !== undefined ? String(defaultGuests) : "");
   const [beds, setBeds] = useState<string>(defaultBeds !== undefined ? String(defaultBeds) : "");
+  const [occupants, setOccupants] = useState<string>(defaultOccupants !== undefined ? String(defaultOccupants) : "");
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   // New dynamic filters
@@ -57,12 +60,14 @@ export default function SearchBar({
     const value = q.trim();
     const g = guests ? Number(guests) : undefined;
     const b = beds ? Number(beds) : undefined;
-    if (onSearch) onSearch(value, { guests: g, beds: b, type: selectedType, priceMin, priceMax, areaMin, areaMax, mode, locationSlug, locationName });
+    const occ = occupants ? Number(occupants) : undefined;
+  if (onSearch) onSearch(value, { guests: g, beds: b, occupants: occ, type: selectedType, priceMin, priceMax, areaMin, areaMax, mode, locationSlug, locationName });
     else {
       const qs = new URLSearchParams();
       qs.set("q", value);
       if (g !== undefined) qs.set("guests", String(g));
       if (b !== undefined) qs.set("beds", String(b));
+      if (occ !== undefined) qs.set("occupants", String(occ));
       if (selectedType) qs.set("type", selectedType);
       if (priceMin !== undefined) qs.set("minPrice", String(priceMin));
       if (priceMax !== undefined) qs.set("maxPrice", String(priceMax));
@@ -92,6 +97,10 @@ export default function SearchBar({
   useEffect(() => {
     setGuests(defaultGuests !== undefined ? String(defaultGuests) : "");
   }, [defaultGuests]);
+
+  useEffect(() => {
+    setOccupants(defaultOccupants !== undefined ? String(defaultOccupants) : "");
+  }, [defaultOccupants]);
 
   useEffect(() => {
     setBeds(defaultBeds !== undefined ? String(defaultBeds) : "");
@@ -140,99 +149,38 @@ export default function SearchBar({
           placeholder={placeholder}
           className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
         />
-        {/* Khu vực legacy (no mode) */}
-        {!mode ? (
+        {/* Khu vực / Bộ lọc: on homepage we surface a single 'Bộ lọc' button and move Khách/Ngủ into the filter panel */}
+        {/* Compact filter summary button: shows active filters or 'Bộ lọc' and opens panel */}
+        <div className="hidden xs:block">
           <button
             type="button"
-            onClick={() => onOpenLocation?.()}
-            className="hidden xs:inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium hover:bg-[#ecf9ef]"
-            style={{ borderColor: '#006633', color: '#006633' }}
+            onClick={() => setAllPickerOpen((v) => !v)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium"
+            style={{ borderColor: '#e6f4ea', background: 'white' }}
+            aria-haspopup="dialog"
+            aria-expanded={allPickerOpen}
           >
-            Chọn khu vực
+            <span className="text-slate-700">
+              {(() => {
+                const parts: string[] = [];
+                if (locationName) parts.push(locationName as string);
+                if (selectedType) parts.push(selectedType);
+                if (guests) parts.push(`${guests} phòng khách`);
+                if (beds !== "") parts.push(`${beds} phòng ngủ`);
+                if (occupants) parts.push(`${occupants} người ở`);
+                if (priceMin != null || priceMax != null) {
+                  const pmin = priceMin != null ? `${priceMin}` : '';
+                  const pmax = priceMax != null ? `${priceMax}` : '';
+                  parts.push(`Giá ${pmin}${pmin && pmax ? '–' : ''}${pmax}`);
+                }
+                return parts.length ? parts.join(' • ') : 'Bộ lọc';
+              })()}
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-slate-400 transform ${allPickerOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
           </button>
-        ) : (
-          // Fallback: original guests/beds compact picker
-          <div className="relative" ref={pickerRef}>
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={pickerOpen}
-              onClick={() => setPickerOpen((v) => !v)}
-              className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-white hover:shadow-sm transition cursor-pointer"
-              style={{ borderColor: '#006633' }}
-            >
-              <User className="w-4 h-4" style={{ color: '#006633' }} />
-              <span className="text-sm text-slate-700">{guests ? `${guests} khách` : "Khách"}</span>
-              <span className="text-slate-300">•</span>
-              <Bed className="w-4 h-4" style={{ color: '#006633' }} />
-              <span className="text-sm text-slate-700">{beds !== "" ? `${beds} ngủ` : "Ngủ"}</span>
-            </button>
-
-            {pickerOpen && (
-              <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-lg p-5 z-50" style={{ borderColor: '#e8f6ef' }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" style={{ color: '#006633' }} />
-                    <div className="text-sm font-medium">Khách</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setGuests((g) => String(Math.max(0, Number(g || 0) - 1)))}
-                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-[#ecf9ef] transition cursor-pointer"
-                      style={{ borderColor: '#006633', color: '#006633' }}
-                      aria-label="Giảm khách"
-                    >
-                      −
-                    </button>
-                    <div className="w-10 text-center text-[#006633] font-semibold">{guests || "0"}</div>
-                    <button
-                      type="button"
-                      onClick={() => setGuests((g) => String(Math.min(12, Number(g || 0) + 1)))}
-                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-[#ecf9ef] transition cursor-pointer"
-                      style={{ borderColor: '#006633', color: '#006633' }}
-                      aria-label="Tăng khách"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Bed className="w-4 h-4" style={{ color: '#006633' }} />
-                    <div className="text-sm font-medium">Ngủ</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBeds((b) => String(Math.max(0, Number(b || 0) - 1)))}
-                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-[#ecf9ef] transition cursor-pointer"
-                      style={{ borderColor: '#006633', color: '#006633' }}
-                      aria-label="Giảm ngủ"
-                    >
-                      −
-                    </button>
-                    <div className="w-10 text-center text-[#006633] font-semibold">{beds !== "" ? beds : "0"}</div>
-                    <button
-                      type="button"
-                      onClick={() => setBeds((b) => String(Math.min(6, Number(b || 0) + 1)))}
-                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-[#ecf9ef] transition cursor-pointer"
-                      style={{ borderColor: '#006633', color: '#006633' }}
-                      aria-label="Tăng ngủ"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-2 text-right">
-                  <button type="button" onClick={() => setPickerOpen(false)} className="text-sm font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white hover:opacity-95 transition">Xong</button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
         {/* Unified Filters Button (combine all choices into one) */}
         {mode && (
           <div className="relative" ref={allPickerRef}>
@@ -294,19 +242,83 @@ export default function SearchBar({
                     </div>
                   </div>
                 )}
-                {/* Guests/Beds (optional, shown if defaults exist) */}
-                {(defaultGuests !== undefined || defaultBeds !== undefined) && (
-                  <div className="mb-2 grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs text-slate-500 mb-2">Khách</div>
-                      <input type="number" min={0} max={12} className="w-full rounded-lg border px-3 py-2 text-sm" value={guests} onChange={(e)=> setGuests(e.target.value)} />
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500 mb-2">Ngủ</div>
-                      <input type="number" min={0} max={6} className="w-full rounded-lg border px-3 py-2 text-sm" value={beds} onChange={(e)=> setBeds(e.target.value)} />
+                {/* Guests/Beds: always visible in the filter panel and styled compactly */}
+                <div className="mb-4 grid grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-xs text-slate-500 mb-2">Phòng khách</div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setGuests((g) => String(Math.max(0, Number(g || 0) - 1)))}
+                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                        aria-label="Giảm khách"
+                      >
+                        −
+                      </button>
+                      <input type="number" min={0} max={12} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={guests} onChange={(e)=> setGuests(e.target.value)} />
+                      <button
+                        type="button"
+                        onClick={() => setGuests((g) => String(Math.min(12, Number(g || 0) + 1)))}
+                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                        aria-label="Tăng khách"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  <div>
+                    <div className="text-xs text-slate-500 mb-2">Phòng ngủ</div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBeds((b) => String(Math.max(0, Number(b || 0) - 1)))}
+                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                        aria-label="Giảm ngủ"
+                      >
+                        −
+                      </button>
+                      <input type="number" min={0} max={6} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={beds} onChange={(e)=> setBeds(e.target.value)} />
+                      <button
+                        type="button"
+                        onClick={() => setBeds((b) => String(Math.min(6, Number(b || 0) + 1)))}
+                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                        aria-label="Tăng ngủ"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="text-xs text-slate-500 mb-2">Số người ở</div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOccupants((o) => String(Math.max(0, Number(o || 0) - 1)))}
+                      className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                      style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                      aria-label="Giảm số người ở"
+                    >
+                      −
+                    </button>
+                    <input type="number" min={0} max={20} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
+                    <button
+                      type="button"
+                      onClick={() => setOccupants((o) => String(Math.min(20, Number(o || 0) + 1)))}
+                      className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
+                      style={{ borderColor: '#e6f4ea', color: '#006633' }}
+                      aria-label="Tăng số người ở"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <button type="button" onClick={() => { setSelectedType(undefined); setPriceMin(undefined); setPriceMax(undefined); setAreaMin(undefined); setAreaMax(undefined); setLocationName(undefined); setLocationSlug(undefined); }} className="px-4 py-2 text-sm rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50">Xoá</button>
                   <button type="button" onClick={() => setAllPickerOpen(false)} className="px-4 py-2 text-sm rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white">Áp dụng</button>
