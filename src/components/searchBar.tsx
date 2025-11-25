@@ -1,6 +1,7 @@
 // components/SearchBar.tsx
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from 'react-dom';
 import { useRouter } from "next/navigation";
 import { Search, User, Bed } from "lucide-react";
 import clsx from "clsx";
@@ -33,16 +34,26 @@ export default function SearchBar({
   mode,
 }: Props) {
   const [q, setQ] = useState(defaultValue);
-  const [guests, setGuests] = useState<string>(defaultGuests !== undefined ? String(defaultGuests) : "");
-  const [beds, setBeds] = useState<string>(defaultBeds !== undefined ? String(defaultBeds) : "");
-  const [occupants, setOccupants] = useState<string>(defaultOccupants !== undefined ? String(defaultOccupants) : "");
+  const [guests, setGuests] = useState<string>(defaultGuests !== undefined ? String(defaultGuests) : "1");
+  const [beds, setBeds] = useState<string>(defaultBeds !== undefined ? String(defaultBeds) : "1");
+  const [occupants, setOccupants] = useState<string>(defaultOccupants !== undefined ? String(defaultOccupants) : "1");
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
+  const locationRef = useRef<HTMLDivElement | null>(null);
+  const priceRef = useRef<HTMLDivElement | null>(null);
+  const roomsRef = useRef<HTMLDivElement | null>(null);
+  const [pricePos, setPricePos] = useState<{ top: number; left: number; width?: number } | null>(null);
+  const [roomsPos, setRoomsPos] = useState<{ top: number; left: number; width?: number } | null>(null);
+  const [locationPos, setLocationPos] = useState<{ top: number; left: number; width?: number } | null>(null);
+  const locationPaneRef = useRef<HTMLDivElement | null>(null);
+  const pricePaneRef = useRef<HTMLDivElement | null>(null);
+  const roomsPaneRef = useRef<HTMLDivElement | null>(null);
   // New dynamic filters
   const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [pricePickerOpen, setPricePickerOpen] = useState(false);
   const [areaPickerOpen, setAreaPickerOpen] = useState(false);
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [roomsPickerOpen, setRoomsPickerOpen] = useState(false);
   // Unified filter panel (combine all choices into one button)
   const [allPickerOpen, setAllPickerOpen] = useState(false);
   const allPickerRef = useRef<HTMLDivElement | null>(null);
@@ -54,6 +65,9 @@ export default function SearchBar({
   const [locationName, setLocationName] = useState<string | undefined>(undefined);
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
   const router = useRouter();
+  const PRICE_SLIDER_MAX = 10000000;
+  const PRICE_SLIDER_STEP = 500000;
+  const formatVND = (v?: number) => (typeof v === 'number' ? v.toLocaleString('vi-VN') : '');
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,10 +98,115 @@ export default function SearchBar({
       const t = e.target as Node;
       if (pickerOpen && pickerRef.current && !pickerRef.current.contains(t)) setPickerOpen(false);
       if (allPickerOpen && allPickerRef.current && !allPickerRef.current.contains(t)) setAllPickerOpen(false);
+
+      // location: close only when click outside both trigger and pane
+      if (locationPickerOpen) {
+        const inTrigger = locationRef.current && locationRef.current.contains(t);
+        const inPane = locationPaneRef.current && locationPaneRef.current.contains(t);
+        if (!inTrigger && !inPane) setLocationPickerOpen(false);
+      }
+
+      if (pricePickerOpen) {
+        const inTrigger = priceRef.current && priceRef.current.contains(t);
+        const inPane = pricePaneRef.current && pricePaneRef.current.contains(t);
+        if (!inTrigger && !inPane) setPricePickerOpen(false);
+      }
+
+      if (roomsPickerOpen) {
+        const inTrigger = roomsRef.current && roomsRef.current.contains(t);
+        const inPane = roomsPaneRef.current && roomsPaneRef.current.contains(t);
+        if (!inTrigger && !inPane) setRoomsPickerOpen(false);
+      }
     }
+
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [pickerOpen, allPickerOpen]);
+  }, [pickerOpen, allPickerOpen, locationPickerOpen, pricePickerOpen, roomsPickerOpen]);
+
+  // compute location popover position and keep it updated on resize/scroll
+  useEffect(() => {
+    function updatePos() {
+      if (!locationRef.current) {
+        setLocationPos(null);
+        return;
+      }
+      const rect = locationRef.current.getBoundingClientRect();
+      const maxWidth = Math.min(320, Math.floor(window.innerWidth * 0.92));
+      // prefer aligning right edge of trigger with right edge of popover, but keep inside viewport
+      let left = rect.right - maxWidth;
+      if (left < 8) left = 8;
+      if (left + maxWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - maxWidth - 8);
+      const top = rect.bottom + 8;
+      setLocationPos({ top, left, width: maxWidth });
+    }
+
+    if (locationPickerOpen) {
+      updatePos();
+      window.addEventListener('resize', updatePos);
+      window.addEventListener('scroll', updatePos, true);
+      return () => {
+        window.removeEventListener('resize', updatePos);
+        window.removeEventListener('scroll', updatePos, true);
+      };
+    }
+    return;
+  }, [locationPickerOpen]);
+
+  // compute price popover position and keep it updated on resize/scroll
+  useEffect(() => {
+    function updatePos() {
+      if (!priceRef.current) {
+        setPricePos(null);
+        return;
+      }
+      const rect = priceRef.current.getBoundingClientRect();
+      const maxWidth = Math.min(360, Math.floor(window.innerWidth * 0.96));
+      let left = rect.right - maxWidth;
+      if (left < 8) left = 8;
+      if (left + maxWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - maxWidth - 8);
+      const top = rect.bottom + 8;
+      setPricePos({ top, left, width: maxWidth });
+    }
+
+    if (pricePickerOpen) {
+      updatePos();
+      window.addEventListener('resize', updatePos);
+      window.addEventListener('scroll', updatePos, true);
+      return () => {
+        window.removeEventListener('resize', updatePos);
+        window.removeEventListener('scroll', updatePos, true);
+      };
+    }
+    return;
+  }, [pricePickerOpen]);
+
+  // compute rooms popover position and keep it updated on resize/scroll
+  useEffect(() => {
+    function updatePos() {
+      if (!roomsRef.current) {
+        setRoomsPos(null);
+        return;
+      }
+      const rect = roomsRef.current.getBoundingClientRect();
+      const maxWidth = Math.min(360, Math.floor(window.innerWidth * 0.92));
+      let left = rect.right - maxWidth;
+      if (left < 8) left = 8;
+      if (left + maxWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - maxWidth - 8);
+      const top = rect.bottom + 8;
+      setRoomsPos({ top, left, width: maxWidth });
+    }
+
+    if (roomsPickerOpen) {
+      updatePos();
+      window.addEventListener('resize', updatePos);
+      window.addEventListener('scroll', updatePos, true);
+      return () => {
+        window.removeEventListener('resize', updatePos);
+        window.removeEventListener('scroll', updatePos, true);
+      };
+    }
+    return;
+  }, [roomsPickerOpen]);
 
   // sync when parent updates defaults (e.g., URL params changed)
   useEffect(() => {
@@ -95,15 +214,15 @@ export default function SearchBar({
   }, [defaultValue]);
 
   useEffect(() => {
-    setGuests(defaultGuests !== undefined ? String(defaultGuests) : "");
+    setGuests(defaultGuests !== undefined ? String(defaultGuests) : "1");
   }, [defaultGuests]);
 
   useEffect(() => {
-    setOccupants(defaultOccupants !== undefined ? String(defaultOccupants) : "");
+    setOccupants(defaultOccupants !== undefined ? String(defaultOccupants) : "1");
   }, [defaultOccupants]);
 
   useEffect(() => {
-    setBeds(defaultBeds !== undefined ? String(defaultBeds) : "");
+    setBeds(defaultBeds !== undefined ? String(defaultBeds) : "1");
   }, [defaultBeds]);
 
   // Reset defaults when mode changes
@@ -149,184 +268,208 @@ export default function SearchBar({
           placeholder={placeholder}
           className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
         />
-        {/* Khu vực / Bộ lọc: on homepage we surface a single 'Bộ lọc' button and move Khách/Ngủ into the filter panel */}
-        {/* Compact filter summary button: shows active filters or 'Bộ lọc' and opens panel */}
-        <div className="hidden xs:block">
-          <button
-            type="button"
-            onClick={() => setAllPickerOpen((v) => !v)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium"
-            style={{ borderColor: '#e6f4ea', background: 'white' }}
-            aria-haspopup="dialog"
-            aria-expanded={allPickerOpen}
-          >
-            <span className="text-slate-700">
-              {(() => {
-                const parts: string[] = [];
-                if (locationName) parts.push(locationName as string);
-                if (selectedType) parts.push(selectedType);
-                if (guests) parts.push(`${guests} phòng khách`);
-                if (beds !== "") parts.push(`${beds} phòng ngủ`);
-                if (occupants) parts.push(`${occupants} người ở`);
-                if (priceMin != null || priceMax != null) {
-                  const pmin = priceMin != null ? `${priceMin}` : '';
-                  const pmax = priceMax != null ? `${priceMax}` : '';
-                  parts.push(`Giá ${pmin}${pmin && pmax ? '–' : ''}${pmax}`);
-                }
-                return parts.length ? parts.join(' • ') : 'Bộ lọc';
-              })()}
-            </span>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-slate-400 transform ${allPickerOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        {/* Unified Filters Button (combine all choices into one) */}
-        {mode && (
-          <div className="relative" ref={allPickerRef}>
-            <button
-              type="button"
-              onClick={() => setAllPickerOpen(v => !v)}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-white hover:shadow-sm transition cursor-pointer"
-              style={{ borderColor: '#006633' }}
-            >
-              <span className="text-sm text-slate-700">Bộ lọc</span>
+        {/* Three horizontal filter options: Khu vực | Khoảng giá | Phòng/Ngủ & Số người */}
+        <div className="hidden sm:flex items-center gap-2">
+          {/* Khu vực */}
+          <div className="relative" ref={locationRef}>
+            <button type="button" onClick={() => setLocationPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+              <span className="text-slate-700">{locationName ? `Khu vực: ${locationName}` : 'Khu vực'}</span>
             </button>
-            {allPickerOpen && (
-              <div className="absolute right-0 mt-2 w-[520px] max-w-[92vw] bg-white rounded-2xl shadow-2xl p-4 z-50 border border-emerald-100">
-                {/* Khu vực */}
-                <div className="mb-4">
-                  <div className="text-xs text-slate-500 mb-2">Khu vực</div>
-                  <input
-                    type="text"
-                    placeholder="Nhập tên quận (VD: Cầu Giấy)"
-                    className="w-full rounded-lg border px-3 py-2 text-sm"
-                    value={locationName ?? ''}
-                    onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
-                  />
-                  <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
-                  <div className="flex flex-wrap gap-2">
-                    {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
-                      <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
-                    ))}
-                  </div>
-                </div>
-                {/* Loại hình */}
-                {(mode === 'phong' || mode === 'nha') && (
-                  <div className="mb-4">
-                    <div className="text-xs text-slate-500 mb-2">Loại hình</div>
+              {locationPickerOpen && typeof document !== 'undefined' && (
+                createPortal(
+                <div
+                  ref={(el) => { locationPaneRef.current = el; }}
+                  style={{
+                    position: 'fixed',
+                    top: locationPos ? `${locationPos.top}px` : undefined,
+                    left: locationPos ? `${locationPos.left}px` : undefined,
+                    width: locationPos?.width ? `${locationPos.width}px` : '320px',
+                    maxWidth: '92vw'
+                  }}
+                  className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
+                >
+                    <div className="text-xs text-slate-500 mb-2">Khu vực</div>
+                    <input
+                      type="text"
+                      placeholder="Nhập tên quận (VD: Cầu Giấy)"
+                      className="w-full rounded-lg border px-3 py-2 text-sm"
+                      value={locationName ?? ''}
+                      onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
+                    />
+                    <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
                     <div className="flex flex-wrap gap-2">
-                      {(mode === 'phong' ? ['Studio'] : ['Nhà phố', 'Nhà nguyên căn', 'Chung cư', 'Nhà tập thể']).map(opt => (
-                        <button key={opt} type="button" onClick={() => setSelectedType(opt)} className={clsx("px-3 py-1.5 rounded-full border text-sm", selectedType===opt ? "bg-emerald-600 text-white border-emerald-600" : "border-emerald-200 hover:bg-emerald-50 text-emerald-800")}>{opt}</button>
+                      {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
+                        <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
                       ))}
                     </div>
+                  </div>,
+                  document.body
+                )
+              )}
+          </div>
+
+          {/* Khoảng giá */}
+          <div className="relative" ref={priceRef}>
+            <button type="button" onClick={() => setPricePickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+              <span className="text-slate-700">{(priceMin != null || priceMax != null) ? `Giá: ${formatVND(priceMin) || ''}${priceMin && priceMax ? '–' : ''}${formatVND(priceMax) || ''}` : 'Khoảng giá'}</span>
+            </button>
+            {pricePickerOpen && typeof document !== 'undefined' && (
+                createPortal(
+                <div
+                  ref={(el) => { pricePaneRef.current = el; }}
+                  style={{
+                    position: 'fixed',
+                    top: pricePos ? `${pricePos.top}px` : undefined,
+                    left: pricePos ? `${pricePos.left}px` : undefined,
+                    width: pricePos?.width ? `${pricePos.width}px` : '360px',
+                    maxWidth: '96vw'
+                  }}
+                  className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm font-semibold text-slate-800">Khoảng giá</div>
+                    <div className="text-xs text-slate-400">VND / tháng</div>
                   </div>
-                )}
-                {/* Giá tiền */}
-                {(mode === 'phong' || mode === 'nha') && (
-                  <div className="mb-4">
-                    <div className="text-xs text-slate-500 mb-2">Khoảng giá (VND/tháng)</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="number" placeholder="Tối thiểu" className="rounded-lg border px-3 py-2 text-sm" value={priceMin ?? ''} onChange={(e)=> setPriceMin(e.target.value === '' ? undefined : Number(e.target.value))} />
-                      <input type="number" placeholder="Tối đa" className="rounded-lg border px-3 py-2 text-sm" value={priceMax ?? ''} onChange={(e)=> setPriceMax(e.target.value === '' ? undefined : Number(e.target.value))} />
+
+                  <div className="mb-3 flex flex-col gap-3">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <div>Min: <span className="font-medium text-slate-700">{formatVND(priceMin) || '0'}</span></div>
+                      <div>Max: <span className="font-medium text-slate-700">{formatVND(priceMax) || formatVND(PRICE_SLIDER_MAX)}</span></div>
                     </div>
-                  </div>
-                )}
-                {/* Diện tích */}
-                {mode === 'mat-bang' && (
-                  <div className="mb-4">
-                    <div className="text-xs text-slate-500 mb-2">Khoảng diện tích (m²)</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="number" placeholder="Tối thiểu" className="rounded-lg border px-3 py-2 text-sm" value={areaMin ?? ''} onChange={(e)=> setAreaMin(e.target.value === '' ? undefined : Number(e.target.value))} />
-                      <input type="number" placeholder="Tối đa" className="rounded-lg border px-3 py-2 text-sm" value={areaMax ?? ''} onChange={(e)=> setAreaMax(e.target.value === '' ? undefined : Number(e.target.value))} />
-                    </div>
-                  </div>
-                )}
-                {/* Guests/Beds: always visible in the filter panel and styled compactly */}
-                <div className="mb-4 grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-xs text-slate-500 mb-2">Phòng khách</div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setGuests((g) => String(Math.max(0, Number(g || 0) - 1)))}
-                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                        aria-label="Giảm khách"
-                      >
-                        −
-                      </button>
-                      <input type="number" min={0} max={12} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={guests} onChange={(e)=> setGuests(e.target.value)} />
-                      <button
-                        type="button"
-                        onClick={() => setGuests((g) => String(Math.min(12, Number(g || 0) + 1)))}
-                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                        aria-label="Tăng khách"
-                      >
-                        +
-                      </button>
+
+                    {/* Combined dual-handle slider: two overlapping ranges with a colored track */}
+                    <div className="relative w-full h-8 flex items-center combined-range">
+                      {(() => {
+                        const minVal = priceMin ?? 0;
+                        const maxVal = priceMax ?? PRICE_SLIDER_MAX;
+                        const minPct = Math.round((minVal / PRICE_SLIDER_MAX) * 100);
+                        const maxPct = Math.round((maxVal / PRICE_SLIDER_MAX) * 100);
+                        const trackStyle = { background: `linear-gradient(to right, #eefaf2 0% ${minPct}%, #b7f3c9 ${minPct}% ${maxPct}%, #eefaf2 ${maxPct}% 100%)` };
+                        return (
+                          <div className="w-full px-2 slider-track" style={trackStyle}>
+                            <div className="relative">
+                              <input
+                                aria-label="Min price"
+                                type="range"
+                                min={0}
+                                max={PRICE_SLIDER_MAX}
+                                step={PRICE_SLIDER_STEP}
+                                value={minVal}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setPriceMin(val === 0 ? undefined : val);
+                                  if (priceMax != null && val > priceMax) setPriceMax(val);
+                                }}
+                                className="absolute inset-0 w-full appearance-none bg-transparent h-8"
+                                style={{ zIndex: 30 }}
+                              />
+
+                              <input
+                                aria-label="Max price"
+                                type="range"
+                                min={0}
+                                max={PRICE_SLIDER_MAX}
+                                step={PRICE_SLIDER_STEP}
+                                value={maxVal}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setPriceMax(val === PRICE_SLIDER_MAX ? undefined : val);
+                                  if (priceMin != null && val < priceMin) setPriceMin(val);
+                                }}
+                                className="absolute inset-0 w-full appearance-none bg-transparent h-8"
+                                style={{ zIndex: 40 }}
+                              />
+                              {/* invisible spacer to keep height */}
+                              <div className="h-2" />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <style>{`
+                        /* Wrapper height and centering */
+                        .combined-range { height:36px; }
+                        .combined-range .slider-track { height:8px; border-radius:9999px; display:block; }
+
+                        /* Make range inputs overlay the track and center thumbs vertically */
+                        .combined-range input[type=range] { -webkit-appearance:none; appearance:none; position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:24px; background:transparent; margin:0; padding:0; }
+                        .combined-range input[type=range]::-webkit-slider-runnable-track { height:8px; background:transparent; border-radius:9999px; }
+                        .combined-range input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid #006633; box-shadow:0 1px 2px rgba(0,0,0,0.15); transform:translateY(-50%); }
+                        .combined-range input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid #006633; box-shadow:0 1px 2px rgba(0,0,0,0.15); transform:translateY(-50%); }
+                      `}</style>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="text-xs text-slate-500 mb-2">Phòng ngủ</div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setBeds((b) => String(Math.max(0, Number(b || 0) - 1)))}
-                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                        aria-label="Giảm ngủ"
-                      >
-                        −
-                      </button>
-                      <input type="number" min={0} max={6} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={beds} onChange={(e)=> setBeds(e.target.value)} />
-                      <button
-                        type="button"
-                        onClick={() => setBeds((b) => String(Math.min(6, Number(b || 0) + 1)))}
-                        className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                        style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                        aria-label="Tăng ngủ"
-                      >
-                        +
-                      </button>
+                  <div className="flex items-center justify-between mb-3 gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => { setPriceMin(undefined); setPriceMax(2000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">Dưới 2 triệu</button>
+                      <button type="button" onClick={() => { setPriceMin(2000000); setPriceMax(4000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">2 - 4 triệu</button>
+                      <button type="button" onClick={() => { setPriceMin(4000000); setPriceMax(6000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">4 - 6 triệu</button>
+                      <button type="button" onClick={() => { setPriceMin(6000000); setPriceMax(undefined); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">Trên 6 triệu</button>
                     </div>
+                    <button type="button" onClick={() => setPricePickerOpen(false)} className="text-xs px-2 py-1 rounded-full border border-slate-200 text-slate-600">Đóng</button>
                   </div>
-                </div>
-                
-                <div>
-                  <div className="text-xs text-slate-500 mb-2">Số người ở</div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setOccupants((o) => String(Math.max(0, Number(o || 0) - 1)))}
-                      className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                      style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                      aria-label="Giảm số người ở"
-                    >
-                      −
-                    </button>
-                    <input type="number" min={0} max={20} className="flex-1 rounded-lg border px-3 py-2 text-sm" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
-                    <button
-                      type="button"
-                      onClick={() => setOccupants((o) => String(Math.min(20, Number(o || 0) + 1)))}
-                      className="w-9 h-9 rounded-lg border flex items-center justify-center hover:bg-[#ecf9ef]"
-                      style={{ borderColor: '#e6f4ea', color: '#006633' }}
-                      aria-label="Tăng số người ở"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-end gap-2">
-                  <button type="button" onClick={() => { setSelectedType(undefined); setPriceMin(undefined); setPriceMax(undefined); setAreaMin(undefined); setAreaMax(undefined); setLocationName(undefined); setLocationSlug(undefined); }} className="px-4 py-2 text-sm rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50">Xoá</button>
-                  <button type="button" onClick={() => setAllPickerOpen(false)} className="px-4 py-2 text-sm rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white">Áp dụng</button>
-                </div>
-              </div>
+                </div>,
+                document.body
+              )
             )}
           </div>
-        )}
+
+          {/* Phòng/Ngủ & Số người */}
+          <div className="relative" ref={roomsRef}>
+            <button type="button" onClick={() => setRoomsPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+              <span className="text-slate-700">Phòng/Ngủ & Người</span>
+            </button>
+            {roomsPickerOpen && typeof document !== 'undefined' && (
+                createPortal(
+                <div
+                  ref={(el) => { roomsPaneRef.current = el; }}
+                  style={{
+                    position: 'fixed',
+                    top: roomsPos ? `${roomsPos.top}px` : undefined,
+                    left: roomsPos ? `${roomsPos.left}px` : undefined,
+                    width: roomsPos?.width ? `${roomsPos.width}px` : '360px',
+                    maxWidth: '92vw'
+                  }}
+                  className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
+                >
+                  <div className="text-sm font-medium text-slate-700 mb-3">Phòng & Số người</div>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-slate-600 w-36">Phòng khách</div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setGuests((g) => String(Math.max(1, Number(g || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                        <input type="number" min={1} max={12} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={guests} onChange={(e)=> setGuests(e.target.value)} />
+                        <button type="button" onClick={() => setGuests((g) => String(Math.min(12, Number(g || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-slate-600 w-36">Phòng ngủ</div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setBeds((b) => String(Math.max(1, Number(b || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                        <input type="number" min={1} max={6} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={beds} onChange={(e)=> setBeds(e.target.value)} />
+                        <button type="button" onClick={() => setBeds((b) => String(Math.min(6, Number(b || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-slate-600 w-36">Số người ở</div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setOccupants((o) => String(Math.max(1, Number(o || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                        <input type="number" min={1} max={20} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
+                        <button type="button" onClick={() => setOccupants((o) => String(Math.min(20, Number(o || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setRoomsPickerOpen(false)} className="text-xs px-2 py-1 rounded-full border border-emerald-200 text-emerald-700">Đóng</button>
+                  </div>
+                </div>,
+                document.body
+              )
+            )}
+          </div>
+        </div>
         <button
           type="submit"
           className="inline-flex items-center rounded-full bg-emerald-600 text-white px-5 py-2 text-sm font-semibold hover:bg-emerald-700 cursor-pointer"

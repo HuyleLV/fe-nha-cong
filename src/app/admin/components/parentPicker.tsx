@@ -34,7 +34,18 @@ export default function ParentPicker({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const parentLevels = useMemo<LocationLevel[]>(() => allowedParents[childLevel] ?? [], [childLevel]);
+  // Determine allowed parent levels per child level
+  // Province: []
+  // City: [Province]
+  // District: [City, Province]  <-- allow Province as parent for District
+  // Street: [District]
+  const parentLevels = useMemo<LocationLevel[]>(() => {
+    if (childLevel === 'Province') return [];
+    if (childLevel === 'City') return ['Province'];
+    if (childLevel === 'District') return ['City', 'Province'];
+    if (childLevel === 'Street') return ['District'];
+    return [];
+  }, [childLevel]);
   const viLabel = (lv: LocationLevel) => {
     if (lv === 'Province') return 'Tỉnh';
     if (lv === 'City') return 'Thành phố';
@@ -57,12 +68,18 @@ export default function ParentPicker({
         const r = await locationService.getAll({
           page: 1,
           limit: 20,
-          level: lv,
+          // level: lv,
           q: kw || undefined,
         });
         results.push(...(r.items || []));
       }
-      setItems(results);
+
+      // Loại bỏ bản ghi trùng theo id (trường hợp API trả cùng record cho nhiều level)
+      const uniqueMap = new Map<number, Location>();
+      for (const it of results) {
+        if (it && it.id != null && !uniqueMap.has(it.id)) uniqueMap.set(it.id, it);
+      }
+      setItems(Array.from(uniqueMap.values()));
     } finally {
       setLoading(false);
     }
@@ -106,7 +123,10 @@ export default function ParentPicker({
             disabled={!canPickParent}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            onFocus={() => setOpenList(true)}
+            onFocus={() => {
+              setOpenList(true);
+              fetchParents(keyword);
+            }}
             placeholder={
               canPickParent ? placeholder : "Cấp này không cần/không có cấp cha"
             }

@@ -81,6 +81,9 @@ export default function DistrictListingSection({
     return items.filter((x) => x.district === active).map((x) => x.apt);
   }, [items, active, showAll]);
 
+  // Chỉ hiển thị tối đa 10 item, chia thành 2 hàng x 5 item
+  const displayed = useMemo(() => filtered.slice(0, 10), [filtered]);
+
   const showHeaderTabs = !onlyDistrict && showTabs;
 
   return (
@@ -140,8 +143,8 @@ export default function DistrictListingSection({
         </div>
       ) : variant === "grid" ? (
         // GRID
-        <div className="mt-6 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-4">
-          {filtered.map((apt) => (
+        <div className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:grid-cols-5 md:gap-4">
+          {displayed.map((apt) => (
             <RoomCardItem
               key={apt.id}
               item={apt}
@@ -152,9 +155,9 @@ export default function DistrictListingSection({
         </div>
       ) : (
         // SCROLL: 1 hàng, cuộn ngang
-        <div className="mt-6 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-4">
+        <div className="mt-6 grid grid-cols-1 items-stretch gap-3 md:gap-4">
           <div className="flex gap-3 md:gap-4">
-            {filtered.map((apt) => (
+            {displayed.map((apt) => (
               <div
                 key={apt.id}
                 className="min-w-[240px] sm:min-w-[260px] md:min-w-[280px]"

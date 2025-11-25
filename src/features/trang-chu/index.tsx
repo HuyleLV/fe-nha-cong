@@ -227,7 +227,7 @@ export default function TrangChu() {
             subtitle="Các căn hộ giảm giá nhiều nhất"
             data={discounted}
             showTabs={false}
-            variant="scroll"
+            variant="grid"
             onBook={(apt) => console.log("book:", apt)}
           />
         )}

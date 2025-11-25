@@ -114,7 +114,6 @@ export default function LocationFormPage() {
   // District: phải có parent (City)
   useEffect(() => {
     if (!level) return;
-
     if (level === 'Province') {
       setSelectedParent(null);
       setValue('parentId', null, { shouldDirty: true });
@@ -126,8 +125,8 @@ export default function LocationFormPage() {
         setValue('parentId', null, { shouldDirty: true });
       }
     } else if (level === 'District') {
-      // District yêu cầu parent là City
-      if (selectedParent && selectedParent.level !== 'City') {
+      // District cho phép parent là City hoặc Province
+      if (selectedParent && selectedParent.level !== 'City' && selectedParent.level !== 'Province') {
         setSelectedParent(null);
         setValue('parentId', null, { shouldDirty: true });
       }
@@ -160,8 +159,8 @@ export default function LocationFormPage() {
     }
     if (values.level === 'District') {
       if (!values.parentId) {
-        setError('parentId', { message: 'Quận cần chọn Thành phố cha' });
-        toast.error('Vui lòng chọn Thành phố cha cho Quận');
+        setError('parentId', { message: 'Quận cần chọn Thành phố hoặc Tỉnh cha' });
+        toast.error('Vui lòng chọn Thành phố hoặc Tỉnh cha cho Quận');
         return;
       }
     }
@@ -328,7 +327,7 @@ export default function LocationFormPage() {
                     validate: (val) => {
                       if (level === 'Province' && val) return 'Tỉnh không được có cấp cha';
                       if (level === 'City' && !val) return 'Thành phố cần chọn Tỉnh cha';
-                      if (level === 'District' && !val) return 'Quận cần chọn Thành phố cha';
+                      if (level === 'District' && !val) return 'Quận cần chọn Thành phố hoặc Tỉnh cha';
                       if (level === 'Street' && !val) return 'Khu vực cần chọn Quận cha';
                       return true;
                     },
