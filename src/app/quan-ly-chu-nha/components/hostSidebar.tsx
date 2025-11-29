@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown, Users } from "lucide-react";
 import type { User } from "@/type/user";
 
 export default function HostSidebar() {
@@ -46,18 +46,26 @@ export default function HostSidebar() {
     {
       href: "/quan-ly-chu-nha/khach-hang",
       label: "Khách hàng",
-      icon: CalendarDays,
+      icon: Users,
       children: [
         { href: "/quan-ly-chu-nha/khach-hang/khach-hen", label: "Khách hẹn", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/dat-coc", label: "Đặt cọc", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/hop-dong", label: "Hợp đồng", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/khach-hang/khach-hang", label: "Khách hàng", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/khach-hang/khach-hang", label: "Khách hàng", icon: Users },
         { href: "/quan-ly-chu-nha/khach-hang/phuong-tien", label: "Phương tiện", icon: CalendarDays },
       ],
     },
   ];
 
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const STORAGE_KEY = 'host_sidebar_open';
+  const [openMenu, setOpenMenu] = useState<string | null>(() => {
+    try {
+      if (typeof window === 'undefined') return null;
+      return localStorage.getItem(STORAGE_KEY) || null;
+    } catch {
+      return null;
+    }
+  });
 
   const onLogout = () => {
     try {
@@ -71,6 +79,31 @@ export default function HostSidebar() {
       router.replace("/dang-nhap");
     }
   };
+
+  // keep openMenu in sync with pathname: if a child route is active, open its parent
+  useEffect(() => {
+    try {
+      const parent = menu.find((m) => m.children?.some((c) => pathname.startsWith(c.href)));
+      if (parent) {
+        if (openMenu !== parent.href) {
+          setOpenMenu(parent.href);
+          try { localStorage.setItem(STORAGE_KEY, parent.href); } catch {}
+        }
+        return;
+      }
+      // if no parent matches current pathname, keep stored openMenu (user preference)
+    } catch (e) {
+      // ignore
+    }
+  }, [pathname]);
+
+  // persist openMenu changes
+  useEffect(() => {
+    try {
+      if (openMenu) localStorage.setItem(STORAGE_KEY, openMenu);
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+  }, [openMenu]);
 
   return (
     <aside className="w-64 bg-white text-slate-700 flex flex-col min-h-screen border-r border-slate-200 shadow-sm">

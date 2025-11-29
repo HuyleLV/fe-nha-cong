@@ -11,6 +11,12 @@ export interface User {
     gender?: Gender | null;      
     dateOfBirth?: Date | null;   
     avatarUrl?: string | null;   
+    idCardNumber?: string | null;
+    idIssueDate?: string | null;
+    idIssuePlace?: string | null;
+    idCardFront?: string | null;
+    idCardBack?: string | null;
+    note?: string | null;
     address?: string | null;     
     referralCode?: string | null;   
     referralBy?: string | null;  

@@ -112,19 +112,30 @@ export const userService = {
     },
 
     // ===== Admin Users Management =====
-    async listAdminUsers(params?: { page?: number; limit?: number }): Promise<{ data: User[]; meta: any }> {
-        const payload = await axiosClient.get<any, any>(apiUrl(`/api/admin/users`), { params });
-        return { data: payload?.data ?? [], meta: payload?.meta ?? {} };
+    async listAdminUsers(params?: any): Promise<{ data: User[]; meta: any }> {
+        try {
+            const payload = await axiosClient.get<any, any>(apiUrl(`/api/admin/users`), { params });
+            return { data: payload?.data ?? [], meta: payload?.meta ?? {} };
+        } catch (err: any) {
+            // If the request is forbidden (403) it's likely the current user is not an admin.
+            // Return an empty list and log a warning so the UI can handle it gracefully.
+            const status = err?.response?.status;
+            if (status === 403) {
+                console.warn('listAdminUsers: request forbidden (403) — user may not have admin rights');
+                return { data: [], meta: {} };
+            }
+            throw err;
+        }
     },
     async getAdminUser(id: number): Promise<User> {
         const res = await axiosClient.get<any>(apiUrl(`/api/admin/users/${id}`));
         return (res?.data ?? res) as User;
     },
-    async createAdminUser(data: { email: string; password?: string; role?: 'customer'|'host'|'admin'; name?: string; phone?: string }): Promise<User> {
+    async createAdminUser(data: { email: string; password?: string; role?: 'customer'|'host'|'admin'; name?: string; phone?: string; ownerId?: number; note?: string; gender?: string; avatar?: string | null; idCardFront?: string | null; idCardBack?: string | null; dateOfBirth?: string | null; idCardNumber?: string; idIssueDate?: string | null; idIssuePlace?: string | null; address?: string }): Promise<User> {
         const res = await axiosClient.post<any>(apiUrl(`/api/admin/users`), data);
         return (res?.data ?? res) as User;
     },
-    async updateAdminUser(id: number, data: { email?: string; password?: string; role?: 'customer'|'host'|'admin'; name?: string; phone?: string }): Promise<User> {
+    async updateAdminUser(id: number, data: { email?: string; password?: string; role?: 'customer'|'host'|'admin'; name?: string; phone?: string; ownerId?: number; note?: string; gender?: string; avatar?: string | null; idCardFront?: string | null; idCardBack?: string | null; dateOfBirth?: string | null; customerStatus?: 'new'|'appointment'|'sales'|'deposit_form'|'contract'|'failed'; idCardNumber?: string; idIssueDate?: string | null; idIssuePlace?: string | null; address?: string }): Promise<User> {
         const res = await axiosClient.patch<any>(apiUrl(`/api/admin/users/${id}`), data);
         return (res?.data ?? res) as User;
     },

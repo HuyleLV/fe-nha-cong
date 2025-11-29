@@ -75,7 +75,11 @@ axiosClient.interceptors.response.use(
   },
   (error) => {
     const status = error?.response?.status;
-    if (status === 401 && typeof window !== 'undefined') {
+    const respData = error?.response?.data || {};
+    const unauthorizedByBody = respData && (String(respData.error || '').toLowerCase() === 'unauthorized' && String(respData.message || '').toLowerCase().includes('no auth token'));
+    const jwtExpiredByBody = respData && String(respData.message || '').toLowerCase().includes('jwt expired');
+
+    if ((status === 401 || unauthorizedByBody || jwtExpiredByBody) && typeof window !== 'undefined') {
       // Chỉ thông báo nếu trước đó có token => nghĩa là phiên đã từng đăng nhập
       const hadToken = !!(
         localStorage.getItem('access_token') ||
@@ -88,24 +92,28 @@ axiosClient.interceptors.response.use(
       const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
       const method = String(cfg.method || 'get').toLowerCase();
 
-      // Xoá token theo scope
+      // Xoá token (loại bỏ tất cả token liên quan) và thông báo cho các tab khác
       try {
-        if (isAdminEndpoint) {
-          localStorage.removeItem('tokenAdmin');
-        } else {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('tokenUser');
-        }
-        document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('tokenUser');
+        localStorage.removeItem('tokenAdmin');
+        localStorage.removeItem('auth_user');
+        sessionStorage.removeItem('auth_user');
+        sessionStorage.removeItem('access_token');
+        // set a logout flag so other tabs can react
+        try { localStorage.setItem('auth_logout', String(Date.now())); } catch {}
+        // clear common cookies
+        try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch {}
+        try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch {}
       } catch {}
 
-      // Chỉ thông báo + chuyển trang khi là hành động đòi hỏi đăng nhập (non-GET)
-      if (method !== 'get') {
-        if (hadToken && !logoutNotified) {
+      // Thông báo + chuyển trang khi token hết hạn (áp dụng cho GET và các method khác)
+      if (hadToken) {
+        if (!logoutNotified) {
           logoutNotified = true;
           try {
             const { toast } = require('react-toastify');
-            toast.info('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại!');
+            toast.info('Phiên đăng nhập đã hết hạn');
           } catch {}
           setTimeout(() => { logoutNotified = false; }, 5000);
         }
