@@ -90,7 +90,9 @@ export default function CustomerEditPage() {
         // Client-side duplicate checks for email and phone to provide immediate feedback
         if (data.email) {
           try {
-            const found = await userService.listAdminUsers({ q: data.email, limit: 5 });
+            const params: any = { q: data.email, limit: 5 };
+            if (meId) params.ownerId = meId;
+            const found = await userService.listAdminUsers(params);
             const exists = (found.data || []).some(u => String(u.email || '').toLowerCase() === String(data.email).toLowerCase());
             if (exists) {
               toast.error('Email đã tồn tại, vui lòng sử dụng email khác');
@@ -104,7 +106,9 @@ export default function CustomerEditPage() {
 
         if (data.phone) {
           try {
-            const found = await userService.listAdminUsers({ q: data.phone, limit: 5 });
+            const params2: any = { q: data.phone, limit: 5 };
+            if (meId) params2.ownerId = meId;
+            const found = await userService.listAdminUsers(params2);
             const norm = String(data.phone).replace(/\s+/g, '');
             const exists = (found.data || []).some(u => String(u.phone || '').replace(/\s+/g, '') === norm);
             if (exists) {

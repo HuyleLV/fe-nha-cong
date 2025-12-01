@@ -45,7 +45,7 @@ export default function DepositEditPage() {
 
   const [loading, setLoading] = useState<boolean>(Boolean(isEdit));
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting, dirtyFields } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting, dirtyFields, errors } } = useForm<FormData>({
     defaultValues: { status: 'pending', buildingId: undefined, apartmentId: undefined, customerId: undefined, customerInfo: '', occupantsCount: 1, rentAmount: 0, depositAmount: 0, depositDate: '', moveInDate: '', billingStartDate: '', contractDuration: '', rentFrom: '', rentTo: '', paymentCycle: '', account: '', note: '', attachments: '' }
   });
 
@@ -54,6 +54,7 @@ export default function DepositEditPage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
+  const [meId, setMeId] = useState<number | null>(null);
 
   // Load buildings for current host (backend should return only host's buildings when called with host token)
   useEffect(() => {
@@ -71,13 +72,26 @@ export default function DepositEditPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await userService.listAdminUsers({ page: 1, limit: 1000 });
+        const me = await userService.getMe();
+        if (me && (me as any).id) setMeId((me as any).id);
+      } catch (err) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const params: any = { page: 1, limit: 1000 };
+        if (meId) params.ownerId = meId;
+        const res = await userService.listAdminUsers(params);
         setCustomers((res.data ?? []) as User[]);
       } catch (err) {
         console.error('Không thể tải khách hàng', err);
       }
     })();
-  }, []);
+  }, [meId]);
 
   // When buildingId changes, load apartments of that building
   useEffect(() => {
@@ -149,6 +163,8 @@ export default function DepositEditPage() {
       // Coerce decimal/amount fields
       if (payload.rentAmount !== undefined && payload.rentAmount !== null && payload.rentAmount !== '') payload.rentAmount = Number(payload.rentAmount);
       if (payload.depositAmount !== undefined && payload.depositAmount !== null && payload.depositAmount !== '') payload.depositAmount = Number(payload.depositAmount);
+
+      console.log('deposit payload', payload);
 
       if (isEdit) {
         await depositService.update(Number(id), payload);
@@ -235,6 +251,7 @@ export default function DepositEditPage() {
                   <select
                     className={inputCls}
                     {...register('buildingId')}
+                    value={watch('buildingId') ?? ''}
                     onChange={(e) => setValue('buildingId', e.target.value ? Number(e.target.value) : undefined)}
                   >
                     <option value="">-- Chọn tòa nhà --</option>
@@ -246,7 +263,7 @@ export default function DepositEditPage() {
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Căn hộ</label>
-                  <select className={inputCls} {...register('apartmentId')} onChange={(e) => setValue('apartmentId', e.target.value ? Number(e.target.value) : undefined)}>
+                  <select className={inputCls} {...register('apartmentId')} value={watch('apartmentId') ?? ''} onChange={(e) => setValue('apartmentId', e.target.value ? Number(e.target.value) : undefined)}>
                     <option value="">-- Chọn căn hộ --</option>
                     {apartments.map((a) => (
                       <option key={a.id} value={a.id}>{a.title ?? `#${a.id}`}</option>
@@ -256,7 +273,7 @@ export default function DepositEditPage() {
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Khách</label>
-                  <select className={inputCls} {...register('customerId')} onChange={(e) => setValue('customerId', e.target.value ? Number(e.target.value) : undefined)}>
+                  <select className={inputCls} {...register('customerId')} value={watch('customerId') ?? ''} onChange={(e) => setValue('customerId', e.target.value ? Number(e.target.value) : undefined)}>
                     <option value="">-- Chọn khách --</option>
                     {customers.map(c => (
                       <option key={c.id} value={c.id}>{c.name ?? `#${c.id}`} {c.phone ? `— ${c.phone}` : ''}</option>
@@ -281,17 +298,20 @@ export default function DepositEditPage() {
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Ngày đặt cọc</label>
-                  <input type="date" className={inputCls} {...register('depositDate')} />
+                  <input type="date" className={inputCls} {...register('depositDate', { required: 'Vui lòng chọn ngày đặt cọc' })} />
+                  {errors.depositDate && <div className="text-sm text-red-600 mt-1">{errors.depositDate.message}</div>}
                 </div>
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Ngày chuyển vào</label>
-                  <input type="date" className={inputCls} {...register('moveInDate')} />
+                  <input type="date" className={inputCls} {...register('moveInDate', { required: 'Vui lòng chọn ngày chuyển vào' })} />
+                  {errors.moveInDate && <div className="text-sm text-red-600 mt-1">{errors.moveInDate.message}</div>}
                 </div>
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Ngày bắt đầu tính tiền</label>
-                  <input type="date" className={inputCls} {...register('billingStartDate')} />
+                  <input type="date" className={inputCls} {...register('billingStartDate', { required: 'Vui lòng chọn ngày bắt đầu tính tiền' })} />
+                  {errors.billingStartDate && <div className="text-sm text-red-600 mt-1">{errors.billingStartDate.message}</div>}
                 </div>
 
                 <div>
@@ -308,12 +328,14 @@ export default function DepositEditPage() {
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Thuê từ ngày</label>
-                  <input type="date" className={inputCls} {...register('rentFrom')} />
+                  <input type="date" className={inputCls} {...register('rentFrom', { required: 'Vui lòng chọn ngày thuê từ' })} />
+                  {errors.rentFrom && <div className="text-sm text-red-600 mt-1">{errors.rentFrom.message}</div>}
                 </div>
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Thuê đến ngày</label>
-                  <input type="date" className={inputCls} {...register('rentTo')} />
+                  <input type="date" className={inputCls} {...register('rentTo', { required: 'Vui lòng chọn ngày thuê đến' })} />
+                  {errors.rentTo && <div className="text-sm text-red-600 mt-1">{errors.rentTo.message}</div>}
                 </div>
 
                 <div>

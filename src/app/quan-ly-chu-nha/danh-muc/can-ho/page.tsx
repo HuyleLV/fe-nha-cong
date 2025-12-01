@@ -6,7 +6,7 @@ import Panel from "../../components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import Spinner from "@/components/spinner";
-import { PlusCircle, Edit3, Trash2, CheckCircle, Key, Clock } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, CheckCircle, Key, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { apartmentService } from "@/services/apartmentService";
 import { toast } from "react-toastify";
 
@@ -167,6 +167,7 @@ export default function Page() {
               <td className="px-4 py-3 text-center">
                 <div className="inline-flex items-center gap-2">
                   <button onClick={() => router.push(`/quan-ly-chu-nha/danh-muc/can-ho/${it.id}`)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></button>
+                  <button onClick={() => router.push(`/quan-ly-chu-nha/danh-muc/can-ho/${it.id}/calendar`)} className="inline-flex items-center justify-center p-2 rounded-md bg-sky-600 text-white hover:bg-sky-700" title="Xem lịch"><CalendarIcon className="w-4 h-4"/></button>
                   <button onClick={async () => { try { if (!confirm('Bạn có chắc muốn xóa căn hộ này?')) return; await apartmentService.delete(it.id); toast.success('Xóa thành công'); fetch(page, limit); fetchCounts(); } catch (e: any) { toast.error(e?.message || 'Xóa thất bại'); } }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>

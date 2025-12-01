@@ -45,6 +45,11 @@ export const viewingService = {
     if (Array.isArray(data)) return { items: data, meta: null };
     return data as { items: Viewing[]; meta: any };
   },
+  async hostList(params?: { q?: string; status?: string; apartmentId?: number; buildingId?: number; page?: number; limit?: number }): Promise<{ items: Viewing[]; meta: any }> {
+    const data = await axiosClient.get<{ items: Viewing[]; meta: any } | Viewing[]>(apiUrl(`/api/viewings/host`), { params }) as unknown as { items: Viewing[]; meta: any } | Viewing[];
+    if (Array.isArray(data)) return { items: data, meta: null };
+    return data as { items: Viewing[]; meta: any };
+  },
   async adminUpdateStatus(id: number, payload: { status: 'pending'|'confirmed'|'cancelled'|'visited'; staffNote?: string }) {
   const data = await axiosClient.patch(apiUrl(`/api/viewings/admin/${id}/status`), payload);
     return data;

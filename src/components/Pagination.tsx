@@ -1,109 +1,112 @@
+"use client";
+
 import React from "react";
 
-interface PaginationProps {
+// Support two common prop shapes found across the codebase so the component
+// can be used uniformly:
+// - New style: { page, limit, total, onPageChange }
+// - Old style: { page, totalPages, onPageChange, onPrev, onNext }
+type NewProps = {
   page: number;
-  totalPages: number;
-  onPrev: () => void;
-  onNext: () => void;
+  limit: number;
+  total: number;
   onPageChange: (page: number) => void;
-}
-
-const Pagination: React.FC<PaginationProps> = ({
-  page,
-  totalPages,
-  onPrev,
-  onNext,
-  onPageChange,
-}) => {
-  // Hàm tạo danh sách số trang
-  const generatePageNumbers = () => {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    if (page <= 4) {
-      return [1, 2, 3, 4, 5, "...", totalPages];
-    }
-
-    if (page >= totalPages - 3) {
-      return [
-        1,
-        "...",
-        totalPages - 4,
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      ];
-    }
-
-    return [1, "...", page - 1, page, page + 1, "...", totalPages];
-  };
-
-  const pageNumbers = generatePageNumbers();
-
-  return (
-    <nav className="flex justify-center items-center mt-6 gap-2 select-none">
-      {/* Nút trang trước */}
-      <button
-        className="w-9 h-9 flex items-center justify-center border rounded-full bg-white hover:bg-blue-100 text-blue-500 cursor-pointer border-blue-300 shadow-sm transition disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400"
-        onClick={onPrev}
-        disabled={page === 1}
-        aria-label="Trang trước"
-      >
-        <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-          <path
-            d="M13 16l-5-6 5-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      {/* Page numbers */}
-      {pageNumbers.map((num, idx) =>
-        typeof num === "number" ? (
-          <button
-            key={`page-${num}-${idx}`} // ✅ key unique, không bị trùng
-            className={`w-9 h-9 flex items-center justify-center rounded-full transition font-medium cursor-pointer
-              ${
-                num === page
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-white text-gray-700 hover:bg-blue-100 border border-gray-300"
-              }`}
-            onClick={() => onPageChange(num)}
-            aria-current={num === page ? "page" : undefined}
-          >
-            {num}
-          </button>
-        ) : (
-          <span key={`dots-${idx}`} className="px-2 text-gray-400 select-none">
-            {num}
-          </span>
-        )
-      )}
-
-      {/* Nút trang sau */}
-      <button
-        className="w-9 h-9 flex items-center justify-center border rounded-full bg-white hover:bg-blue-100 text-blue-500 cursor-pointer border-blue-300 shadow-sm transition disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400"
-        onClick={onNext}
-        disabled={page === totalPages || totalPages === 0}
-        aria-label="Trang sau"
-      >
-        <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-          <path
-            d="M7 4l5 6-5 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-    </nav>
-  );
+  siblingCount?: number;
 };
 
-export default Pagination;
+type OldProps = {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+};
+
+type Props = NewProps | OldProps;
+
+function isNewProps(p: Props): p is NewProps {
+  return (p as NewProps).limit !== undefined && (p as NewProps).total !== undefined;
+}
+
+export default function Pagination(props: Props) {
+  const siblingCount = isNewProps(props) ? (props.siblingCount ?? 3) : 3;
+
+  // normalize to pageCount and simple handlers so both shapes render the same UI
+  // Coerce page to a number to avoid "1" vs 1 mismatches when callers
+  // pass a string (common when reading from query params). This ensures
+  // the active-button comparison (p === page) reliably matches and the
+  // active background (green) is applied consistently.
+  const page = Number((props as any).page) || 1;
+  const pageCount = isNewProps(props)
+    ? Math.max(1, Math.ceil(((props as NewProps).total || 0) / ((props as NewProps).limit || 1)))
+    : Math.max(1, (props as OldProps).totalPages || 1);
+
+  const onPageChange = (p: number) => {
+    if (p === page) return;
+    if (isNewProps(props)) props.onPageChange(p);
+    else props.onPageChange(p);
+  };
+
+  const onPrev = () => {
+    const next = Math.max(1, page - 1);
+    if (isNewProps(props)) props.onPageChange(next);
+    else if (props.onPrev) props.onPrev(); else props.onPageChange(next);
+  };
+
+  const onNext = () => {
+    const next = Math.min(pageCount, page + 1);
+    if (isNewProps(props)) props.onPageChange(next);
+    else if (props.onNext) props.onNext(); else props.onPageChange(next);
+  };
+
+  // Always render pagination per user request (even for a single page)
+  const pages: number[] = [];
+  for (let i = 1; i <= pageCount; i++) {
+    if (i === 1 || i === pageCount || Math.abs(i - page) <= siblingCount) pages.push(i);
+  }
+
+  return (
+    <nav className="mt-4 flex items-center justify-center gap-4" aria-label="Pagination">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onPrev}
+          disabled={page <= 1}
+          aria-label="Previous page"
+          className={`w-9 h-9 flex items-center justify-center rounded-full transition-shadow border ${page <= 1 ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-slate-700 hover:shadow-sm border-gray-200'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div className="flex items-center gap-1">
+          {pages.map((p, idx) => (
+            <React.Fragment key={p}>
+              {idx > 0 && pages[idx - 1] + 1 < p && (
+                <span className="px-2 text-sm text-gray-400 select-none">…</span>
+              )}
+              <button
+                onClick={() => onPageChange(p)}
+                aria-current={p === page ? 'page' : undefined}
+                className={`min-w-[36px] h-9 flex items-center justify-center px-3 rounded-full text-sm font-medium transition-colors border ${p === page ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-white text-slate-700 border-gray-200 hover:bg-slate-50'}`}
+              >
+                {p}
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+
+        <button
+          onClick={onNext}
+          disabled={page >= pageCount}
+          aria-label="Next page"
+          className={`w-9 h-9 flex items-center justify-center rounded-full transition-shadow border ${page >= pageCount ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-slate-700 hover:shadow-sm border-gray-200'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+  );
+}

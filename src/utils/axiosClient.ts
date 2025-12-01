@@ -71,10 +71,54 @@ axiosClient.interceptors.request.use(
 let logoutNotified = false; // tránh hiện toast nhiều lần cho loạt request 401
 axiosClient.interceptors.response.use(
   (response) => {
+    // Handle backend returning an OK status but with a payload indicating JWT expired,
+    // example: { success: true, data: { message: 'jwt expired' }, meta: {} }
+    try {
+      const d = response?.data;
+      const msg = (d && (d.message || (d.data && d.data.message))) || '';
+      if (typeof msg === 'string' && msg.toLowerCase().includes('jwt expired')) {
+        // perform logout + notify
+        try {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('tokenUser');
+          localStorage.removeItem('tokenAdmin');
+          localStorage.removeItem('auth_user');
+          sessionStorage.removeItem('auth_user');
+          sessionStorage.removeItem('access_token');
+          try { localStorage.setItem('auth_logout', String(Date.now())); } catch {}
+          try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch {}
+          try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch {}
+        } catch {}
+
+        try {
+          const { toast } = require('react-toastify');
+          toast.info('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        } catch {}
+
+        // redirect to login (preserve admin path if applicable)
+        if (typeof window !== 'undefined') {
+          const isAdminUI = window.location.pathname.startsWith('/admin');
+          const loginPath = isAdminUI ? '/dang-nhap?role=admin' : '/dang-nhap';
+          // small debounce to avoid navigation loops
+          const FLAG = 'auth_logout_inflight';
+          const last = Number(sessionStorage.getItem(FLAG) || 0);
+          const now = Date.now();
+          if (!last || now - last > 1500) {
+            sessionStorage.setItem(FLAG, String(now));
+            window.location.href = loginPath;
+          }
+        }
+
+        return Promise.reject(new Error('jwt expired'));
+      }
+    } catch (e) {
+      // ignore parsing errors and continue
+    }
     return response.data ?? response;
   },
   (error) => {
     const status = error?.response?.status;
+
     const respData = error?.response?.data || {};
     const unauthorizedByBody = respData && (String(respData.error || '').toLowerCase() === 'unauthorized' && String(respData.message || '').toLowerCase().includes('no auth token'));
     const jwtExpiredByBody = respData && String(respData.message || '').toLowerCase().includes('jwt expired');

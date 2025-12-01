@@ -45,6 +45,13 @@ export const viAdmin = {
     cancelled: 'Đã huỷ',
     visited: 'Đã xem'
   }
+  ,
+  contractStatus: {
+    active: 'Hoạt động',
+    expiring_soon: 'Sắp hết hạn',
+    expired: 'Quá hạn',
+    terminated: 'Đã thanh lý'
+  }
 };
 
 export const tRole = (r: string) => viAdmin.role[r as keyof typeof viAdmin.role] || r;
@@ -53,3 +60,4 @@ export const tJobStatus = (st: string) => (viAdmin.jobStatus as any)[st] || st;
 export const tViewingStatus = (st: string) => (viAdmin.viewingStatus as any)[st] || st;
 export const tBuildingStatus = (st: string) => (viAdmin.buildingStatus as any)[st] || st;
 export const tApartmentStatus = (st: string) => (viAdmin.apartmentStatus as any)[st] || st;
+export const tContractStatus = (st: string) => (viAdmin.contractStatus as any)[st] || st;

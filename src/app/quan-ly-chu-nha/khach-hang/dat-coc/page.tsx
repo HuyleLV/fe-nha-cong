@@ -4,34 +4,56 @@ import React, { useEffect, useState } from "react";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from '@/components/AdminTable';
 import { depositService } from '@/services/depositService';
+import { userService } from '@/services/userService';
 import Link from 'next/link';
 import { Edit3, Trash2, PlusCircle, List as ListIcon, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { toast } from 'react-toastify';
+import Pagination from '@/components/Pagination';
 
-type Row = { id: number; status?: string; buildingId?: number; apartmentId?: number; customerInfo?: string; depositDate?: string; rentAmount?: number; depositAmount?: number };
+type Row = { id: number; status?: string; buildingId?: number; apartmentId?: number; customerInfo?: string; customerName?: string | null; customerPhone?: string | null; depositDate?: string; rentAmount?: number; depositAmount?: number };
 
 export default function DatCocPage(){
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [buildings, setBuildings] = useState<any[]>([]);
   const [apartments, setApartments] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(20);
+  const [total, setTotal] = useState<number>(0);
+  const [meId, setMeId] = useState<number | null>(null);
 
   const [filter, setFilter] = useState<'all'|'pending'|'signed'|'cancelled'>('all');
 
-  const load = async () => {
+  const load = async (p = page) => {
     setLoading(true);
     try {
-      const res = await depositService.list();
-      const data = res.data ?? res;
-      setRows((data as any[]).map(d => ({ id: d.id, status: d.status, buildingId: d.buildingId, apartmentId: d.apartmentId, customerInfo: d.customerInfo, depositDate: d.depositDate, rentAmount: d.rentAmount, depositAmount: d.depositAmount })));
+      const params: any = { page: p, limit };
+      if (meId) params.ownerId = meId;
+      const res = await depositService.list(params);
+      const data = res.data ?? [];
+      const meta = res.meta ?? {};
+      setTotal(meta.total ?? 0);
+      setPage(meta.page ?? p);
+      setRows((data as any[]).map(d => ({ id: d.id, status: d.status, buildingId: d.buildingId, apartmentId: d.apartmentId, customerInfo: d.customerInfo, customerName: (d as any).customerName ?? null, customerPhone: (d as any).customerPhone ?? null, depositDate: d.depositDate, rentAmount: d.rentAmount, depositAmount: d.depositAmount })));
     } catch (err) {
       console.error(err);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(1); }, [meId]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await userService.getMe();
+        if (me && (me as any).id) setMeId((me as any).id);
+      } catch (err) {
+        // ignore
+      }
+    })();
+  }, []);
 
   // preload buildings and apartments for display mapping
   useEffect(() => {
@@ -74,7 +96,7 @@ export default function DatCocPage(){
   return (
     <div className="p-6">
       <Panel title="Đặt cọc" actions={(
-        <Link href={`/quan-ly-chu-nha/khach-hang/dat-coc/new`} title="Tạo đặt cọc" aria-label="Tạo đặt cọc" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md">
+        <Link href={`/quan-ly-chu-nha/khach-hang/dat-coc/new`} title="Tạo đặt cọc" aria-label="Tạo đặt cọc" className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white">
           <PlusCircle className="w-5 h-5" />
         </Link>
       )}>
@@ -174,6 +196,8 @@ export default function DatCocPage(){
                 return r.apartmentId ? `#${r.apartmentId}` : '';
               })()}</td>
               <td className="px-4 py-3">{(() => {
+                // Prefer customerName returned by API; fallback to stored customerInfo snapshot
+                if ((r as any).customerName) return `${(r as any).customerName}${(r as any).customerPhone ? ' • ' + (r as any).customerPhone : ''}`;
                 try {
                   const c = typeof r.customerInfo === 'string' && r.customerInfo ? JSON.parse(r.customerInfo) : r.customerInfo;
                   if (c && (c.name || c.phone)) return `${c.name || ''}${c.phone ? ' • ' + c.phone : ''}`;
@@ -196,8 +220,7 @@ export default function DatCocPage(){
             </tr>
           ))}
         </AdminTable>
-
-        
+        <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
       </Panel>
     </div>
   );

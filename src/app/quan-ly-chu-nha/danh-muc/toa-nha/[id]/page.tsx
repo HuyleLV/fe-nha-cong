@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Save, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Save, ChevronRight, CheckCircle2, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Building, BuildingForm } from "@/type/building";
@@ -169,9 +170,12 @@ function BuildingHostDetailInner() {
           </div>
           <div className="flex items-center gap-2">
             {isEdit && (
-              <button onClick={onDelete} className="px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <>
+                <Link href={`/quan-ly-chu-nha/danh-muc/toa-nha/${id}/calendar`} className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700"><CalendarIcon className="w-4 h-4" /></Link>
+                <button onClick={onDelete} className="px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
             )}
             <button onClick={onSave} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">
               <CheckCircle2 className="w-5 h-5" /> {isEdit ? "Cập nhật" : "Tạo mới"}

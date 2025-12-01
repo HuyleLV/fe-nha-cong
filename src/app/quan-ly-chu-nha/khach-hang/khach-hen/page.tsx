@@ -7,6 +7,7 @@ import { userService } from '@/services/userService';
 import Link from 'next/link';
 import { Edit3, Trash2, UserPlus, Calendar, ShoppingCart, FileText, FileCheck, XCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Pagination from '@/components/Pagination';
 
 type StatusKey = 'new'|'appointment'|'sales'|'deposit_form'|'contract'|'failed';
 
@@ -25,15 +26,21 @@ export default function KhachHenPage(){
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<StatusKey | null>(null);
-
-  const load = async () => {
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(20);
+  const [total, setTotal] = useState<number>(0);
+  const [meId, setMeId] = useState<number | null>(null);
+  const load = async (p = page) => {
     setLoading(true);
     try {
-      // Fetch all host-relevant users, then compute status counts client-side
-      const res = await userService.listAdminUsers({ page: 1, limit: 1000 });
+      const params: any = { page: p, limit };
+      if (meId) params.ownerId = meId;
+      const res = await userService.listAdminUsers(params);
       const users = res.data ?? [];
+      const meta = res.meta ?? {};
+      setTotal(meta.total ?? 0);
+      setPage(meta.page ?? p);
       const mapped = (users as any[]).map(u => ({ id: u.id, name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '', note: u.note ?? '', customerStatus: u.customerStatus ?? null }));
-      // Keep only customers with one of the workflow statuses
       const statusKeys = STATUS_LIST.map(s => s.key);
       const filtered = mapped.filter(m => statusKeys.includes((m.customerStatus ?? 'new') as StatusKey));
       setRows(filtered);
@@ -42,7 +49,19 @@ export default function KhachHenPage(){
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(1); }, [meId]);
+
+  useEffect(() => {
+    // load current user id to scope lists to this host
+    (async () => {
+      try {
+        const me = await userService.getMe();
+        if (me && me.id) setMeId(me.id);
+      } catch (err) {
+        // ignore
+      }
+    })();
+  }, []);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -129,6 +148,7 @@ export default function KhachHenPage(){
             </tr>
           ))}
         </AdminTable>
+        <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
       </Panel>
     </div>
   );

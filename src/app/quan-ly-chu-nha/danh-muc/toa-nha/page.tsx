@@ -6,7 +6,7 @@ import AdminTable from "@/components/AdminTable";
 import { useRouter } from 'next/navigation';
 // locationService used to populate province/city/district/street selects
 import { locationService } from '@/services/locationService';
-import { PlusCircle, Edit3, Trash2, Home, CheckCircle, XCircle } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, Home, CheckCircle, XCircle, Calendar as CalendarIcon } from "lucide-react";
 import Spinner from '@/components/spinner';
 import Pagination from '@/components/Pagination';
 import { buildingService } from '@/services/buildingService';
@@ -160,6 +160,7 @@ export default function Page() {
               <td className="py-2 text-sm text-slate-700 text-center">{it.paymentDate ? new Date(it.paymentDate).toLocaleDateString() : '-'}</td>
               <td className="py-2 text-sm text-slate-700 text-center">
                 <div className="inline-flex items-center gap-2">
+                  <button onClick={() => router.push(`/quan-ly-chu-nha/danh-muc/toa-nha/${it.id}/calendar`)} className="inline-flex items-center justify-center p-2 rounded-md bg-sky-600 text-white hover:bg-sky-700" title="Xem lịch"><CalendarIcon className="w-4 h-4"/></button>
                   <button onClick={() => startEdit(it)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></button>
                   <button onClick={() => remove(it.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
