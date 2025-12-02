@@ -154,3 +154,14 @@ body {
   justify-content: right;
 }
 
+/* ================== Clickable cursor ================== */
+/* Ensure clickable elements show pointer cursor across the app so
+   components rendered as <button> or elements with role="button"
+   visually indicate interactivity. This avoids editing many files. */
+button,
+input[type="button"],
+input[type="submit"],
+[role="button"] {
+  cursor: pointer;
+}
+

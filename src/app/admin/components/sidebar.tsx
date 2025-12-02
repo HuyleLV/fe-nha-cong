@@ -12,6 +12,7 @@ export default function Sidebar() {
   const [info, setInfo] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [moderationOpen, setModerationOpen] = useState(false);
 
   useEffect(() => {
     setReady(true);
@@ -27,6 +28,7 @@ export default function Sidebar() {
   useEffect(() => {
     if (!ready) return;
     setLocationOpen(pathname.startsWith("/admin/location"));
+    setModerationOpen(pathname.startsWith("/admin/moderation"));
   }, [pathname, ready]);
 
   const initials = useMemo(() => {
@@ -39,6 +41,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
+    { href: "/admin/moderation", label: "Kiểm duyệt", icon: CalendarDays },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
@@ -91,6 +94,65 @@ export default function Sidebar() {
         {menuItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           const isLocation = href === "/admin/location";
+          const isModeration = href === "/admin/moderation";
+
+          if (isModeration) {
+            const subLinks = [
+              { href: "/admin/moderation/apartment", label: "Căn hộ", Icon: House },
+            ];
+            const groupActive = pathname.startsWith("/admin/moderation");
+
+            return (
+              <div key={href} className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setModerationOpen((v) => !v)}
+                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
+                    moderationOpen || groupActive
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    {(moderationOpen || groupActive) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                    )}
+                    <Icon className="w-4.5 h-4.5" />
+                    <span className="truncate">{label}</span>
+                  </span>
+                  {moderationOpen ? (
+                    <ChevronDown className="w-4 h-4 opacity-80" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 opacity-80" />
+                  )}
+                </button>
+
+                {moderationOpen && (
+                  <div className="ml-4 border-l border-emerald-100 pl-3">
+                    <div className="rounded-md bg-emerald-50/60 p-1.5">
+                      {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
+                        const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
+                        return (
+                          <Link
+                            key={shref}
+                            href={shref}
+                            className={`flex items-center gap-2 px-2 py-2 rounded transition text-sm ${
+                              subActive
+                                ? "text-emerald-700 bg-white shadow-sm ring-1 ring-emerald-100"
+                                : "text-emerald-800/80 hover:bg-white hover:text-emerald-700"
+                            }`}
+                          >
+                            <SIcon className="w-4 h-4" />
+                            <span>{slabel}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
 
           if (!isLocation) {
             return (

@@ -39,10 +39,19 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
   // backend will restrict results to the caller when a host token is used.
   const isAdminUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/admin');
 
+  // Host UI detection: pages under /quan-ly-chu-nha are host management pages.
+  // When on host UI, prefer the user/host token and DO NOT fall back to admin
+  // token. This prevents the situation where an admin token present in
+  // localStorage causes host pages to receive admin-scoped data.
+  const isHostUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/quan-ly-chu-nha');
+
   if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
     // Admin endpoint or admin UI → ưu tiên token admin
     return adminToken || userToken || null;
   }
+
+  // If we're in the host UI, prefer the user token and don't fall back to admin.
+  if (isHostUI) return userToken || null;
 
   // Endpoint phía người dùng → ưu tiên token người dùng để không "đè" bằng admin
   return userToken || adminToken || null;

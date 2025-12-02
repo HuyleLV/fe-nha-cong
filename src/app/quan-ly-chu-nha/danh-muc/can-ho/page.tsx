@@ -146,11 +146,11 @@ export default function Page() {
           </button>
         </div>
 
-        <AdminTable headers={["Mã","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Trạng thái","Hành động"]}>
+        <AdminTable headers={["Mã","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Trạng thái","Đã duyệt","Hành động"]}>
           {loading ? (
-            <tr><td colSpan={8} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
+            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
           ) : displayed.length === 0 ? (
-            <tr><td colSpan={8} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
+            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
           ) : displayed.map((it) => (
             <tr key={it.id} className="text-[14px]">
               <td className="px-4 py-3 text-center">{it.roomCode ?? it.id}</td>
@@ -163,6 +163,17 @@ export default function Page() {
                 <span className={`px-2 py-0.5 rounded text-sm ${occupancyOf(it.occupancyRaw) === 'occupied' ? 'bg-rose-100 text-rose-700' : occupancyOf(it.occupancyRaw) === 'reserved' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                   {occupancyOf(it.occupancyRaw) === 'occupied' ? 'Đang thuê' : occupancyOf(it.occupancyRaw) === 'reserved' ? 'Đang cọc' : 'Đang trống'}
                 </span>
+              </td>
+              <td className="px-4 py-3 text-center">
+                {(() => {
+                  const st = (it.occupancyRaw as any)?.status ?? (it.occupancyRaw as any)?.state ?? (it.occupancyRaw as any)?.published ?? undefined;
+                  const ok = String(st).toLowerCase() === 'published' || String(st).toLowerCase() === 'active' || String(st).toLowerCase() === '1' || st === true;
+                  return (
+                    <span className={`px-2 py-0.5 rounded text-sm ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                      {ok ? 'Đã duyệt' : 'Chưa duyệt'}
+                    </span>
+                  );
+                })()}
               </td>
               <td className="px-4 py-3 text-center">
                 <div className="inline-flex items-center gap-2">
