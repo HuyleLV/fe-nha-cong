@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown, Users } from "lucide-react";
+import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown, Users, BarChart2, FileText, DollarSign } from "lucide-react";
 import type { User } from "@/type/user";
 
 export default function HostSidebar() {
@@ -53,6 +53,16 @@ export default function HostSidebar() {
         { href: "/quan-ly-chu-nha/khach-hang/hop-dong", label: "Hợp đồng", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/khach-hang", label: "Khách hàng", icon: Users },
         { href: "/quan-ly-chu-nha/khach-hang/phuong-tien", label: "Phương tiện", icon: CalendarDays },
+      ],
+    },
+    {
+      href: "/quan-ly-chu-nha/tai-chinh",
+      label: "Tài chính",
+      icon: BarChart2,
+      children: [
+        { href: "/quan-ly-chu-nha/tai-chinh/ghi-chi-so", label: "Ghi chỉ số", icon: BarChart2 },
+        { href: "/quan-ly-chu-nha/tai-chinh/hoa-don", label: "Hóa đơn", icon: FileText },
+        { href: "/quan-ly-chu-nha/tai-chinh/thu-chi", label: "Thu chi", icon: DollarSign },
       ],
     },
   ];

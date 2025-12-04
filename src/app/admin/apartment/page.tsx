@@ -477,6 +477,7 @@ export default function AdminApartmentsPage() {
           "Phòng",
           "Khu vực",
           "Trạng thái",
+          "Đã duyệt",
           "Cập nhật",
           "Thao tác",
         ]}
@@ -502,17 +503,36 @@ export default function AdminApartmentsPage() {
                 </span>
               </td>
               <td className="px-4 py-3">
-                <span
-                  className={`px-2 py-0.5 rounded text-sm capitalize ${
-                    it.status === "published"
-                      ? "bg-green-100 text-green-700"
-                      : it.status === "draft"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {it.status}
-                </span>
+                {(() => {
+                  const s = it.status;
+                  let label = String(s);
+                  let cls = "bg-slate-200 text-slate-700";
+                  if (s === "published") {
+                    label = "Đã đăng";
+                    cls = "bg-green-100 text-green-700";
+                  } else if (s === "draft") {
+                    label = "Nháp";
+                    cls = "bg-amber-100 text-amber-700";
+                  } else if (s === "archived") {
+                    label = "Đã ẩn";
+                    cls = "bg-slate-200 text-slate-700";
+                  }
+                  return (
+                    <span className={`px-2 py-0.5 rounded text-sm ${cls}`}>{label}</span>
+                  );
+                })()}
+              </td>
+
+              <td className="px-4 py-3 text-center">
+                {(() => {
+                  const approved = (it as any).isApproved ?? (it as any).is_approved;
+                  const ok = Boolean(approved);
+                  return (
+                    <span className={`px-2 py-0.5 rounded text-sm ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                      {ok ? 'Đã duyệt' : 'Chưa duyệt'}
+                    </span>
+                  );
+                })()}
               </td>
               <td className="px-4 py-3 text-slate-500">{formatDateTime(it.updatedAt)}</td>
               <td className="px-4 py-3">

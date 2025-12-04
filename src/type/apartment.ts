@@ -41,6 +41,8 @@ export type Apartment = {
   /** Ưu đãi theo phần trăm (0-100). Null/undefined nếu không có ưu đãi */
   discountPercent?: number | null;
   discountAmount?: string | null; // số tiền giảm trực tiếp (VND) numeric string
+  /** Hoa hồng cho CTV (%) */
+  commissionPercent?: number | null;
   /** Tiền đặt cọc (numeric string, VND) */
   depositAmount?: string | null;
 
@@ -136,6 +138,7 @@ export type ApartmentForm = {
   status?: ApartmentStatus;       // default "draft" ở BE
   discountPercent?: number | null; // Ưu đãi (%), 0-100
   discountAmount?: string | null; // Ưu đãi cố định VND
+  commissionPercent?: number | null; // Hoa hồng CTV (%)
   /** Tiền đặt cọc (numeric string, VND) */
   depositAmount?: string | null;
 

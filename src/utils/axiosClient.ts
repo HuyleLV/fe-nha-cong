@@ -33,16 +33,8 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
   // Một số hành động write trên tài nguyên nhạy cảm (có thể là admin/partner)
   const isPotentialAdminWrite = (m === 'post' || m === 'patch' || m === 'put' || m === 'delete') && /\/apartments(\b|\/)/.test(p) && !/home-sections/.test(p);
 
-  // If the current browser page is an admin UI route, prefer admin token so
-  // admin UI requests are not accidentally sent with a host/user token.
-  // This is important because GET /apartments is a shared endpoint and the
-  // backend will restrict results to the caller when a host token is used.
   const isAdminUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/admin');
 
-  // Host UI detection: pages under /quan-ly-chu-nha are host management pages.
-  // When on host UI, prefer the user/host token and DO NOT fall back to admin
-  // token. This prevents the situation where an admin token present in
-  // localStorage causes host pages to receive admin-scoped data.
   const isHostUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/quan-ly-chu-nha');
 
   if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
@@ -84,8 +76,12 @@ axiosClient.interceptors.response.use(
     // example: { success: true, data: { message: 'jwt expired' }, meta: {} }
     try {
       const d = response?.data;
-      const msg = (d && (d.message || (d.data && d.data.message))) || '';
-      if (typeof msg === 'string' && msg.toLowerCase().includes('jwt expired')) {
+      const raw = (d && (d.message || (d.data && d.data.message))) || '';
+      const msg = String(raw);
+      const low = msg.toLowerCase();
+      const isExpired = low.includes('jwt expired') || low.includes('phiên đăng nhập đã hết hạn') || low.includes('token expired');
+      const isInvalid = low.includes('invalid signature') || low.includes('jwt malformed') || low.includes('token không hợp lệ');
+      if (isExpired || isInvalid) {
         // perform logout + notify
         try {
           localStorage.removeItem('access_token');
@@ -101,7 +97,7 @@ axiosClient.interceptors.response.use(
 
         try {
           const { toast } = require('react-toastify');
-          toast.info('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          toast.info(isExpired ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : 'Token không hợp lệ. Vui lòng đăng nhập lại.');
         } catch {}
 
         // redirect to login (preserve admin path if applicable)
@@ -118,7 +114,7 @@ axiosClient.interceptors.response.use(
           }
         }
 
-        return Promise.reject(new Error('jwt expired'));
+        return Promise.reject(new Error(isExpired ? 'jwt expired' : 'invalid token'));
       }
     } catch (e) {
       // ignore parsing errors and continue
@@ -129,10 +125,12 @@ axiosClient.interceptors.response.use(
     const status = error?.response?.status;
 
     const respData = error?.response?.data || {};
-    const unauthorizedByBody = respData && (String(respData.error || '').toLowerCase() === 'unauthorized' && String(respData.message || '').toLowerCase().includes('no auth token'));
-    const jwtExpiredByBody = respData && String(respData.message || '').toLowerCase().includes('jwt expired');
+    const lowMsg = String(respData.message || '').toLowerCase();
+    const unauthorizedByBody = respData && (String(respData.error || '').toLowerCase() === 'unauthorized' && lowMsg.includes('no auth token'));
+    const jwtExpiredByBody = respData && (lowMsg.includes('jwt expired') || lowMsg.includes('phiên đăng nhập đã hết hạn') || lowMsg.includes('token expired'));
+    const invalidTokenByBody = respData && (lowMsg.includes('invalid signature') || lowMsg.includes('jwt malformed') || lowMsg.includes('token không hợp lệ'));
 
-    if ((status === 401 || unauthorizedByBody || jwtExpiredByBody) && typeof window !== 'undefined') {
+    if ((status === 401 || unauthorizedByBody || jwtExpiredByBody || invalidTokenByBody) && typeof window !== 'undefined') {
       // Chỉ thông báo nếu trước đó có token => nghĩa là phiên đã từng đăng nhập
       const hadToken = !!(
         localStorage.getItem('access_token') ||
@@ -166,7 +164,7 @@ axiosClient.interceptors.response.use(
           logoutNotified = true;
           try {
             const { toast } = require('react-toastify');
-            toast.info('Phiên đăng nhập đã hết hạn');
+            toast.info(jwtExpiredByBody ? 'Phiên đăng nhập đã hết hạn' : 'Token không hợp lệ');
           } catch {}
           setTimeout(() => { logoutNotified = false; }, 5000);
         }

@@ -166,8 +166,10 @@ export default function Page() {
               </td>
               <td className="px-4 py-3 text-center">
                 {(() => {
-                  const st = (it.occupancyRaw as any)?.status ?? (it.occupancyRaw as any)?.state ?? (it.occupancyRaw as any)?.published ?? undefined;
-                  const ok = String(st).toLowerCase() === 'published' || String(st).toLowerCase() === 'active' || String(st).toLowerCase() === '1' || st === true;
+                  const raw = it.occupancyRaw as any;
+                  // Prefer explicit approval flag added on backend. Accept both camelCase and snake_case.
+                  const approvedFlag = raw?.isApproved ?? raw?.is_approved;
+                  const ok = Boolean(approvedFlag);
                   return (
                     <span className={`px-2 py-0.5 rounded text-sm ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
                       {ok ? 'Đã duyệt' : 'Chưa duyệt'}

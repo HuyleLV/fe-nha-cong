@@ -18,7 +18,10 @@ export default function ModerationApartmentPage() {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await apartmentService.getAll({ status: 'draft', page: 1, limit: 200 });
+  // Request apartments that are not yet approved (isApproved = false).
+  // Do not filter by status so admins can review any unapproved listing.
+  // apartmentService.getAll typings don't include isApproved yet, so cast to any.
+  const res = await apartmentService.getAll({ isApproved: false, page: 1, limit: 200 } as any);
       const apts = res.items || [];
       setItems(apts);
 
@@ -52,7 +55,8 @@ export default function ModerationApartmentPage() {
   const onApprove = async (id: number) => {
     if (!confirm('Duyệt căn hộ này để hiển thị trên website?')) return;
     try {
-      await apartmentService.update(id, { status: 'published' } as any);
+      // Mark as published and explicitly set isApproved = true
+      await apartmentService.update(id, { status: 'published', isApproved: true } as any);
       toast.success('Đã duyệt căn hộ');
       setItems((prev) => prev.filter((p) => p.id !== id));
     } catch (e: any) {
@@ -64,7 +68,8 @@ export default function ModerationApartmentPage() {
     if (!confirm('Bạn có chắc muốn từ chối căn hộ này?')) return;
     try {
       // Mark apartment as archived when rejected
-      await apartmentService.update(id, { status: 'archived' } as any);
+      // Explicitly ensure isApproved stays false and archive the listing
+      await apartmentService.update(id, { status: 'archived', isApproved: false } as any);
       toast.success('Đã từ chối căn hộ');
       setItems((prev) => prev.filter((p) => p.id !== id));
     } catch (e: any) {

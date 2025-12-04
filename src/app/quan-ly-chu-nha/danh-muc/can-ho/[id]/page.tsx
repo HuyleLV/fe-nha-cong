@@ -91,6 +91,7 @@ export default function HostApartmentFormPage() {
   discountPercent: 0,
   discountAmount: "",
   discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
+  commissionPercent: 0,
       coverImageUrl: "",
       images: [],
 
@@ -198,6 +199,7 @@ export default function HostApartmentFormPage() {
   const videoUrl = watch("videoUrl") || "";
   const focusKeyword = watch("focusKeyword") || ""; // ✅ theo dõi keyword
   const [buildings, setBuildings] = useState<Building[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // auto slug
   useEffect(() => {
@@ -267,6 +269,7 @@ export default function HostApartmentFormPage() {
           depositAmount: (ap as any).depositAmount ?? "",
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
+          commissionPercent: (ap as any).commissionPercent ?? 0,
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
           buildingId: ap.buildingId ?? null,
 
@@ -325,6 +328,18 @@ export default function HostApartmentFormPage() {
         setBuildings(res.items || []);
       } catch {
         setBuildings([]);
+      }
+    })();
+  }, []);
+
+  // Load current user role (used to hide admin-only UI on host pages)
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await userService.getMe();
+        setUserRole(me?.role || null);
+      } catch {
+        setUserRole(null);
       }
     })();
   }, []);
@@ -409,25 +424,50 @@ export default function HostApartmentFormPage() {
       if ((payload as any)[k] == null) delete (payload as any)[k];
     }
     // Normalize discount: if NaN, remove; allow 0 to clear
-    // Phân tích ô discountInput: nếu kết thúc bằng %, dùng phần trăm; nếu không → số tiền
-  const rawDiscount: string = (values as any).discountInput?.trim() || "";
+    // Phân tích ô discountInput: host chỉ cần nhập số tiền, admin vẫn có thể nhập % hoặc số tiền
+    const rawDiscount: string = (values as any).discountInput?.trim() || "";
     delete (payload as any).discountPercent;
     delete (payload as any).discountAmount;
     if (rawDiscount) {
-      if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
-        const num = parseFloat(rawDiscount.replace('%',''));
-        if (Number.isFinite(num) && num >= 0) {
-          (payload as any).discountPercent = Math.min(100, Math.round(num));
+      const price = parseFloat(String(values.rentPrice || payload.rentPrice || "0").replace(/,/g, '.')) || 0;
+      if (userRole === 'host') {
+        // For hosts: prefer numeric amount. If percent provided, convert it to amount using rentPrice.
+        if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
+          const amt = parseFloat(rawDiscount.replace(/,/g, '.'));
+          if (Number.isFinite(amt) && amt >= 0) (payload as any).discountAmount = amt.toFixed(2);
+        } else if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
+          const pct = parseFloat(rawDiscount.replace('%', ''));
+          if (Number.isFinite(pct) && pct >= 0 && price > 0) {
+            const amt = Math.round(price * pct / 100);
+            (payload as any).discountAmount = String(amt);
+          }
         }
-      } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
-        const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
-        if (Number.isFinite(amt) && amt >= 0) {
-          (payload as any).discountAmount = amt.toFixed(2); // chuẩn hoá
+      } else {
+        // For admins/others: allow percent or absolute amount
+        if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
+          const num = parseFloat(rawDiscount.replace('%',''));
+          if (Number.isFinite(num) && num >= 0) {
+            (payload as any).discountPercent = Math.min(100, Math.round(num));
+          }
+        } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
+          const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
+          if (Number.isFinite(amt) && amt >= 0) {
+            (payload as any).discountAmount = amt.toFixed(2); // chuẩn hoá
+          }
         }
       }
     }
     // Không gửi discountInput lên API
     delete (payload as any).discountInput;
+
+    // Normalize commissionPercent: clamp to 0-100 if present
+    if ((values as any).commissionPercent != null && (values as any).commissionPercent !== "") {
+      const cp = Number((values as any).commissionPercent);
+      if (Number.isFinite(cp)) {
+        (payload as any).commissionPercent = Math.min(100, Math.max(0, Math.round(cp)));
+      }
+    }
+    if ((payload as any).commissionPercent == null) delete (payload as any).commissionPercent;
 
   // Remove local-only fields
   delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
@@ -685,11 +725,14 @@ export default function HostApartmentFormPage() {
               </div>
 
               <div className="mt-3">
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" {...register("isVerified")} />
-                  <span className="text-sm text-slate-700">Đã xác minh (hiển thị dấu tích xanh)</span>
-                </label>
-              </div>
+                {userRole === 'admin' ? (
+                  <div className="mt-3">
+                    <label className="inline-flex items-center gap-2">
+                      <input type="checkbox" {...register("isVerified")} />
+                      <span className="text-sm text-slate-700">Đã xác minh (hiển thị dấu tích xanh)</span>
+                    </label>
+                  </div>
+                ) : null}
 
               
 
@@ -735,26 +778,33 @@ export default function HostApartmentFormPage() {
                     ) : null}
               </div>
 
-              <div>
+              <div className="my-2">
                 <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
                 <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
                 {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
               </div>
-              <div>
+              <div className="my-2">
                 <label className="block text-sm text-slate-600 mb-1">Tiền đặt cọc (VND)</label>
                 <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 1300000" {...register("depositAmount")} />
                 <p className="text-xs text-slate-500 mt-1">Để trống nếu không có đặt cọc.</p>
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm text-slate-600 mb-1">Ưu đãi (% hoặc số tiền)</label>
+              <div className="md:col-span-2 my-2">
+                <label className="block text-sm text-slate-600 mb-1">{userRole === 'host' ? 'Ưu đãi (số tiền, VND)' : 'Ưu đãi (% hoặc số tiền)'}</label>
                 <input
                   type="text"
                   className={inputCls}
-                  placeholder="Ví dụ: 15% hoặc 500000"
+                  placeholder={userRole === 'host' ? 'Ví dụ: 500000' : 'Ví dụ: 15% hoặc 500000'}
                   {...register("discountInput" as any)}
                 />
-                <p className="text-xs text-slate-500 mt-1">Nhập 15% hoặc số tiền giảm (VD: 500000). Để trống nếu không có ưu đãi.</p>
+                <p className="text-xs text-slate-500 mt-1">{userRole === 'host' ? 'Nhập số tiền giảm (VD: 500000). Chỉ cần số tiền, không bắt buộc nhập %.' : 'Nhập 15% hoặc số tiền giảm (VD: 500000). Để trống nếu không có ưu đãi.'}</p>
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (%)</label>
+                <input type="number" min={0} max={100} className={inputCls} placeholder="Ví dụ: 5" {...register("commissionPercent", { valueAsNumber: true })} />
+                <p className="text-xs text-slate-500 mt-1">Nhập phần trăm hoa hồng dành cho CTV (0-100). Để trống nếu không áp dụng.</p>
+              </div>
+            </div>
             </div>
           </Section>
 
