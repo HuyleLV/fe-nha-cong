@@ -1,4 +1,3 @@
-// Helper to build absolute API URLs based on NEXT_PUBLIC_API_URL
 export function apiUrl(path: string): string {
   const baseRaw = process.env.NEXT_PUBLIC_API_URL || "";
   const base = baseRaw.replace(/\/+$/, "");
