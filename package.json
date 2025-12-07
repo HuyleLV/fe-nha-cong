@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --turbopack",
-    "start": "next start",
+  "start": "node .next/standalone/server.js",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,md}\"",
     "lint": "next lint || echo 'Lint step not configured'"
   },
