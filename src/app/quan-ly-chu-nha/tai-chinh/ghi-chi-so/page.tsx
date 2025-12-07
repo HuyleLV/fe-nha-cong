@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from '@/components/AdminTable';
+import Pagination from '@/components/Pagination';
 import { meterReadingService } from '@/services/meterReadingService';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -17,21 +18,27 @@ export default function GhiChiSoListPage(){
   };
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [meta, setMeta] = useState({ page: 1, limit: 10, totalPages: 1, total: 0 });
   const router = useRouter();
 
-  const load = async () => {
+  const load = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const res = await meterReadingService.list();
-      const items = (res?.data ?? res) as any[];
-      setRows(items || []);
+      const res = await meterReadingService.list({ page, limit });
+      const payload = (res as any) ?? {};
+      const data = payload.items ?? payload.data ?? payload;
+      const m = payload.meta ?? { page, limit, totalPages: Array.isArray(data) ? Math.ceil(data.length / limit) : 1, total: Array.isArray(data) ? data.length : 0 };
+      setRows(Array.isArray(data) ? data : []);
+      setMeta(m);
     } catch (err) {
       console.error(err);
       toast.error('Không thể tải danh sách');
+      setRows([]);
+      setMeta({ page: 1, limit: 10, totalPages: 1, total: 0 });
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(meta.page, meta.limit); }, []);
 
   const onDelete = async (id: number) => {
     if (!confirm('Xoá ghi chỉ số này?')) return;
@@ -78,6 +85,9 @@ export default function GhiChiSoListPage(){
             </tr>
           ))}
         </AdminTable>
+        <div className="mt-4">
+          <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p) => load(p, meta.limit)} />
+        </div>
       </Panel>
     </div>
   );

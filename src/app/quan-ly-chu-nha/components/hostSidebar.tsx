@@ -65,6 +65,8 @@ export default function HostSidebar() {
         { href: "/quan-ly-chu-nha/tai-chinh/thu-chi", label: "Thu chi", icon: DollarSign },
       ],
     },
+    { href: "/quan-ly-chu-nha/thong-bao", label: "Thông báo", icon: FileText },
+    { href: "/quan-ly-chu-nha/cong-viec", label: "Công việc", icon: CalendarDays },
   ];
 
   const STORAGE_KEY = 'host_sidebar_open';

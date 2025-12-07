@@ -7,8 +7,8 @@ export const meterReadingService = {
     return res;
   },
 
-  async list() {
-    const res = await axiosClient.get<any, any>(apiUrl('/api/meter-readings'));
+  async list(params?: any) {
+    const res = await axiosClient.get<any, any>(apiUrl('/api/meter-readings'), { params });
     return res || [];
   },
   async getById(id: number) {

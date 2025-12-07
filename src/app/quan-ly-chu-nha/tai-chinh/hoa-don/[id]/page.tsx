@@ -36,9 +36,6 @@ export default function InvoiceEditPage() {
   const [apartments, setApartments] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [contractsLoading, setContractsLoading] = useState(false);
-  // Track the apartment id for which we last requested contracts. This lets the UI
-  // immediately reflect the selected apartment (disable/select placeholder) while
-  // the async fetch is in progress and prevents showing another apartment's contracts.
   const [selectedApartmentForContracts, setSelectedApartmentForContracts] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -62,7 +59,6 @@ export default function InvoiceEditPage() {
   const stripTrailingDotZero = (v: any) => {
     if (v === undefined || v === null) return "";
     const s = String(v);
-    // Remove a trailing .00 if present (e.g. "123123.00" -> "123123")
     if (s.endsWith('.00')) return s.slice(0, -3);
     return s;
   };
@@ -75,7 +71,6 @@ export default function InvoiceEditPage() {
         setBuildings(items);
       } catch {}
     })();
-    // TODO: Load real contracts when API available
     setContracts([]);
   }, []);
 
@@ -89,7 +84,6 @@ export default function InvoiceEditPage() {
     } catch {}
   };
 
-  // Load default services for an apartment and populate items table
   const loadApartmentServices = async (apartmentId?: number) => {
     if (!apartmentId) return;
     try {

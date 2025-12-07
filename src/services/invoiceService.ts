@@ -3,8 +3,8 @@ import { apiUrl } from '@/utils/apiUrl';
 import type { InvoicePayload } from '@/type/invoice';
 
 export const invoiceService = {
-  async list() {
-    const res = await axiosClient.get<any, any>(apiUrl('/api/invoices'));
+  async list(params?: any) {
+    const res = await axiosClient.get<any, any>(apiUrl('/api/invoices'), { params });
     return res || [];
   },
   async getById(id: number) {
