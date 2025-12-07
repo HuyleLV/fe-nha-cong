@@ -12,6 +12,7 @@ import { userService } from '@/services/userService';
 import { serviceService } from '@/services/serviceService';
 import { toast } from 'react-toastify';
 import { Save, CheckCircle2, ChevronRight, PlusCircle } from 'lucide-react';
+import { formatMoneyVND } from '@/utils/format-number';
 import Spinner from '@/components/spinner';
 import AdminTable from '@/components/AdminTable';
 import UploadPicker from '@/components/UploadPicker';
@@ -35,8 +36,18 @@ export default function ContractEditPage() {
 
   // Modal state for adding a service fee
   const [showFeeModal, setShowFeeModal] = useState(false);
-  const [newFee, setNewFee] = useState<{ serviceId?: string; meter?: string; initialIndex?: string; quantity?: string; billingDate?: string }>({});
-  const resetFeeModal = () => setNewFee({ serviceId: '', meter: '', initialIndex: '', quantity: '', billingDate: '' });
+  const [newFee, setNewFee] = useState<{ serviceId?: string; meter?: string; initialIndex?: string; quantity?: string; billingDate?: string; unitPrice?: string; unit?: string }>({});
+  const resetFeeModal = () => setNewFee({ serviceId: '', meter: '', initialIndex: '', quantity: '', billingDate: '', unitPrice: '', unit: '' });
+
+  const tUnit = (u?: string | null) => ({
+    phong: 'Phòng',
+    giuong: 'Giường',
+    kwh: 'kWh',
+    m3: 'm³',
+    m2: 'm²',
+    xe: 'Xe',
+    luot: 'Lượt/Lần',
+  } as Record<string, string>)[String(u ?? '')] ?? (u ?? '');
 
 
   useEffect(() => {
@@ -71,6 +82,8 @@ export default function ContractEditPage() {
             initialIndex: f.initialIndex ?? '',
             quantity: f.quantity ?? '',
             billingDate: f.billingDate ? new Date(f.billingDate).toISOString().slice(0,10) : '',
+            unitPrice: f.unitPrice ?? '',
+            unit: f.unit ?? '',
           })));
         }
         // if contract has buildingId, preload apartments for that building
@@ -183,6 +196,8 @@ export default function ContractEditPage() {
           meter: f?.meter ?? null,
           initialIndex: f?.initialIndex !== '' && f?.initialIndex !== undefined && f?.initialIndex !== null ? Number(f.initialIndex) : null,
           quantity: f?.quantity !== '' && f?.quantity !== undefined && f?.quantity !== null ? Number(f.quantity) : null,
+          unitPrice: f?.unitPrice !== '' && f?.unitPrice !== undefined && f?.unitPrice !== null ? Number(f.unitPrice) : null,
+          unit: f?.unit ?? null,
           billingDate: f?.billingDate || null,
         })) || [],
       };
@@ -409,17 +424,16 @@ export default function ContractEditPage() {
                       resetFeeModal();
                       setShowFeeModal(true);
                     }}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="inline-flex items-center gap-2 p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
                     title="Thêm phí dịch vụ"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    <span>Thêm</span>
                   </button>
                 </div>
-                <AdminTable headers={["Dịch vụ","Công tơ","Chỉ số đầu","Số lượng","Ngày tính phí","Hành động"]}>
+                <AdminTable headers={["Dịch vụ","Công tơ","Chỉ số đầu","Số lượng","Đơn giá","Đơn vị tính","Ngày tính phí","Hành động"]}>
                   {feeFields.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-4 text-center text-slate-500">Chưa có phí dịch vụ</td>
+                      <td colSpan={8} className="py-4 text-center text-slate-500">Chưa có phí dịch vụ</td>
                     </tr>
                   ) : feeFields.map((field, idx) => {
                     const sId = watch(`serviceFees.${idx}.serviceId` as const);
@@ -430,6 +444,8 @@ export default function ContractEditPage() {
                         <td className="py-2 pr-3">{watch(`serviceFees.${idx}.meter` as const) || '-'}</td>
                         <td className="py-2 pr-3">{watch(`serviceFees.${idx}.initialIndex` as const) || '-'}</td>
                         <td className="py-2 pr-3">{watch(`serviceFees.${idx}.quantity` as const) || '-'}</td>
+                        <td className="py-2 pr-3">{(watch(`serviceFees.${idx}.unitPrice` as const) || '') !== '' ? formatMoneyVND(Number(watch(`serviceFees.${idx}.unitPrice` as const))) : '-'}</td>
+                        <td className="py-2 pr-3">{(watch(`serviceFees.${idx}.unit` as const) || '') ? tUnit(watch(`serviceFees.${idx}.unit` as const)) : '-'}</td>
                         <td className="py-2 pr-3">{watch(`serviceFees.${idx}.billingDate` as const) || '-'}</td>
                         <td className="py-2 pr-3">
                           <button type="button" onClick={() => removeFee(idx)} className="px-3 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50">Xóa</button>
@@ -471,7 +487,11 @@ export default function ContractEditPage() {
                       <select
                         className={modalInputCls}
                         value={newFee.serviceId || ''}
-                        onChange={(e) => setNewFee({ ...newFee, serviceId: e.target.value })}
+                        onChange={(e) => {
+                          const sid = e.target.value;
+                          const svc = Array.isArray(services) ? services.find((s: any) => String(s.id) === String(sid)) : undefined;
+                          setNewFee({ ...newFee, serviceId: sid, unitPrice: svc?.unitPrice !== undefined && svc?.unitPrice !== null ? String(svc.unitPrice) : '', unit: svc?.unit ?? '' });
+                        }}
                       >
                         <option value="">-- Chọn dịch vụ --</option>
                         {Array.isArray(services) && services.map((s: any) => (<option key={s.id} value={String(s.id)}>{s.name}</option>))}
@@ -492,6 +512,25 @@ export default function ContractEditPage() {
                       <input type="number" inputMode="decimal" step="0.01" className={modalInputCls} value={newFee.quantity || ''} onChange={(e) => setNewFee({ ...newFee, quantity: e.target.value })} />
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Đơn giá</label>
+                      <input type="number" inputMode="decimal" step="0.01" className={modalInputCls} value={newFee.unitPrice || ''} onChange={(e) => setNewFee({ ...newFee, unitPrice: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Đơn vị tính</label>
+                      <select className={modalInputCls} value={newFee.unit || ''} onChange={(e) => setNewFee({ ...newFee, unit: e.target.value })}>
+                        <option value="">-- Chọn đơn vị --</option>
+                        <option value="phong">Phòng</option>
+                        <option value="giuong">Giường</option>
+                        <option value="kwh">kWh</option>
+                        <option value="m3">m³</option>
+                        <option value="m2">m²</option>
+                        <option value="xe">Xe</option>
+                        <option value="luot">Lượt/Lần</option>
+                      </select>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Ngày tính phí <span className="text-red-600">*</span></label>
                     <input type="date" className={modalInputCls} value={newFee.billingDate || ''} onChange={(e) => setNewFee({ ...newFee, billingDate: e.target.value })} />
@@ -510,6 +549,8 @@ export default function ContractEditPage() {
                         meter: newFee.meter || '',
                         initialIndex: newFee.initialIndex || '',
                         quantity: newFee.quantity || '',
+                        unitPrice: newFee.unitPrice || '',
+                        unit: newFee.unit || '',
                         billingDate: newFee.billingDate || '',
                       });
                       setShowFeeModal(false);

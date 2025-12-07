@@ -23,6 +23,8 @@ export type ContractServiceFee = {
   meter?: string | null;
   initialIndex?: number | null;
   quantity?: number | null;
+  unitPrice?: string | number | null;
+  unit?: string | null;
   billingDate?: string | null;
 };
 

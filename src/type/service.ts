@@ -28,4 +28,6 @@ export interface ServiceItem {
   taxRate?: string | number | null;
   buildingId?: number | null;
   note?: string | null;
+  unitPrice?: string | number | null;
+  unit?: 'phong' | 'giuong' | 'kwh' | 'm3' | 'm2' | 'xe' | 'luot' | null;
 }

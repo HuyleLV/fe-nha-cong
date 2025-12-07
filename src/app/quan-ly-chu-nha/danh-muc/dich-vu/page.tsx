@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Panel from "../../components/Panel";
 import AdminTable from "@/components/AdminTable";
+import { formatMoneyVND } from "@/utils/format-number";
 import Pagination from "@/components/Pagination";
 import Link from "next/link";
 import { PlusCircle, Edit3, Trash2 } from "lucide-react";
@@ -91,20 +92,36 @@ export default function Page() {
     }
   };
 
+  const tUnit = (u?: string | null) => {
+    if (!u) return '-';
+    switch (u) {
+      case 'phong': return 'Phòng';
+      case 'giuong': return 'Giường';
+      case 'kwh': return 'kWh';
+      case 'm3': return 'm³';
+      case 'm2': return 'm²';
+      case 'xe': return 'Xe';
+      case 'luot': return 'Lượt/Lần';
+      default: return u;
+    }
+  };
+
   return (
     <div className="p-6">
       <Panel title="Quản lý Dịch vụ" actions={(
         <Link href="/quan-ly-chu-nha/danh-muc/dich-vu/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md" title="Thêm dịch vụ"><PlusCircle className="w-5 h-5"/></Link>
       )}>
-        <AdminTable headers={["Mã","Tên dịch vụ","Loại phí","Loại đơn giá","Thuế suất","Tòa nhà","Ghi chú","Hành động"]}>
+        <AdminTable headers={["Mã","Tên dịch vụ","Loại phí","Loại đơn giá","Đơn giá","Đơn vị tính","Thuế suất","Tòa nhà","Ghi chú","Hành động"]}>
           {items.length === 0 ? (
-            <tr><td colSpan={8} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có dịch vụ'}</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có dịch vụ'}</td></tr>
           ) : items.map((it, idx) => (
             <tr key={it.id} className="border-b">
               <td className="py-3 text-sm text-slate-700">{items.length - idx}</td>
               <td className="py-3 text-sm text-slate-700">{it.name}</td>
               <td className="py-3 text-sm text-slate-700">{tFee(it.feeType)}</td>
               <td className="py-3 text-sm text-slate-700">{tPriceType(it.priceType)}</td>
+              <td className="py-3 text-sm text-slate-700">{it.unitPrice != null && it.unitPrice !== '' ? formatMoneyVND(Number(String(it.unitPrice).replace(/,/g, ''))) : '-'}</td>
+              <td className="py-3 text-sm text-slate-700">{tUnit(it.unit)}</td>
               <td className="py-3 text-sm text-slate-700">{it.taxRate ?? '-'}</td>
               <td className="py-3 text-sm text-slate-700">
                 {it.buildingId ? (

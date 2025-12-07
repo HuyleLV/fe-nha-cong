@@ -1,9 +1,13 @@
 export interface InvoiceItem {
   serviceName: string;
   unitPrice?: string | null;
-  meterIndex?: string | null;
+  unit?: string | null;
+  meter?: string | null; // tên công tơ / mã công tơ
+  initialIndex?: string | null; // chỉ số đầu
+  meterIndex?: string | null; // legacy: chỉ số (kept for compatibility)
   quantity?: string | null;
   vat?: string | null;
+  billingDate?: string | null; // YYYY-MM-DD - ngày tính phí
   fromDate?: string | null; // YYYY-MM-DD
   toDate?: string | null;   // YYYY-MM-DD
   amount?: string | null;

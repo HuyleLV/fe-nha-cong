@@ -18,7 +18,7 @@ export default function ServiceEditPage() {
   const [loading, setLoading] = useState<boolean>(Boolean(isEdit));
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ServiceItem>({
-    defaultValues: { name: '', feeType: 'service_fee', priceType: 'fixed', taxRate: '0', buildingId: undefined, note: '' } as any
+    defaultValues: { name: '', feeType: 'service_fee', priceType: 'fixed', taxRate: '0', buildingId: undefined, note: '', unitPrice: '', unit: '' } as any
   });
 
   useEffect(() => {
@@ -34,7 +34,9 @@ export default function ServiceEditPage() {
           priceType: data.priceType ?? 'fixed',
           taxRate: data.taxRate ?? '0',
           buildingId: data.buildingId ?? undefined,
-          note: data.note ?? ''
+          note: data.note ?? '',
+          unitPrice: data.unitPrice ?? '',
+          unit: data.unit ?? ''
         } as any);
       } catch (err) {
         console.error(err);
@@ -156,6 +158,23 @@ export default function ServiceEditPage() {
                     <option value="quantity_quota">Định mức theo số lượng</option>
                   </select>
                   {errors.priceType && <div className="text-sm text-red-600 mt-1">{(errors.priceType as any).message}</div>}
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Đơn giá (VNĐ)</label>
+                  <input type="number" step="0.01" min={0} className="h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white" placeholder="VD: 150000" {...register('unitPrice')} />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Đơn vị tính</label>
+                  <select className="h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white" {...register('unit') }>
+                    <option value="">-- Chọn đơn vị --</option>
+                    <option value="phong">Phòng</option>
+                    <option value="giuong">Giường</option>
+                    <option value="kwh">Kwh</option>
+                    <option value="m3">m3</option>
+                    <option value="m2">m2</option>
+                    <option value="xe">Xe</option>
+                    <option value="luot">Lượt/Lần</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Thuế suất (%) <span className="text-red-600">*</span></label>
