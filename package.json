@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --turbopack",
+    "build": "next build",
     "postbuild": "node scripts/prepare-standalone.js",
-  "start": "node .next/standalone/server.js",
+    "start": "node .next/standalone/server.js",
+    "start:standalone": "cd .next/standalone && node server.js",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,md}\"",
     "lint": "next lint || echo 'Lint step not configured'"
   },
