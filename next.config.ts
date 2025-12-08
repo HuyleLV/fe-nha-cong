@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: '127.0.0.1' },
     ],
     formats: ['image/avif', 'image/webp'],
+    // Tắt Image Optimization để tránh lỗi 400 khi proxy/nginx không pass được `/_next/image`
+    // Trang vẫn hoạt động bằng <img/> thông thường. Bật lại khi hạ tầng đã cấu hình đúng.
+    unoptimized: true,
   },
 
   // SWC compiler
