@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Panel from '@/app/quan-ly-chu-nha/components/Panel';
+import { Clipboard, CheckCircle2, Save } from 'lucide-react';
 import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { taskService } from '@/services/taskService';
@@ -34,6 +35,8 @@ export default function TaskEditPage(){
   };
 
   const save = async ()=>{
+    if (!form.buildingId) return toast.error('Tòa nhà không được để trống');
+    if (!form.apartmentId) return toast.error('Căn hộ không được để trống');
     if (!form.title || String(form.title).trim()==='') return toast.error('Tiêu đề không được để trống');
     try{
       const payload = { ...form };
@@ -48,12 +51,15 @@ export default function TaskEditPage(){
     <div className="mx-auto max-w-screen-xl">
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-slate-500">{isCreate? 'Thêm' : 'Chỉnh sửa'}</p>
-            <h1 className="text-lg font-semibold">{isCreate? 'Tạo công việc' : 'Cập nhật công việc'}</h1>
+          <div className="flex items-center gap-3">
+            <Save className="w-5 h-5 text-emerald-600" /> 
+            <div>
+              <p className="text-sm text-slate-500">{isCreate? 'Thêm' : 'Chỉnh sửa'}</p>
+              <h1 className="text-lg font-semibold">{isCreate? 'Tạo công việc' : 'Cập nhật công việc'}</h1>
+            </div>
           </div>
           <div>
-            <button onClick={save} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white">Lưu</button>
+            <button onClick={save} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white"><CheckCircle2 className="w-5 h-5"/> Lưu</button>
           </div>
         </div>
       </div>
@@ -62,7 +68,7 @@ export default function TaskEditPage(){
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm">Tòa nhà</label>
+              <label className="block text-sm">Tòa nhà<span className="text-red-500 ml-1">*</span></label>
               <select value={String(form.buildingId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, buildingId: v, apartmentId:''})); if (v) { const a = await apartmentService.getAll({ page:1, limit:1000, buildingId: v }); setApartments((a as any)?.items ?? (a as any)?.data ?? a ?? []); } }} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
                 <option value="">-- Chọn tòa nhà --</option>
                 {buildings.map(b=> <option key={b.id} value={String(b.id)}>{b.name}</option>)}
@@ -70,7 +76,7 @@ export default function TaskEditPage(){
             </div>
 
             <div>
-              <label className="block text-sm">Căn hộ</label>
+              <label className="block text-sm">Căn hộ<span className="text-red-500 ml-1">*</span></label>
               <select value={String(form.apartmentId ?? '')} onChange={(e)=>setForm((s:any)=>({...s, apartmentId: Number(e.target.value) || ''}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
                 <option value="">-- Chọn căn hộ --</option>
                 {apartments.map(a=> <option key={a.id} value={String(a.id)}>{a.title || a.code}</option>)}
@@ -78,7 +84,7 @@ export default function TaskEditPage(){
             </div>
 
             <div>
-              <label className="block text-sm">Tiêu đề</label>
+              <label className="block text-sm">Tiêu đề<span className="text-red-500 ml-1">*</span></label>
               <input value={form.title} onChange={(e)=>setForm((s:any)=>({...s, title: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
             </div>
 

@@ -2,13 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import 'suneditor/dist/css/suneditor.min.css';
+import CustomSunEditor from '@/app/admin/components/customSunEditor';
 import { notificationService } from '@/services/notificationService';
 import UploadPicker from '@/components/UploadPicker';
+import { Bell, CheckCircle2, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const SunEditor = dynamic(() => import('suneditor-react'), { ssr: false });
 
 export default function NotificationEditPage(){
   const params = useParams();
@@ -30,6 +29,8 @@ export default function NotificationEditPage(){
 
   const save = async ()=>{
     if (!form.title || String(form.title).trim()==='') return toast.error('Tiêu đề không được để trống');
+    const plain = (form.content || '').replace(/<[^>]*>/g,'').trim();
+    if (!plain) return toast.error('Nội dung không được để trống');
     try{
       const payload = { title: form.title, content: form.content, attachments: form.attachments };
       if (isCreate) await notificationService.create(payload);
@@ -44,13 +45,14 @@ export default function NotificationEditPage(){
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Save className="w-5 h-5 text-emerald-600" /> 
             <div>
                 <p className="text-sm text-slate-500">{isCreate? 'Thêm' : 'Chỉnh sửa'}</p>
                 <h1 className="text-lg font-semibold">{isCreate? 'Tạo thông báo' : 'Cập nhật thông báo'}</h1>
             </div>
           </div>
           <div>
-            <button onClick={save} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white">Lưu</button>
+            <button onClick={save} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white"><CheckCircle2 className="w-5 h-5"/> Lưu</button>
           </div>
         </div>
       </div>
@@ -63,8 +65,8 @@ export default function NotificationEditPage(){
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm">Nội dung</label>
-            <SunEditor onChange={(c:any)=>setForm((s:any)=>({...s, content: c}))} setContents={form.content} />
+            <label className="block text-sm">Nội dung<span className="text-red-500 ml-1">*</span></label>
+            <CustomSunEditor value={form.content} onChange={(c: string) => setForm((s: any) => ({ ...s, content: c }))} />
           </div>
 
           <div className="mt-4">

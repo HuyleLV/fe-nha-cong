@@ -1,25 +1,27 @@
+import axiosClient from '@/utils/axiosClient';
+import { apiUrl } from '@/utils/apiUrl';
+
 const base = '/api/notifications';
 
 export const notificationService = {
-  list: async (q?: any) => {
-    const params = new URLSearchParams(q || {}).toString();
-    const res = await fetch(base + (params ? `?${params}` : ''));
-    return res.json();
+  async list(params?: any) {
+    const res = await axiosClient.get<any, any>(apiUrl(base), { params });
+    return res || { items: [], meta: {} };
   },
-  getById: async (id: number) => {
-    const res = await fetch(`${base}/${id}`);
-    return res.json();
+  async getById(id: number) {
+    const res = await axiosClient.get<any, any>(apiUrl(`${base}/${encodeURIComponent(String(id))}`));
+    return res;
   },
-  create: async (payload: any) => {
-    const res = await fetch(base, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-    return res.json();
+  async create(payload: any) {
+    const res = await axiosClient.post<any, any>(apiUrl(base), payload);
+    return res;
   },
-  update: async (id: number, payload: any) => {
-    const res = await fetch(`${base}/${id}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-    return res.json();
+  async update(id: number, payload: any) {
+    const res = await axiosClient.patch<any, any>(apiUrl(`${base}/${encodeURIComponent(String(id))}`), payload);
+    return res;
   },
-  remove: async (id: number) => {
-    const res = await fetch(`${base}/${id}`, { method: 'DELETE' });
-    return res.json();
-  }
+  async remove(id: number) {
+    const res = await axiosClient.delete<any, any>(apiUrl(`${base}/${encodeURIComponent(String(id))}`));
+    return res;
+  },
 };
