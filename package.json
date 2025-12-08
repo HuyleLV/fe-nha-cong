@@ -22,6 +22,7 @@
     "react-hook-form": "^7.63.0",
     "react-slideshow-image": "^4.3.2",
     "react-toastify": "^11.0.5",
+    "socket.io-client": "^4.8.1",
     "suneditor-picmo-emoji": "^1.0.1",
     "suneditor-react": "^3.6.1"
   },

@@ -38,6 +38,7 @@ export default function TaskEditPage(){
     if (!form.buildingId) return toast.error('Tòa nhà không được để trống');
     if (!form.apartmentId) return toast.error('Căn hộ không được để trống');
     if (!form.title || String(form.title).trim()==='') return toast.error('Tiêu đề không được để trống');
+    if (!form.dueDate || String(form.dueDate).trim() === '') return toast.error('Hạn hoàn thành không được để trống');
     try{
       const payload = { ...form };
       if (isCreate) await taskService.create(payload);
@@ -113,7 +114,7 @@ export default function TaskEditPage(){
             </div>
 
             <div>
-              <label className="block text-sm">Hạn hoàn thành</label>
+              <label className="block text-sm">Hạn hoàn thành<span className="text-red-500 ml-1">*</span></label>
               <input type="date" value={form.dueDate} onChange={(e)=>setForm((s:any)=>({...s, dueDate: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
             </div>
 

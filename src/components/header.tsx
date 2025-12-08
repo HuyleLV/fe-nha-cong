@@ -7,6 +7,7 @@ import Image from "next/image";
 import logo from "../assets/logo-trang.png";
 import {
   Heart,
+    Bell,
   UserRound,
   Menu,
   X,
@@ -27,6 +28,7 @@ import {
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
 import { asImageSrc } from "@/utils/imageUrl";
+  import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
 
 export default function Header() {
   const router = useRouter();
@@ -36,9 +38,12 @@ export default function Header() {
 
   const [auth, setAuth] = useState<User | null>(null);
   const [avatarBroken, setAvatarBroken] = useState(false);
+  const [openBell, setOpenBell] = useState(false);
 
   const userBtnRef = useRef<HTMLButtonElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const bellBtnRef = useRef<HTMLButtonElement | null>(null);
+  const bellMenuRef = useRef<HTMLDivElement | null>(null);
 
   const readStoredUser = () => {
     try {
@@ -118,13 +123,17 @@ export default function Header() {
   useEffect(() => {
     const outside = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (
-        userMenuRef.current &&
-        userBtnRef.current &&
-        !userMenuRef.current.contains(t) &&
-        !userBtnRef.current.contains(t)
-      ) {
-        setOpenUser(false);
+      // User menu outside click
+      if (userMenuRef.current && userBtnRef.current) {
+        if (!userMenuRef.current.contains(t) && !userBtnRef.current.contains(t)) {
+          setOpenUser(false);
+        }
+      }
+      // Bell menu outside click
+      if (bellMenuRef.current && bellBtnRef.current) {
+        if (!bellMenuRef.current.contains(t) && !bellBtnRef.current.contains(t)) {
+          setOpenBell(false);
+        }
       }
     };
     const onEsc = (e: KeyboardEvent) => {
@@ -194,6 +203,9 @@ export default function Header() {
     action();
   };
 
+  // Notifications socket
+  const { unread, items, markAllRead } = useNotificationsSocket(auth?.id || undefined);
+
   return (
     <>
       {/* Header */}
@@ -219,6 +231,50 @@ export default function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2 md:gap-3">
+            {/* Bell notifications */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={openBell}
+                onClick={() => setOpenBell((v) => !v)}
+                ref={bellBtnRef}
+                className="p-2 grid place-items-center rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+                title="Thông báo"
+              >
+                <span className="relative inline-flex items-center justify-center">
+                  <Bell className="text-white w-5 h-5" />
+                  {unread > 0 && (
+                    <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                      {unread > 9 ? '9+' : unread}
+                    </span>
+                  )}
+                </span>
+              </button>
+              {openBell && (
+                <div ref={bellMenuRef} className="absolute right-0 top-12 w-100 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2 bg-emerald-50">
+                    <div className="text-sm font-semibold">Thông báo</div>
+                    <button className="text-xs text-emerald-700" onClick={()=> { markAllRead(); setOpenBell(false);} }>Đánh dấu đã đọc</button>
+                  </div>
+                  <div className="max-h-[320px] overflow-auto">
+                    {items.length === 0 ? (
+                      <div className="px-4 py-6 text-sm text-slate-500">Chưa có thông báo mới</div>
+                    ) : (
+                      items.map((n,i)=> (
+                        <div key={i} className="px-4 py-3 border-b hover:bg-emerald-50">
+                          <div className="text-sm font-medium">{n.title}</div>
+                          {n.content && (
+                            <div className="mt-1 text-xs text-slate-600 line-clamp-2" dangerouslySetInnerHTML={{ __html: n.content }} />
+                          )}
+                          <div className="mt-1 text-[11px] text-slate-400">{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <Link
               href="/tim-phong-quanh-day"
               aria-label="Tìm phòng"
