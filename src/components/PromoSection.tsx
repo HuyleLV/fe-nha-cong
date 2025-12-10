@@ -51,7 +51,7 @@ export default function PromoSection({
 
   return (
     <section className="max-w-screen-2xl mx-auto px-4 md:px-0 mt-6">
-      <div className="rounded-3xl bg-[#087748] text-white p-5 md:p-8">
+      <div className=" bg-[#087748] text-white p-5 md:p-8">
         <div className="mb-4 md:mb-6">
           <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         </div>

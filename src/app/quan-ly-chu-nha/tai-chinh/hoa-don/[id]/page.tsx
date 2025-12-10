@@ -11,7 +11,6 @@ import { apartmentService } from "@/services/apartmentService";
 import { PlusCircle, Save, Trash2, CheckCircle2, ChevronRight } from "lucide-react";
 import { contractService } from "@/services/contractService";
 import { serviceService } from "@/services/serviceService";
-import { formatMoneyVND } from '@/utils/format-number';
 
 // Using shared types from src/type/invoice
 
@@ -319,6 +318,8 @@ export default function InvoiceEditPage() {
     }
     const payload: InvoicePayload = {
       ...form,
+      // ensure printTemplate is explicitly sent (avoid it being dropped)
+      printTemplate: form.printTemplate ?? null,
       items: (form.items || []).map((it: any) => ({
         serviceName: it.serviceName,
         unitPrice: it.unitPrice || null,
@@ -343,9 +344,9 @@ export default function InvoiceEditPage() {
       toast.error("Lưu hóa đơn thất bại");
     }
   };
-
   return (
     <div className="mx-auto max-w-screen-xl">
+
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -579,8 +580,12 @@ export default function InvoiceEditPage() {
                     className={"mt-1 " + inputCls}
                   >
                     <option value="">-- Chọn mẫu in --</option>
-                    <option value="A4">A4</option>
-                    <option value="A5">A5</option>
+                    <option value="hoa-don-dat-coc">Hóa đơn đặt cọc</option>
+                    <option value="hoa-don-hang-thang">Hóa đơn hàng tháng</option>
+                    <option value="hoa-don-thanh-ly-hop-dong">Hóa đơn tiền thanh lý hợp đồng trước hạn và đúng hạn</option>
+                    <option value="hoa-don-hoan-tien-dat-coc">Hóa đơn hoàn tiền đặt cọc</option>
+                    <option value="hoa-don-chuyen-nhuong">Hóa đơn chuyển nhượng phòng</option>
+                    <option value="hoa-don-hop-dong-moi">Hóa đơn hợp đồng mới</option>
                   </select>
                 </div>
             </div>

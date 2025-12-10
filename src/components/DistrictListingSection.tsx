@@ -87,11 +87,10 @@ export default function DistrictListingSection({
   const showHeaderTabs = !onlyDistrict && showTabs;
 
   return (
-    <section className="w-full rounded-3xl bg-[#087748] px-4 py-6 sm:px-6 md:px-8 md:py-8">
+    <section className="w-full px-4 py-4 sm:px-6 md:px-8 md:py-6 bg-white shadow-sm">
       {/* Header */}
-      <div className="text-center text-white">
-        <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
-        {subtitle && <p className="mt-1 text-white/80 text-sm md:text-base">{subtitle}</p>}
+      <div className="text-black">
+        <h2 className="text-2xl md:text-2xl font-bold">{title}</h2>
       </div>
 
       {/* Tabs (ẩn khi onlyDistrict hoặc showTabs=false) */}
@@ -103,7 +102,7 @@ export default function DistrictListingSection({
               type="button"
               onClick={() => setActive(d)}
               className={clsx(
-                "px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
+                "px-3 py-1.5 text-sm font-medium border transition-colors",
                 active === d
                   ? "bg-white text-emerald-700 border-white"
                   : "bg-emerald-800 text-white border-white/20 hover:bg-emerald-700"
@@ -116,7 +115,7 @@ export default function DistrictListingSection({
           {!!active && (
             <a 
               href="/tim-phong-quanh-day" 
-              className="ml-auto gap-1 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm border border-white/20 hover:bg-white/15"
+              className="ml-auto gap-1 px-3 py-1.5 bg-white/10 text-white text-sm border border-white/20 hover:bg-white/15"
             >
               <button
                 type="button"
@@ -132,7 +131,7 @@ export default function DistrictListingSection({
 
       {/* Empty state */}
       {(showAll ? items.length === 0 : !active || filtered.length === 0) ? (
-        <div className="mt-6 rounded-xl bg-white/5 p-6 text-center text-white/80">
+        <div className="mt-6 bg-white/5 p-6 text-center text-white/80">
           {showAll
             ? (items.length === 0
                 ? "Chưa có dữ liệu để hiển thị."

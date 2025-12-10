@@ -5,7 +5,8 @@ import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from '@/components/Pagination';
 import { useRouter } from "next/navigation";
-import { PlusCircle, Edit3, Trash2 } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repeat, CheckCircle2, AlertCircle } from "lucide-react";
+import { formatMoneyVND } from '@/utils/format-number';
 import { toast } from "react-toastify";
 import { invoiceService } from "@/services/invoiceService";
 
@@ -38,6 +39,47 @@ export default function HoaDonPage() {
     load(meta.page, meta.limit);
   }, []);
 
+  // --- compute summary values from rows (best-effort) ---
+  const parseNum = (v: any) => {
+    if (v === undefined || v === null || v === '') return 0;
+    const s = String(v).replace(/[^0-9.-]+/g, '');
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const computeItemAmount = (it: any) => {
+    if (!it) return 0;
+    if (it.amount) return parseNum(it.amount);
+    const up = parseNum(it.unitPrice);
+    const q = parseNum(it.quantity);
+    if (up && q) return up * q;
+    return 0;
+  };
+
+  const totalMoney = (rows || []).reduce((sum: number, r: any) => {
+    const items = Array.isArray(r.items) ? r.items : [];
+    if (items.length) return sum + items.reduce((s: number, it: any) => s + computeItemAmount(it), 0);
+    // fallback: use r.total or r.amount if present
+    return sum + (parseNum(r.total) || parseNum(r.amount) || 0);
+  }, 0);
+
+  const rentKeywords = ['nhà', 'thuê', 'phòng', 'tiền nhà', 'tiền thuê'];
+  const rentMoney = (rows || []).reduce((sum: number, r: any) => {
+    const items = Array.isArray(r.items) ? r.items : [];
+    if (items.length) return sum + items.reduce((s: number, it: any) => {
+      const name = String(it?.serviceName || '').toLowerCase();
+      return rentKeywords.some(k => name.includes(k)) ? s + computeItemAmount(it) : s;
+    }, 0);
+    return sum;
+  }, 0);
+
+  const serviceMoney = totalMoney - rentMoney;
+  // Collected/refunded are not part of invoice list shape — default 0 or try fields
+  const totalCollected = (rows || []).reduce((s: number, r: any) => s + (parseNum(r.collected) || 0), 0);
+  const totalRefunded = (rows || []).reduce((s: number, r: any) => s + (parseNum(r.refunded) || 0), 0);
+  const collected = totalCollected;
+  const due = totalMoney - collected + totalRefunded;
+
   const onDelete = async (id: number) => {
     if (!confirm("Xoá hóa đơn này?")) return;
     try {
@@ -49,8 +91,84 @@ export default function HoaDonPage() {
     }
   };
 
+  // Map printTemplate slug/value -> human label
+  const printTemplateLabel = (val: any) => {
+    if (!val && val !== 0) return "";
+    const v = String(val || "").trim();
+    const map: Record<string, string> = {
+      'hoa-don-dat-coc': 'Hóa đơn đặt cọc',
+      'hoa-don-hang-thang': 'Hóa đơn hàng tháng',
+      'hoa-don-thanh-ly-hop-dong': 'Hóa đơn tiền thanh lý hợp đồng trước hạn và đúng hạn',
+      'hoa-don-hoan-tien-dat-coc': 'Hóa đơn hoàn tiền đặt cọc',
+      'hoa-don-chuyen-nhuong': 'Hóa đơn chuyển nhượng phòng',
+      'hoa-don-hop-dong-moi': 'Hóa đơn hợp đồng mới',
+    };
+    return map[v] ?? v;
+  };
+
   return (
     <div className="p-6">
+      {/* Summary blocks */}
+      <div className="max-w-screen-2xl mx-auto px-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+            <div className="p-2 bg-emerald-100 rounded-md"><DollarSign className="w-6 h-6 text-emerald-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Tổng tiền</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(totalMoney)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100">
+            <div className="p-2 bg-blue-100 rounded-md"><Home className="w-6 h-6 text-blue-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Tiền nhà</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(rentMoney)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+            <div className="p-2 bg-yellow-100 rounded-md"><Settings className="w-6 h-6 text-yellow-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Tiền dịch vụ</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(serviceMoney)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+            <div className="p-2 bg-emerald-100 rounded-md"><CreditCard className="w-6 h-6 text-emerald-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Tổng tiền thu</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(totalCollected)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-red-50 p-3 rounded-lg border border-red-100">
+            <div className="p-2 bg-red-100 rounded-md"><Repeat className="w-6 h-6 text-red-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Tổng tiền hoàn</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(totalRefunded)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+            <div className="p-2 bg-emerald-100 rounded-md"><CheckCircle2 className="w-6 h-6 text-emerald-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Đã thu</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(collected)}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+            <div className="p-2 bg-yellow-100 rounded-md"><AlertCircle className="w-6 h-6 text-yellow-700" /></div>
+            <div>
+              <div className="text-xs text-slate-500">Phải thu</div>
+              <div className="font-semibold text-slate-800">{formatMoneyVND(due)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Panel title="Hóa đơn">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-slate-600">Danh sách hóa đơn của bạn.</p>
@@ -74,6 +192,7 @@ export default function HoaDonPage() {
             "Kỳ",
             "Ngày lập",
             "Hạn thanh toán",
+            "Hóa đơn",
             "Hành động",
           ]}
           loading={loading}
@@ -89,6 +208,7 @@ export default function HoaDonPage() {
                   <td className="px-4 py-3 text-left">{r.period}</td>
                   <td className="px-4 py-3 text-left">{r.issueDate ? new Date(r.issueDate).toLocaleDateString() : ""}</td>
                   <td className="px-4 py-3 text-left">{r.dueDate ? new Date(r.dueDate).toLocaleDateString() : ""}</td>
+                  <td className="px-4 py-3 text-left">{printTemplateLabel(r.printTemplate)}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button

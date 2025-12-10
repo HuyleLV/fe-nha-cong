@@ -18,14 +18,10 @@ export default function ModerationApartmentPage() {
   const fetch = async () => {
     setLoading(true);
     try {
-  // Request apartments that are not yet approved (isApproved = false).
-  // Do not filter by status so admins can review any unapproved listing.
-  // apartmentService.getAll typings don't include isApproved yet, so cast to any.
-  const res = await apartmentService.getAll({ isApproved: false, page: 1, limit: 200 } as any);
-      const apts = res.items || [];
+      const res = await apartmentService.getAll({ page: 1, limit: 200, isApproved: false } as any);
+      const apts = (res.items || []) as Apartment[];
       setItems(apts);
 
-      // Fetch owner details for unique createdById values
       try {
         const ids = Array.from(new Set(apts.map(a => Number((a as any).createdById)).filter(Boolean)));
         if (ids.length) {
@@ -55,7 +51,6 @@ export default function ModerationApartmentPage() {
   const onApprove = async (id: number) => {
     if (!confirm('Duyệt căn hộ này để hiển thị trên website?')) return;
     try {
-      // Mark as published and explicitly set isApproved = true
       await apartmentService.update(id, { status: 'published', isApproved: true } as any);
       toast.success('Đã duyệt căn hộ');
       setItems((prev) => prev.filter((p) => p.id !== id));
@@ -67,8 +62,6 @@ export default function ModerationApartmentPage() {
   const onReject = async (id: number) => {
     if (!confirm('Bạn có chắc muốn từ chối căn hộ này?')) return;
     try {
-      // Mark apartment as archived when rejected
-      // Explicitly ensure isApproved stays false and archive the listing
       await apartmentService.update(id, { status: 'archived', isApproved: false } as any);
       toast.success('Đã từ chối căn hộ');
       setItems((prev) => prev.filter((p) => p.id !== id));

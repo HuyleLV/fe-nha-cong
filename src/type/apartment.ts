@@ -223,6 +223,9 @@ export type ApartmentQuery = {
   // ===== Tìm kiếm =====
   q?: string;
 
+  /** Lọc theo cờ đã duyệt bởi admin/host (true = đã duyệt, false = chưa duyệt) */
+  isApproved?: boolean;
+
   hasPrivateBathroom?: boolean;
   hasMezzanine?: boolean;
   noOwnerLiving?: boolean;

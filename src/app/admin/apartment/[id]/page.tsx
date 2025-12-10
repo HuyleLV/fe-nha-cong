@@ -64,7 +64,7 @@ export default function ApartmentFormPage() {
     reset,
     control,
     formState: { errors, isSubmitting, dirtyFields },
-  } = useForm<ApartmentForm & { discountInput?: string }>({
+  } = useForm<ApartmentForm>({
     defaultValues: {
       title: "",
       slug: "",
@@ -86,10 +86,10 @@ export default function ApartmentFormPage() {
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
-  depositAmount: "",
+    depositAmount: "",
   discountPercent: 0,
   discountAmount: "",
-  discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
+  commissionPercent: 0,
       coverImageUrl: "",
       images: [],
 
@@ -243,17 +243,7 @@ export default function ApartmentFormPage() {
           status: ap.status,
           discountPercent: (ap as any).discountPercent ?? 0,
           discountAmount: (ap as any).discountAmount ?? "",
-          discountInput: (() => {
-            const pct = (ap as any).discountPercent;
-            const amtStr = (ap as any).discountAmount;
-            const price = parseFloat(String(ap.rentPrice).replace(/,/g,''));
-            const pctVal = typeof pct === 'number' && pct > 0 ? Math.round(price * pct / 100) : 0;
-            const amtVal = amtStr ? parseFloat(String(amtStr).replace(/,/g,'')) : 0;
-            if (pctVal === 0 && amtVal === 0) return "";
-            if (pctVal >= amtVal && pctVal > 0 && pct) return `${pct}%`;
-            if (amtVal > 0) return String(Math.round(amtVal));
-            return "";
-          })(),
+          commissionPercent: (ap as any).commissionPercent ?? 0,
           coverImageUrl: ap.coverImageUrl || "",
           depositAmount: (ap as any).depositAmount ?? "",
           images: ap.images || [],
@@ -350,7 +340,7 @@ export default function ApartmentFormPage() {
     return Number.isFinite(n) ? Math.round(n) : null;
   };
 
-  const onSubmit = async (values: ApartmentForm & { discountInput?: string }) => {
+  const onSubmit = async (values: ApartmentForm) => {
     // Build gallery images and ensure video (if provided) goes first
     const rawImages = Array.isArray(values.images)
       ? Array.from(new Set(values.images.filter(Boolean))).map((s) => s!.toString().trim())
@@ -367,8 +357,8 @@ export default function ApartmentFormPage() {
       locationId: Number(values.locationId || selectedLocation?.id),
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
-      depositAmount: values.depositAmount ? String(values.depositAmount) : undefined,
-  // discount sẽ được phân tích từ discountInput bên dưới
+    depositAmount: values.depositAmount ? String(values.depositAmount) : undefined,
+  // discount will be taken from discountAmount (absolute VND) field
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
       images: imagesOrdered.length ? imagesOrdered : undefined,
       description: values.description || "",
@@ -401,26 +391,23 @@ export default function ApartmentFormPage() {
     for (const k of feeKeys) {
       if ((payload as any)[k] == null) delete (payload as any)[k];
     }
-    // Normalize discount: if NaN, remove; allow 0 to clear
-    // Phân tích ô discountInput: nếu kết thúc bằng %, dùng phần trăm; nếu không → số tiền
-  const rawDiscount: string = (values as any).discountInput?.trim() || "";
+    // Normalize discount: admin should input absolute discount amount (VND)
     delete (payload as any).discountPercent;
-    delete (payload as any).discountAmount;
-    if (rawDiscount) {
-      if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
-        const num = parseFloat(rawDiscount.replace('%',''));
-        if (Number.isFinite(num) && num >= 0) {
-          (payload as any).discountPercent = Math.min(100, Math.round(num));
-        }
-      } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
-        const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
-        if (Number.isFinite(amt) && amt >= 0) {
-          (payload as any).discountAmount = amt.toFixed(2); // chuẩn hoá
-        }
+    if ((values as any).discountAmount != null && String((values as any).discountAmount).trim() !== "") {
+      const amt = parseFloat(String((values as any).discountAmount).replace(/,/g, '.'));
+      if (Number.isFinite(amt) && amt >= 0) {
+        (payload as any).discountAmount = amt.toFixed(2);
       }
     }
-    // Không gửi discountInput lên API
-    delete (payload as any).discountInput;
+
+    // Normalize commissionPercent: clamp to 0-100 if present (keep parity with host form)
+    if ((values as any).commissionPercent != null && (values as any).commissionPercent !== "") {
+      const cp = Number((values as any).commissionPercent);
+      if (Number.isFinite(cp)) {
+        (payload as any).commissionPercent = Math.min(100, Math.max(0, Math.round(cp)));
+      }
+    }
+    if ((payload as any).commissionPercent == null) delete (payload as any).commissionPercent;
 
   // Remove local-only fields
   delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
@@ -738,15 +725,20 @@ export default function ApartmentFormPage() {
                 <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 1300000" {...register("depositAmount")} />
                 <p className="text-xs text-slate-500 mt-1">Để trống nếu không có đặt cọc.</p>
               </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (%)</label>
+                <input type="number" min={0} max={100} className={inputCls} placeholder="Ví dụ: 5" {...register("commissionPercent", { valueAsNumber: true })} />
+                <p className="text-xs text-slate-500 mt-1">Phần trăm hoa hồng cho cộng tác viên (nếu có).</p>
+              </div>
               <div className="md:col-span-2">
-                <label className="block text-sm text-slate-600 mb-1">Ưu đãi (% hoặc số tiền)</label>
+                <label className="block text-sm text-slate-600 mb-1">Ưu đãi (số tiền VND)</label>
                 <input
-                  type="text"
+                  inputMode="numeric"
                   className={inputCls}
-                  placeholder="Ví dụ: 15% hoặc 500000"
-                  {...register("discountInput" as any)}
+                  placeholder="Ví dụ: 500000"
+                  {...register("discountAmount" as any)}
                 />
-                <p className="text-xs text-slate-500 mt-1">Nhập 15% hoặc số tiền giảm (VD: 500000). Để trống nếu không có ưu đãi.</p>
+                <p className="text-xs text-slate-500 mt-1">Nhập số tiền giảm (VD: 500000). Để trống nếu không có ưu đãi.</p>
               </div>
             </div>
           </Section>
