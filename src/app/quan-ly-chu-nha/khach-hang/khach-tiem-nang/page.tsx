@@ -5,7 +5,7 @@ import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from '@/components/AdminTable';
 import { userService } from '@/services/userService';
 import Link from 'next/link';
-import { Edit3, Trash2, UserPlus, Calendar, ShoppingCart, FileText, FileCheck, XCircle } from 'lucide-react';
+import { Edit3, Trash2, UserPlus, Calendar, ShoppingCart, FileText, FileCheck, XCircle, PlusCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 
@@ -22,7 +22,7 @@ const STATUS_LIST: { key: StatusKey; label: string; bg?: string; accent?: string
   { key: 'failed', label: 'Thất bại', bg: 'bg-red-50', accent: 'bg-red-600', icon: XCircle },
 ];
 
-export default function KhachHenPage(){
+export default function KhachTiemNangPage(){
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<StatusKey | null>(null);
@@ -34,6 +34,8 @@ export default function KhachHenPage(){
     setLoading(true);
     try {
       const params: any = { page: p, limit };
+      // Khách tiềm năng: customers WITHOUT contract/deposit
+      params.hasContractOrDeposit = false;
       if (meId) params.ownerId = meId;
       const res = await userService.listAdminUsers(params);
       const users = res.data ?? [];
@@ -74,7 +76,7 @@ export default function KhachHenPage(){
   }, [rows]);
 
   const onDelete = async (r: Row) => {
-    if (!confirm(`Xóa khách hàng "${r.name}" ?`)) return;
+    if (!confirm(`Xóa khách hàng \"${r.name}\" ?`)) return;
     try {
       await userService.deleteAdminUser(r.id);
       toast.success('Đã xóa');
@@ -97,8 +99,14 @@ export default function KhachHenPage(){
 
   return (
     <div className="p-6">
-      <Panel title="Khách hẹn">
-        <p className="text-sm text-slate-600 mb-4">Danh sách các khách hẹn.</p>
+      <Panel title="Khách tiềm năng" actions={(
+        <Link href="/quan-ly-chu-nha/khach-hang/khach-hang/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md h-8" title="Thêm khách hàng">
+          <PlusCircle className="w-4 h-4" />
+        </Link>
+      )}>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-slate-600">Danh sách các khách tiềm năng.</p>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-4">
           {STATUS_LIST.map(s => (
@@ -117,9 +125,10 @@ export default function KhachHenPage(){
           ))}
         </div>
 
-        <AdminTable headers={["Tên","Email","Điện thoại","Ghi chú","Trạng thái","Hành động"]} loading={loading} emptyText="Chưa có khách hẹn">
+        <AdminTable headers={["Mã khách hàng", "Tên","Email","Điện thoại","Ghi chú","Trạng thái","Hành động"]} loading={loading} emptyText="Chưa có khách tiềm năng">
           {displayRows.map(r => (
             <tr key={r.id} className="border-t">
+              <td className="px-4 py-3 text-left">{r.id}</td>
               <td className="px-4 py-3">{r.name}</td>
               <td className="px-4 py-3">{r.email}</td>
               <td className="px-4 py-3">{r.phone}</td>

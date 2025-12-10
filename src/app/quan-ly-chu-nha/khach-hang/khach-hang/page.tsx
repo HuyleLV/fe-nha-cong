@@ -34,6 +34,8 @@ export default function KhachHangListPage(){
     setLoading(true);
     try {
       const params: any = { page: p, limit };
+      // Show only customers who have contract or deposit on the main customers page
+      params.hasContractOrDeposit = true;
       if (meId) params.ownerId = meId;
       const res = await userService.listAdminUsers(params);
       const users = res.data ?? [];
@@ -88,11 +90,6 @@ export default function KhachHangListPage(){
       <Panel title="Khách hàng">
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-slate-600">Danh sách khách hàng của chủ nhà.</p>
-          <div>
-            <Link href="/quan-ly-chu-nha/khach-hang/khach-hang/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md" title="Thêm khách hàng">
-              <PlusCircle className="w-5 h-5" />
-            </Link>
-          </div>
         </div>
 
         {/* Tabs removed — main page shows all customers for the host */}

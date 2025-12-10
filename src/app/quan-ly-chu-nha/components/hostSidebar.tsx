@@ -48,7 +48,7 @@ export default function HostSidebar() {
       label: "Khách hàng",
       icon: Users,
       children: [
-        { href: "/quan-ly-chu-nha/khach-hang/khach-hen", label: "Khách hẹn", icon: CalendarDays },
+  { href: "/quan-ly-chu-nha/khach-hang/khach-tiem-nang", label: "Khách tiềm năng", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/dat-coc", label: "Đặt cọc", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/hop-dong", label: "Hợp đồng", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/khach-hang", label: "Khách hàng", icon: Users },

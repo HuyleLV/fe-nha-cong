@@ -796,7 +796,7 @@ export default function HostApartmentFormPage() {
                   placeholder={userRole === 'host' ? 'Ví dụ: 500000' : 'Ví dụ: 15% hoặc 500000'}
                   {...register("discountInput" as any)}
                 />
-                <p className="text-xs text-slate-500 mt-1">{userRole === 'host' ? 'Nhập số tiền giảm (VD: 500000). Chỉ cần số tiền, không bắt buộc nhập %.' : 'Nhập 15% hoặc số tiền giảm (VD: 500000). Để trống nếu không có ưu đãi.'}</p>
+                <p className="text-xs text-slate-500 mt-1">{userRole === 'host' ? 'Nhập số tiền giảm (VD: 500000).' : 'Nhập %. Để trống nếu không có ưu đãi.'}</p>
               </div>
 
               <div className="md:col-span-2">

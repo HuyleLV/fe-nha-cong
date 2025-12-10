@@ -28,4 +28,14 @@ export const meterReadingService = {
     const res = await axiosClient.get<any, any>(apiUrl(`/api/meter-readings/latest/by-apartment?${qs}`));
     return res;
   }
+,
+  async stats() {
+    const res = await axiosClient.get<any, any>(apiUrl('/api/meter-readings/stats'));
+    return res;
+  }
+,
+  async approve(id: number, approve: boolean) {
+    const res = await axiosClient.patch<any, any>(apiUrl(`/api/meter-readings/${encodeURIComponent(String(id))}/approve`), { approve });
+    return res;
+  }
 };
