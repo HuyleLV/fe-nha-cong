@@ -21,7 +21,7 @@ type CustomerRow = {
   address?: string | null;
 };
 
-export default function KhachHangListPage(){
+export default function CuDanListPage(){
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<number>(1);
@@ -70,8 +70,6 @@ export default function KhachHangListPage(){
     })();
   }, []);
 
-  const openCreate = () => { /* kept for compatibility */ };
-
   const onDelete = async (r: CustomerRow) => {
     if (!confirm(`Xóa khách hàng "${r.name}" ?`)) return;
     try {
@@ -83,21 +81,17 @@ export default function KhachHangListPage(){
     }
   };
 
-  // status update removed from list view
-
   return (
     <div className="p-6">
-      <Panel title="Khách hàng">
+      <Panel title="Cư dân">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-600">Danh sách khách hàng của chủ nhà.</p>
+          <p className="text-sm text-slate-600">Danh sách cư dân của chủ nhà.</p>
         </div>
 
-        {/* Tabs removed — main page shows all customers for the host */}
-
         <AdminTable
-          headers={["Mã KH", "Tên khách hàng", "Số điện thoại", "Giới tính", "CCCD", "Ngày sinh", "Địa chỉ", "Hành động"]}
+          headers={["Mã KH", "Tên cư dân", "Số điện thoại", "Giới tính", "CCCD", "Ngày sinh", "Địa chỉ", "Hành động"]}
           loading={loading}
-          emptyText="Chưa có khách hàng nào"
+          emptyText="Chưa có cư dân nào"
         >
           {Array.isArray(rows) ? (
             rows.map((r) => (
@@ -111,7 +105,7 @@ export default function KhachHangListPage(){
                 <td className="px-4 py-3">{r.address ?? ''}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link href={`/quan-ly-chu-nha/khach-hang/khach-hang/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                    <Link href={`/quan-ly-chu-nha/khach-hang/cu-dan/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
                       <Edit3 className="w-4 h-4 text-white" />
                     </Link>
                     <button title="Xóa" onClick={() => onDelete(r)} className="p-2 rounded bg-red-500 hover:bg-red-600">
@@ -122,7 +116,6 @@ export default function KhachHangListPage(){
               </tr>
             ))
           ) : (
-            // Defensive fallback to avoid runtime crash; log for debugging
             (() => {
               console.error('Expected rows to be an array but got:', rows);
               return (
@@ -133,7 +126,6 @@ export default function KhachHangListPage(){
             })()
           )}
         </AdminTable>
-        {/* edit handled on separate page */}
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
 
       </Panel>

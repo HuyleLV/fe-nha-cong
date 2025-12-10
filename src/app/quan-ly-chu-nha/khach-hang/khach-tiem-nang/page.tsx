@@ -100,7 +100,7 @@ export default function KhachTiemNangPage(){
   return (
     <div className="p-6">
       <Panel title="Khách tiềm năng" actions={(
-        <Link href="/quan-ly-chu-nha/khach-hang/khach-hang/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md h-8" title="Thêm khách hàng">
+        <Link href="/quan-ly-chu-nha/khach-hang/cu-dan/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md h-8" title="Thêm khách hàng">
           <PlusCircle className="w-4 h-4" />
         </Link>
       )}>
@@ -146,7 +146,7 @@ export default function KhachTiemNangPage(){
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-center gap-2">
-                  <Link href={`/quan-ly-chu-nha/khach-hang/khach-hang/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                  <Link href={`/quan-ly-chu-nha/khach-hang/cu-dan/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
                     <Edit3 className="w-4 h-4 text-white" />
                   </Link>
                   <button title="Xóa" onClick={() => onDelete(r)} className="p-2 rounded bg-red-500 hover:bg-red-600">

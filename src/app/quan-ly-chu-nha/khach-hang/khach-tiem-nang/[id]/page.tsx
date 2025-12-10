@@ -7,7 +7,7 @@ export default function KhachTiemNangIdPage({ params }: { params: { id: string }
   const router = useRouter();
   useEffect(() => {
     // redirect to the original customer edit page to reuse existing form
-    router.replace(`/quan-ly-chu-nha/khach-hang/khach-hang/${params.id}`);
+    router.replace(`/quan-ly-chu-nha/khach-hang/cu-dan/${params.id}`);
   }, [params.id, router]);
   return null;
 }
