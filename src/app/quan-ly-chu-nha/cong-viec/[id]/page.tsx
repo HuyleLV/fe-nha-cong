@@ -16,7 +16,7 @@ export default function TaskEditPage(){
   const isCreate = !idParam || idParam === 'create' || idParam === 'new';
   const router = useRouter();
 
-  const [form, setForm] = useState<any>({ buildingId: '', apartmentId: '', title: '', description: '', group: '', type: '', priority: 'normal', dueDate: '', assignee: '', attachments: '' });
+  const [form, setForm] = useState<any>({ buildingId: '', apartmentId: '', title: '', description: '', group: '', type: '', priority: 'normal', status: 'chua_lam', dueDate: '', assignee: '', attachments: '' });
   const [buildings, setBuildings] = useState<any[]>([]);
   const [apartments, setApartments] = useState<any[]>([]);
 
@@ -26,7 +26,7 @@ export default function TaskEditPage(){
     try{
       const r = await taskService.getById(Number(idParam));
       const data = (r as any)?.data ?? r;
-      setForm({ buildingId: data.buildingId ?? '', apartmentId: data.apartmentId ?? '', title: data.title ?? '', description: data.description ?? '', group: data.group ?? '', type: data.type ?? '', priority: data.priority ?? 'normal', dueDate: data.dueDate ? new Date(data.dueDate).toISOString().slice(0,10) : '', assignee: data.assignee ?? '', attachments: data.attachments ?? '' });
+  setForm({ buildingId: data.buildingId ?? '', apartmentId: data.apartmentId ?? '', title: data.title ?? '', description: data.description ?? '', group: data.group ?? '', type: data.type ?? '', priority: data.priority ?? 'normal', status: data.status ?? 'chua_lam', dueDate: data.dueDate ? new Date(data.dueDate).toISOString().slice(0,10) : '', assignee: data.assignee ?? '', attachments: data.attachments ?? '' });
       if (data.buildingId) {
         const a = await apartmentService.getAll({ page:1, limit:1000, buildingId: Number(data.buildingId) });
         setApartments((a as any)?.items ?? (a as any)?.data ?? a ?? []);
@@ -110,6 +110,18 @@ export default function TaskEditPage(){
                 <option value="normal">Bình thường</option>
                 <option value="low">Thấp</option>
                 <option value="high">Cao</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm">Trạng thái</label>
+              <select value={form.status} onChange={(e)=>setForm((s:any)=>({...s, status: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+                <option value="chua_lam">Chưa làm</option>
+                <option value="dang_lam">Đang làm</option>
+                <option value="cho_nghiem_thu">Chờ nghiệm thu</option>
+                <option value="da_nghiem_thu">Đã nghiệm thu</option>
+                <option value="khong_dat">Không đạt</option>
+                <option value="qua_han">Quá hạn</option>
               </select>
             </div>
 
