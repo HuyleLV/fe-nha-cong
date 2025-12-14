@@ -475,6 +475,7 @@ export default function AdminApartmentsPage() {
           "Giá thuê",
           "Diện tích",
           "Phòng",
+          "Trạng thái phòng",
           "Khu vực",
           "Trạng thái",
           "Đã duyệt",
@@ -496,6 +497,14 @@ export default function AdminApartmentsPage() {
               </td>
               <td className="px-4 py-3">{area !== undefined ? `${area.toLocaleString("vi-VN")} m²` : "-"}</td>
               <td className="px-4 py-3">{it.bedrooms} ngủ · {it.bathrooms} tắm</td>
+              <td className="px-4 py-3 text-center">
+                {(() => {
+                  const k = (it as any).roomStatus ?? (it as any).room_status;
+                  const label = k === 'het_phong' ? 'Hết phòng' : k === 'sap_trong' ? 'Sắp trống' : 'Ở ngay';
+                  const cls = k === 'het_phong' ? 'bg-rose-100 text-rose-700' : k === 'sap_trong' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
+                  return <span className={`px-2 py-0.5 rounded text-sm ${cls}`}>{label}</span>;
+                })()}
+              </td>
               <td className="px-4 py-3">
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="size-4 text-emerald-600" />

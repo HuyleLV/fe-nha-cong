@@ -87,6 +87,7 @@ export default function HostApartmentFormPage() {
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
+  roomStatus: 'o_ngay',
   depositAmount: "",
   discountPercent: 0,
   discountAmount: "",
@@ -252,6 +253,7 @@ export default function HostApartmentFormPage() {
           rentPrice: ap.rentPrice,
           currency: ap.currency,
           status: ap.status,
+          roomStatus: (ap as any).roomStatus ?? (ap as any).room_status ?? 'o_ngay',
           discountPercent: (ap as any).discountPercent ?? 0,
           discountAmount: (ap as any).discountAmount ?? "",
           discountInput: (() => {
@@ -717,6 +719,14 @@ export default function HostApartmentFormPage() {
                   {errors.status && (
                     <p className="text-red-600 text-sm mt-1">{String(errors.status.message)}</p>
                   )}
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Trạng thái phòng</label>
+                  <select className={inputCls} {...register("roomStatus") }>
+                    <option value="o_ngay">Ở ngay</option>
+                    <option value="sap_trong">Sắp trống</option>
+                    <option value="het_phong">Hết phòng</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Đơn vị tiền tệ</label>

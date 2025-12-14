@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRef } from "react";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from '@/components/Pagination';
 import { useRouter } from "next/navigation";
-import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repeat, CheckCircle2, AlertCircle } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repeat, CheckCircle2, AlertCircle, Eye, X } from "lucide-react";
 import { formatMoneyVND } from '@/utils/format-number';
 import { toast } from "react-toastify";
 import { invoiceService } from "@/services/invoiceService";
@@ -90,6 +91,51 @@ export default function HoaDonPage() {
       toast.error(e?.message || "Không xoá được");
     }
   };
+
+  // Invoice viewer modal state
+  const [viewerId, setViewerId] = useState<number | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+
+  (window as any).__openInvoiceViewer = (id: number) => {
+    setViewerId(id);
+    setViewerOpen(true);
+  };
+
+  const closeViewer = () => {
+    setViewerOpen(false);
+    setViewerId(null);
+  };
+
+  const viewerPrint = () => {
+    try {
+      iframeRef.current?.contentWindow?.focus();
+      iframeRef.current?.contentWindow?.print();
+    } catch (e) {
+      console.error('Print failed', e);
+      toast.error('Không thể in (hãy mở trang chi tiết để in)');
+    }
+  };
+
+  const downloadDoc = async () => {
+    try {
+      const doc = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? '';
+      const blob = new Blob([doc], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${viewerId || 'unknown'}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Download doc failed', e);
+      toast.error('Không thể tải file Word');
+    }
+  };
+
 
   // Map printTemplate slug/value -> human label
   const printTemplateLabel = (val: any) => {
@@ -212,6 +258,16 @@ export default function HoaDonPage() {
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
+                        title="Xem"
+                        onClick={() => {
+                          // open modal viewer
+                          (window as any).__openInvoiceViewer?.(r.id);
+                        }}
+                        className="p-2 rounded bg-amber-100 text-amber-800"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
                         title="Sửa"
                         onClick={() => router.push(`/quan-ly-chu-nha/tai-chinh/hoa-don/${r.id}`)}
                         className="p-2 rounded bg-emerald-600 text-white"
@@ -234,6 +290,29 @@ export default function HoaDonPage() {
           <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p)=> load(p, meta.limit)} />
         </div>
       </Panel>
+
+      {/* Viewer modal */}
+      {viewerOpen && viewerId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={closeViewer} />
+          <div className="relative w-[95%] md:w-3/4 lg:w-2/3 h-[85%] bg-white rounded-lg shadow-lg overflow-hidden z-60">
+            <div className="flex items-center justify-between p-3 border-b">
+              <div className="text-sm font-semibold">Xem hóa đơn #{viewerId}</div>
+              <div className="flex items-center gap-2">
+                <button onClick={viewerPrint} className="px-3 py-1 bg-emerald-600 text-white rounded">In / Save as PDF</button>
+                <button onClick={downloadDoc} className="px-3 py-1 bg-sky-600 text-white rounded">Tải Word</button>
+                <button onClick={closeViewer} className="p-2 rounded bg-slate-200" aria-label="Đóng"><X className="w-4 h-4" /></button>
+              </div>
+            </div>
+            <iframe
+              ref={iframeRef}
+              src={`/quan-ly-chu-nha/tai-chinh/print-invoice?id=${viewerId}`}
+              className="w-full h-full border-0"
+              title={`Invoice ${viewerId}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

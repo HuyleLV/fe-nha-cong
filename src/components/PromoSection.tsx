@@ -50,8 +50,8 @@ export default function PromoSection({
   const groups = chunk(list, Math.max(1, perSlide));
 
   return (
-    <section className="max-w-screen-2xl mx-auto px-4 md:px-0 mt-6">
-      <div className=" bg-[#087748] text-white p-5 md:p-8">
+    <section className="max-w-screen-2xl mx-auto px-4 md:px-0 mt-6 rounded-xl overflow-hidden">
+      <div className=" bg-[#087748] text-white p-5 md:p-8 rounded-xl overflow-hidden">
         <div className="mb-4 md:mb-6">
           <h2 className="text-2xl md:text-3xl font-bold">{title}</h2>
         </div>

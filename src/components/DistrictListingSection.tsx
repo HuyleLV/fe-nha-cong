@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Inbox } from "lucide-react";
 import clsx from "clsx";
 import RoomCardItem from "./roomCardItem";
 import { Apartment } from "@/type/apartment";
@@ -87,7 +87,7 @@ export default function DistrictListingSection({
   const showHeaderTabs = !onlyDistrict && showTabs;
 
   return (
-    <section className="w-full px-4 py-4 sm:px-6 md:px-8 md:py-6 bg-white shadow-sm">
+  <section className="w-full px-4 py-4 sm:px-6 md:px-8 md:py-6 bg-white shadow-sm rounded-xl overflow-hidden">
       {/* Header */}
       <div className="text-black">
         <h2 className="text-2xl md:text-2xl font-bold">{title}</h2>
@@ -131,14 +131,19 @@ export default function DistrictListingSection({
 
       {/* Empty state */}
       {(showAll ? items.length === 0 : !active || filtered.length === 0) ? (
-        <div className="mt-6 bg-white/5 p-6 text-center text-white/80">
-          {showAll
-            ? (items.length === 0
-                ? "Chưa có dữ liệu để hiển thị."
-                : "")
-            : (districts.length === 0
-                ? "Chưa có dữ liệu khu vực để hiển thị."
-                : "Chưa có phòng khả dụng trong khu vực đã chọn.")}
+        <div className="mt-6 p-6 text-center text-slate-500">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <Inbox className="h-12 w-12 text-slate-400" />
+            <div className="text-sm">
+              {showAll
+                ? (items.length === 0
+                    ? "Chưa có dữ liệu để hiển thị."
+                    : "")
+                : (districts.length === 0
+                    ? "Chưa có dữ liệu khu vực để hiển thị."
+                    : "Chưa có phòng khả dụng trong khu vực đã chọn.")}
+            </div>
+          </div>
         </div>
       ) : variant === "grid" ? (
         // GRID

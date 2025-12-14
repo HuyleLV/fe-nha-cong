@@ -67,6 +67,21 @@ export default function HostSidebar() {
     },
     { href: "/quan-ly-chu-nha/thong-bao", label: "Thông báo", icon: FileText },
     { href: "/quan-ly-chu-nha/cong-viec", label: "Công việc", icon: CalendarDays },
+    {
+      href: "/quan-ly-chu-nha/bao-cao-bat-dong-san",
+      label: "Báo cáo bất động sản",
+      icon: BarChart2,
+      children: [
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-trong", label: "Căn hộ trống", icon: Home },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-sap-trong", label: "Căn hộ sắp trống", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/phong-gia-han", label: "Phòng gia hạn", icon: Users },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day-cu", label: "Tỷ lệ lấp đầy (cũ)", icon: BarChart2 },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day-moi", label: "Tỷ lệ lấp đầy (Mới)", icon: BarChart2 },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/khuyen-mai", label: "Báo cáo khuyến mãi", icon: DollarSign },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/cho-thue", label: "Báo cáo cho thuê", icon: FileText },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/bo-tra", label: "Báo cáo bỏ trả", icon: FileText },
+      ],
+    },
   ];
 
   const STORAGE_KEY = 'host_sidebar_open';
@@ -210,6 +225,8 @@ export default function HostSidebar() {
           );
         })}
       </nav>
+
+      
 
       <div className="mt-auto p-4 border-t border-slate-200">
         <button

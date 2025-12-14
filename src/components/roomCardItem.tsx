@@ -35,6 +35,28 @@ const toNumber = (v?: string | null) => {
 export default function RoomCardItem({ item, isFav, onToggleFav, onBook, extraBadge }: Props) {
   const router = useRouter();
 
+  // Determine current viewer role (best-effort). If admin token present, show everything.
+  const isAdminViewer = typeof window !== "undefined" && !!localStorage.getItem("tokenAdmin");
+
+  // Helper to normalize room status
+  const roomStatusKey = (a: any): 'sap_trong' | 'o_ngay' | 'het_phong' => {
+    const raw = a?.roomStatus ?? a?.room_status ?? a?.occupancyStatus ?? a?.availability ?? null;
+    if (!raw) return 'o_ngay';
+    const s = String(raw).toLowerCase();
+    if (s === 'sap_trong' || s.includes('sap') || s.includes('sắp') || s.includes('coming')) return 'sap_trong';
+    if (s === 'o_ngay' || s.includes('o_ngay') || s.includes('ở') || s.includes('available') || s.includes('vacant')) return 'o_ngay';
+    if (s === 'het_phong' || s.includes('het') || s.includes('hết') || s.includes('full') || s.includes('occupied')) return 'het_phong';
+    return 'o_ngay';
+  };
+
+  // If viewer is not admin, hide apartments that aren't approved or are fully occupied
+  if (!isAdminViewer) {
+    const approvedFlag = (item as any).isApproved ?? (item as any).is_approved;
+    const approved = Boolean(approvedFlag);
+    const statusKey = roomStatusKey(item);
+    if (!approved || statusKey === 'het_phong') return null;
+  }
+
   // ===== Local state cho tim (được hydrate từ prop/BE/API) =====
   const [fav, setFav] = useState<boolean>(!!(isFav ?? item.favorited));
   const [loadingFav, setLoadingFav] = useState(false);

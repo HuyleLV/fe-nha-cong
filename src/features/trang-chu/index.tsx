@@ -34,6 +34,7 @@ export default function TrangChu() {
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
   const [popular, setPopular] = useState<Apartment[]>([]);
   const [discounted, setDiscounted] = useState<Apartment[]>([]);
+  const [upcomingVacant, setUpcomingVacant] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -96,6 +97,20 @@ export default function TrangChu() {
         } catch (e) {
           // im lặng nếu lỗi phần ưu đãi
         }
+        // Load upcoming vacant apartments (public, approved) - limit 10
+        try {
+          const upRes = await apartmentService.getUpcomingVacant({ status: 'sap_trong', limit: 10 });
+          const upItems: Apartment[] = (upRes.items || []).map((a) => {
+            const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
+            const districtName = secFound?.district?.name || a.location?.name || "";
+            const cityName = rawCity?.name || "";
+            const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
+            return { ...a, addressPath } as Apartment;
+          });
+          setUpcomingVacant(upItems);
+        } catch (e) {
+          // ignore if fails
+        }
       } catch (e: any) {
         if (e?.name !== "CanceledError" && e?.message !== "canceled") {
           setErr(e?.message || "Không tải được dữ liệu");
@@ -152,7 +167,7 @@ export default function TrangChu() {
         >
           {(() => {
             const images = [banner4.src, banner1.src, banner2.src, banner3.src];
-            const chunkSize = isMobile ? 1 : 2;
+            const chunkSize = isMobile ? 1 : 1;
             const slidesArr: string[][] = [];
             for (let i = 0; i < images.length; i += chunkSize) {
               slidesArr.push(images.slice(i, i + chunkSize));
@@ -173,7 +188,7 @@ export default function TrangChu() {
               <div key={sidx} className="w-full">
                 <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
                   {group.map((src, idx) => (
-                    <div key={idx} className={`w-full ${isMobile ? ("h-60") : ("h-80 md:w-1/2")} mx-2 rounded bg-center bg-cover overflow-hidden`} style={{ backgroundImage: `url(${src})` }}>
+                    <div key={idx} className={`w-full ${isMobile ? ("h-60") : ("h-60 md:w-1/1")} mx-2 rounded bg-center bg-cover overflow-hidden`} style={{ backgroundImage: `url(${src})` }}>
                       <div className="h-full w-full bg-black/8" />
                     </div>
                   ))}
@@ -184,9 +199,9 @@ export default function TrangChu() {
         </Slide>
 
         {/* Overlay search card (Agoda-style) */}
-        <div className=" flex justify-center px-4 md:px-6 mt-3">
+        <div className="absolute left-0 right-0 flex justify-center px-4 md:px-6 top-full -translate-y-1/2 z-20">
           <div className="pointer-events-auto w-full max-w-5xl">
-            <div className="rounded-2xl bg-white/95 backdrop-blur shadow-2xl ring-1 ring-black/5 p-3 md:p-4">
+            <div className="rounded-2xl bg-white/95 backdrop-blur shadow-xl ring-1 ring-black/5 p-3 md:p-4">
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 <button
                   type="button"
@@ -236,12 +251,12 @@ export default function TrangChu() {
         </div>
       </div>
 
-      {/* Spacer to accommodate overlay */}
-      <div className="h-12 md:h-16" />
+      {/* Spacer so content below isn't overlapped by the absolute search card */}
+      <div className="h-20 md:h-30" />
 
       {/* ===== Ưu đãi giảm giá (trước PromoSection) ===== */}
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-0">
-        {!loading && !err && discounted.length >= 0 && (
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-0 rounded-xl overflow-hidden">
+        {!loading && !err && (
           <DistrictListingSection
             title="Các phòng đang có ưu đãi"
             subtitle="Các căn hộ giảm giá nhiều nhất"
@@ -254,7 +269,7 @@ export default function TrangChu() {
       </div>
 
       {/* ===== Section nhiều quận (có tabs) ===== */}
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-0">
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-0 rounded-xl overflow-hidden pt-5">
         {loading ? (
           <div className="h-40 bg-emerald-100 animate-pulse" />
         ) : err ? (
@@ -297,7 +312,7 @@ export default function TrangChu() {
       </div> */}
       
       {/* ===== Section tái dùng (ẩn tabs) ===== */}
-      <div className="max-w-screen-2xl mx-auto px-4 md:px-0">
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-0 rounded-xl overflow-hidden pt-5">
         {!loading && !err && popular.length > 0 && (
           <DistrictListingSection
             title="Các phòng đang được quan tâm nhiều nhất"
@@ -329,6 +344,20 @@ export default function TrangChu() {
       {/* <PartnersCarousel items={PARTNERS} perSlide={6} /> */}
 
       {/* ===== Ưu đãi / Khuyến mãi (trước Partners & FAQ) ===== */}
+      {/* ===== Các phòng sắp trống (approved) ===== */}
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-0 rounded-xl overflow-hidden mt-6">
+        {!loading && !err && (
+          <DistrictListingSection
+            title="Các phòng sắp trống"
+            subtitle="Căn hộ sắp trống đã được duyệt"
+            data={upcomingVacant}
+            showTabs={false}
+            variant="grid"
+            onBook={(apt) => console.log("book:", apt)}
+          />
+        )}
+      </div>
+
       <PromoSection />
 
       {/* ===== FAQ ===== */}
@@ -336,7 +365,7 @@ export default function TrangChu() {
 
       {/* ===== Bản đồ ===== */}
       <section className="py-10">
-        <div className="mx-auto max-w-screen-2xl bg-[#087748] p-5 text-white md:p-8">
+        <div className="mx-auto max-w-screen-2xl bg-[#087748] p-5 text-white md:p-8 rounded-xl overflow-hidden">
           <h3 className="text-2xl md:text-3xl font-bold">Khám phá khu vực trên bản đồ</h3>
           <div className="mt-4 grid grid-cols-1 items-center gap-6 md:grid-cols-2">
             <div>

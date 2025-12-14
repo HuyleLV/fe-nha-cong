@@ -39,6 +39,11 @@ export default function HostLayoutClient({ children }: { children: React.ReactNo
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
+  // Quick path to render minimal print view without sidebar/header when printing invoices
+  if (pathname?.includes('/print-invoice')) {
+    return <>{children}</>;
+  }
+
   useEffect(() => {
     const u = readStoredUser();
     if (!u) {

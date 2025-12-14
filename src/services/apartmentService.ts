@@ -80,6 +80,36 @@ export const apartmentService = {
     }
   },
 
+  /** GET /api/apartments/available */
+  async getAvailable(params?: any): Promise<{ items: Apartment[]; meta: any }> {
+    try {
+      const payload = await axiosClient.get<any, any>(apiUrl('/api/apartments/available'), { params: cleanParams(params) });
+      return { items: payload?.items ?? [], meta: payload?.meta ?? { total: 0, page: 1, limit: 20, pageCount: 1 } };
+    } catch (err: any) {
+      throw new Error(err?.message || 'Không thể tải danh sách căn hộ trống');
+    }
+  },
+
+  /** GET /api/apartments/room-status */
+  async getByRoomStatus(params?: any): Promise<{ items: Apartment[]; meta: any }> {
+    try {
+      const payload = await axiosClient.get<any, any>(apiUrl('/api/apartments/room-status'), { params: cleanParams(params) });
+      return { items: payload?.items ?? [], meta: payload?.meta ?? { total: 0, page: 1, limit: 20, pageCount: 1 } };
+    } catch (err: any) {
+      throw new Error(err?.message || 'Không thể tải danh sách căn hộ theo trạng thái phòng');
+    }
+  },
+
+  /** GET /api/apartments/room-status/public → danh sách công khai (approved + published enforced) */
+  async getUpcomingVacant(params?: any): Promise<{ items: Apartment[]; meta: any }> {
+    try {
+      const payload = await axiosClient.get<any, any>(apiUrl('/api/apartments/room-status/public'), { params: cleanParams(params) });
+      return { items: payload?.items ?? [], meta: payload?.meta ?? { total: 0, page: 1, limit: 10, pageCount: 1 } };
+    } catch (err: any) {
+      throw new Error(err?.message || 'Không thể tải danh sách căn hộ sắp trống');
+    }
+  },
+
   /** GET /api/apartments/:idOrSlug → hỗ trợ trả trực tiếp entity hoặc { data: entity } */
   async getById(idOrSlug: number | string): Promise<Apartment> {
     try {

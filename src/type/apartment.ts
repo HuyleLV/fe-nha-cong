@@ -1,6 +1,7 @@
 import { Location } from "./location";
 
 export type ApartmentStatus = "draft" | "published" | "archived";
+export type ApartmentRoomStatus = 'sap_trong' | 'o_ngay' | 'het_phong';
 
 /** Bản đọc về (read model) từ API */
 export type Apartment = {
@@ -47,6 +48,7 @@ export type Apartment = {
   depositAmount?: string | null;
 
   status: ApartmentStatus;
+  roomStatus?: ApartmentRoomStatus;
 
   /** Ảnh đại diện */
   coverImageUrl?: string | null;
@@ -136,6 +138,7 @@ export type ApartmentForm = {
   rentPrice: string;
   currency?: string;              // default "VND" ở BE
   status?: ApartmentStatus;       // default "draft" ở BE
+  roomStatus?: ApartmentRoomStatus;
   discountPercent?: number | null; // Ưu đãi (%), 0-100
   discountAmount?: string | null; // Ưu đãi cố định VND
   commissionPercent?: number | null; // Hoa hồng CTV (%)

@@ -87,6 +87,7 @@ export default function ApartmentFormPage() {
       currency: "VND",
       status: "draft" as ApartmentStatus,
     depositAmount: "",
+  roomStatus: 'o_ngay',
   discountPercent: 0,
   discountAmount: "",
   commissionPercent: 0,
@@ -147,7 +148,9 @@ export default function ApartmentFormPage() {
     bathrooms: 'Vệ sinh',
     roomCode: 'Mã phòng',
     floorNumber: 'Tầng',
+    roomStatus: 'Trạng thái phòng',
   };
+
 
   // Called by header Save button. Runs validation, shows toast errors if invalid,
   // or proceeds to submit when valid.
@@ -241,6 +244,7 @@ export default function ApartmentFormPage() {
           rentPrice: ap.rentPrice,
           currency: ap.currency,
           status: ap.status,
+          roomStatus: (ap as any).roomStatus ?? 'o_ngay',
           discountPercent: (ap as any).discountPercent ?? 0,
           discountAmount: (ap as any).discountAmount ?? "",
           commissionPercent: (ap as any).commissionPercent ?? 0,
@@ -659,9 +663,18 @@ export default function ApartmentFormPage() {
                   )}
                 </div>
                 <div>
+                <label className="block text-sm text-slate-600 mb-1">Trạng thái phòng</label>
+                <select className={inputCls} {...register("roomStatus")}> 
+                  <option value="o_ngay">Ở ngay</option>
+                  <option value="sap_trong">Sắp trống</option>
+                  <option value="het_phong">Hết phòng</option>
+                </select>
+                </div>
+              </div>
+
+              <div className="mt-3">
                   <label className="block text-sm text-slate-600 mb-1">Đơn vị tiền tệ</label>
                   <input className={inputCls} placeholder="VND" {...register("currency")} />
-                </div>
               </div>
 
               <div className="mt-3">

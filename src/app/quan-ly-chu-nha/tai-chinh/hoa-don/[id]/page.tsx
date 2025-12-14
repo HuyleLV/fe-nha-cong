@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import AdminTable from "@/components/AdminTable";
 import type { InvoiceItem, InvoicePayload } from "@/type/invoice";
 import { toast } from "react-toastify";
@@ -278,6 +278,47 @@ export default function InvoiceEditPage() {
   useEffect(() => {
     if (!isCreate) fetchOne();
   }, [idParam]);
+
+  const searchParams = useSearchParams();
+  const embedded = searchParams?.get('embedded') === '1';
+
+  // If embedded, render a compact printable view and return early
+  if (embedded) {
+    return (
+      <div className="p-6 bg-white text-slate-800">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold mb-2">Hóa đơn #{idParam}</h2>
+          <div className="mb-4">
+            <div><strong>Tòa nhà:</strong> {form.buildingId}</div>
+            <div><strong>Căn hộ:</strong> {form.apartmentId}</div>
+            <div><strong>Kỳ:</strong> {form.period}</div>
+            <div><strong>Ngày lập:</strong> {form.issueDate}</div>
+          </div>
+          <table className="w-full border-collapse mb-4">
+            <thead>
+              <tr>
+                <th className="border p-2 text-left">Dịch vụ</th>
+                <th className="border p-2 text-right">Đơn giá</th>
+                <th className="border p-2 text-right">Số lượng</th>
+                <th className="border p-2 text-right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(form.items || []).map((it: any, idx: number) => (
+                <tr key={idx}>
+                  <td className="border p-2">{it.serviceName}</td>
+                  <td className="border p-2 text-right">{it.unitPrice ?? ''}</td>
+                  <td className="border p-2 text-right">{it.quantity ?? ''}</td>
+                  <td className="border p-2 text-right">{it.amount ?? ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="text-right font-semibold">Tổng: {/* compute total if needed */}</div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (form && form.period) {

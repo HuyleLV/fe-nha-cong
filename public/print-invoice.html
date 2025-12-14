@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Invoice Print</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 20px; color: #111827; background: #fff; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 20px; margin-bottom: 6px; }
+    .meta { margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; }
+    th { background: #f9fafb; text-align: left; }
+    .text-right { text-align: right; }
+    .summary { margin-top: 12px; font-weight: 600; text-align: right; }
+    .hide-on-print { display: block; margin-bottom: 12px; }
+    @media print { .hide-on-print { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Controls are provided by the modal wrapper; removed in-page buttons -->
+
+    <div id="invoiceRoot">Đang tải hóa đơn...</div>
+  </div>
+
+  <script>
+    async function fetchInvoice(id) {
+      try {
+        const res = await fetch('/api/invoices/' + encodeURIComponent(id));
+        if (!res.ok) throw new Error('Không tải được');
+        const json = await res.json();
+        return json?.data ?? json;
+      } catch (e) {
+        console.error(e);
+        return null;
+      }
+    }
+
+    function formatRow(it) {
+      const unitPrice = it.unitPrice ?? '';
+      const qty = it.quantity ?? '';
+      const amount = it.amount ?? '';
+      return `<tr><td>${it.serviceName || ''}</td><td class="text-right">${unitPrice}</td><td class="text-right">${qty}</td><td class="text-right">${amount}</td></tr>`;
+    }
+
+    function renderInvoice(inv) {
+      if (!inv) { document.getElementById('invoiceRoot').innerText = 'Không tìm thấy hóa đơn'; return; }
+      const header = `<h1>Hóa đơn #${inv.id || ''}</h1>
+        <div class="meta">
+          <div><strong>Tòa nhà:</strong> ${inv.buildingName ?? inv.buildingId ?? ''}</div>
+          <div><strong>Căn hộ:</strong> ${inv.apartmentTitle ?? inv.apartmentId ?? ''}</div>
+          <div><strong>Kỳ:</strong> ${inv.period ?? ''}</div>
+          <div><strong>Ngày lập:</strong> ${inv.issueDate ? new Date(inv.issueDate).toLocaleDateString() : ''}</div>
+        </div>`;
+
+      const rows = (inv.items || []).map(formatRow).join('');
+      const table = `<table><thead><tr><th>Dịch vụ</th><th class="text-right">Đơn giá</th><th class="text-right">Số lượng</th><th class="text-right">Thành tiền</th></tr></thead><tbody>${rows}</tbody></table>`;
+      const total = `<div class="summary">Tổng: ${inv.total ?? inv.amount ?? ''}</div>`;
+      document.getElementById('invoiceRoot').innerHTML = header + table + total;
+    }
+
+    function getQueryParam(name) {
+      const u = new URL(window.location.href);
+      return u.searchParams.get(name);
+    }
+
+    (async function(){
+      const id = getQueryParam('id') || getQueryParam('invoiceId') || getQueryParam('invoice');
+      const inv = await fetchInvoice(id);
+      renderInvoice(inv);
+
+      // In-page controls removed — printing/downloading handled by parent modal.
+    })();
+  </script>
+</body>
+</html>
