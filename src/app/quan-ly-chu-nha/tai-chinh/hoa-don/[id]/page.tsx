@@ -10,6 +10,7 @@ import { buildingService } from "@/services/buildingService";
 import { apartmentService } from "@/services/apartmentService";
 import { PlusCircle, Save, Trash2, CheckCircle2, ChevronRight } from "lucide-react";
 import { contractService } from "@/services/contractService";
+import { userService } from "@/services/userService";
 import { serviceService } from "@/services/serviceService";
 
 // Using shared types from src/type/invoice
@@ -24,6 +25,11 @@ export default function InvoiceEditPage() {
     buildingId: "",
     apartmentId: "",
     contractId: "",
+    customerId: '',
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    customerAddress: '',
     period: "",
     issueDate: "",
     dueDate: "",
@@ -190,6 +196,40 @@ export default function InvoiceEditPage() {
     try {
       const c = await contractService.get(Number(contractId));
       const fees = (c as any)?.serviceFees ?? [];
+      // Populate customer info from the contract if available. Contract may
+      // include nested customer data or only a customerId; attempt to fetch
+      // full user details when needed.
+      try {
+        const custFromContract = (c as any)?.customer ?? null;
+        if (custFromContract) {
+          setForm((s: any) => ({
+            ...s,
+            customerId: custFromContract.id ?? s.customerId ?? '',
+            customerName: custFromContract.name ?? s.customerName ?? '',
+            customerPhone: custFromContract.phone ?? s.customerPhone ?? '',
+            customerEmail: custFromContract.email ?? s.customerEmail ?? '',
+            customerAddress: custFromContract.address ?? s.customerAddress ?? '',
+          }));
+        } else if ((c as any)?.customerId) {
+          // try to fetch user details via admin API
+          try {
+            const u = await userService.getAdminUser(Number((c as any).customerId));
+            setForm((s: any) => ({
+              ...s,
+              customerId: u?.id ?? s.customerId ?? '',
+              customerName: u?.name ?? s.customerName ?? '',
+              customerPhone: u?.phone ?? s.customerPhone ?? '',
+              customerEmail: u?.email ?? s.customerEmail ?? '',
+              customerAddress: u?.address ?? s.customerAddress ?? '',
+            }));
+          } catch (err) {
+            // ignore failure to fetch user details
+            console.debug('Không lấy được thông tin khách hàng từ contract.customerId', err);
+          }
+        }
+      } catch (err) {
+        console.debug('Không xử lý được thông tin khách hàng từ hợp đồng', err);
+      }
       if (!Array.isArray(fees) || fees.length === 0) return;
 
       // Resolve service names when serviceId exists
@@ -243,6 +283,11 @@ export default function InvoiceEditPage() {
         buildingId: data.buildingId ?? "",
         apartmentId: data.apartmentId ?? "",
         contractId: data.contractId ?? "",
+        customerId: data.customerId ?? '' ,
+        customerName: data.customerName ?? '' ,
+        customerPhone: data.customerPhone ?? '' ,
+        customerEmail: data.customerEmail ?? '' ,
+        customerAddress: data.customerAddress ?? '' ,
         period: data.period ?? "",
         issueDate: data.issueDate ? new Date(data.issueDate).toISOString().slice(0, 10) : "",
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString().slice(0, 10) : "",
@@ -267,6 +312,24 @@ export default function InvoiceEditPage() {
       // DEBUG: log normalized items we set on the form
       console.debug('[InvoiceEdit] normalized items set on form:', (data.items ?? []).map((it: any) => ({ serviceName: it.serviceName, unitPrice: it.unitPrice, unit: it.unit })));
       if (data.buildingId) await loadApartments(Number(data.buildingId));
+      // Ensure contracts for the invoice's apartment are loaded so the saved contractId
+      // can be displayed in the select. Also load contract services to populate items
+      // when editing an existing invoice.
+      if (data.apartmentId) {
+        const aptId = Number(data.apartmentId);
+        setSelectedApartmentForContracts(aptId);
+        const contractsForApt = await loadContracts(aptId);
+        // If the invoice already has a contractId, ensure we load its service fees
+        // so the items shown match the saved invoice.
+        if (data.contractId) {
+          // If the loaded contracts don't include the saved contract, still attempt
+          // to load contract services directly by id.
+          await loadContractServices(Number(data.contractId));
+        } else if ((!contractsForApt || contractsForApt.length === 0) && data.apartmentId) {
+          // No contracts: fall back to apartment default services
+          await loadApartmentServices(aptId);
+        }
+      }
     } catch (err) {
       console.error(err);
       toast.error("Không tải được hóa đơn");
@@ -293,6 +356,13 @@ export default function InvoiceEditPage() {
             <div><strong>Căn hộ:</strong> {form.apartmentId}</div>
             <div><strong>Kỳ:</strong> {form.period}</div>
             <div><strong>Ngày lập:</strong> {form.issueDate}</div>
+            {/* Customer info for printable view */}
+            <div className="mt-2 border-t pt-2">
+              <div><strong>Khách hàng:</strong> {form.customerName ?? "-"}</div>
+              {form.customerPhone ? <div><strong>Điện thoại:</strong> {form.customerPhone}</div> : null}
+              {form.customerEmail ? <div><strong>Email:</strong> {form.customerEmail}</div> : null}
+              {form.customerAddress ? <div><strong>Địa chỉ:</strong> {form.customerAddress}</div> : null}
+            </div>
           </div>
           <table className="w-full border-collapse mb-4">
             <thead>
@@ -456,8 +526,8 @@ export default function InvoiceEditPage() {
                     setSelectedApartmentForContracts(val || null);
                     // clear contracts immediately to avoid showing previous apartment's contracts
                     setContracts([]);
-                    // reset contract selection and items while we load
-                    setForm((s: any) => ({ ...s, contractId: "", items: [] }));
+                    // reset contract selection, items and any customer info while we load
+                    setForm((s: any) => ({ ...s, contractId: "", items: [], customerId: '', customerName: '', customerPhone: '', customerEmail: '', customerAddress: '' }));
                     // load contracts for this apartment
                     const contractsForApt = await loadContracts(val);
                     // if there are no contracts for this apartment, load apartment default services
@@ -508,6 +578,17 @@ export default function InvoiceEditPage() {
                     </>
                   )}
                 </select>
+              </div>
+
+              {/* Customer info populated from selected contract (read-only) */}
+              <div>
+                <label className="block text-sm font-medium">Thông tin khách hàng</label>
+                <div className="mt-1 px-3 py-2 border border-slate-200 rounded bg-white">
+                  <div className="text-sm text-slate-700">{form.customerName ? <><strong>{form.customerName}</strong></> : <span className="text-slate-400">Không có</span>}</div>
+                  <div className="text-sm text-slate-500">{form.customerPhone ? <span>Điện thoại: {form.customerPhone}</span> : null}</div>
+                  <div className="text-sm text-slate-500">{form.customerEmail ? <span>Email: {form.customerEmail}</span> : null}</div>
+                  {form.customerAddress ? <div className="text-sm text-slate-500">{form.customerAddress}</div> : null}
+                </div>
               </div>
 
               <div>

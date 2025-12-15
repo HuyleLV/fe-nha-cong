@@ -7,7 +7,7 @@ import phone from "@/assets/phone.png";
 export default function FloatingChatButtons() {
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60]">
+    <div className="fixed bottom-6 right-6 z-[60] floating-chat-buttons">
       <div className="flex flex-col items-end gap-3">
 
         {/* Phone */}

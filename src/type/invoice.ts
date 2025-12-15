@@ -17,6 +17,12 @@ export interface InvoicePayload {
   buildingId: number;
   apartmentId: number;
   contractId?: number | null;
+  // customer information (populated from the contract when available)
+  customerId?: number | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  customerAddress?: string | null;
   period: string; // YYYY-MM
   issueDate?: string | null; // YYYY-MM-DD
   dueDate?: string | null;  // YYYY-MM-DD

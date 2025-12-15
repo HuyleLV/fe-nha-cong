@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown, Users, BarChart2, FileText, DollarSign } from "lucide-react";
 import type { User } from "@/type/user";
 
@@ -48,10 +48,10 @@ export default function HostSidebar() {
       label: "Khách hàng",
       icon: Users,
       children: [
-  { href: "/quan-ly-chu-nha/khach-hang/khach-tiem-nang", label: "Khách tiềm năng", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/khach-hang/khach-tiem-nang", label: "Khách tiềm năng", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/dat-coc", label: "Đặt cọc", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/hop-dong", label: "Hợp đồng", icon: CalendarDays },
-  { href: "/quan-ly-chu-nha/khach-hang/cu-dan", label: "Cư dân", icon: Users },
+        { href: "/quan-ly-chu-nha/khach-hang/cu-dan", label: "Cư dân", icon: Users },
         { href: "/quan-ly-chu-nha/khach-hang/phuong-tien", label: "Phương tiện", icon: CalendarDays },
       ],
     },
@@ -80,6 +80,21 @@ export default function HostSidebar() {
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/khuyen-mai", label: "Báo cáo khuyến mãi", icon: DollarSign },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/cho-thue", label: "Báo cáo cho thuê", icon: FileText },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/bo-tra", label: "Báo cáo bỏ trả", icon: FileText },
+      ],
+    },
+    { href: "/quan-ly-chu-nha/cai-dat-chung", label: "Cài đặt chung", icon: FileText },
+    {
+      href: "/quan-ly-chu-nha/danh-muc-khac",
+      label: "Danh mục khác",
+      icon: FileText,
+      children: [
+        { href: "/quan-ly-chu-nha/danh-muc-khac/tai-chinh", label: "Tài chính", icon: DollarSign },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/tai-san", label: "Tài sản", icon: Home },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/quan-ly-hotline", label: "Quản lý hotline", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/zalo-oa", label: "Zalo OA", icon: Users },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/loai-cong-viec", label: "Loại công việc", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/danh-muc-chung", label: "Danh mục chung", icon: FileText },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/danh-sach-tang", label: "Danh sách tầng", icon: Home },
       ],
     },
   ];
@@ -162,12 +177,36 @@ export default function HostSidebar() {
         {menu.map(({ href, label, icon: Icon, children }) => {
           const itemActive = href === "/quan-ly-chu-nha" ? pathname === href : pathname.startsWith(href);
 
+          // Insert small section titles before specific groups for visual separation
+          let sectionHeader: React.ReactNode = null;
+          if (label === "Cài đặt chung") {
+            sectionHeader = (
+              <div key="__settings_header__" className="px-1 pt-2 pb-1">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cài đặt</div>
+              </div>
+            );
+          } else if (label === "Báo cáo bất động sản") {
+            sectionHeader = (
+              <div key="__reports_header__" className="px-1 pt-2 pb-1">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Báo cáo</div>
+              </div>
+            );
+          } else if (label === "Danh mục dữ liệu") {
+            sectionHeader = (
+              <div key="__operations_header__" className="px-1 pt-2 pb-1">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Vận hành</div>
+              </div>
+            );
+          }
+
           if (children?.length) {
             const anyChildActive = children.some((c) => pathname.startsWith(c.href));
             const active = itemActive || anyChildActive;
 
             return (
-              <div key={href}>
+              <React.Fragment key={href}>
+                {sectionHeader}
+                <div>
                 <button
                   onClick={() => setOpenMenu(openMenu === href ? null : href)}
                   className={`w-full group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
@@ -204,24 +243,27 @@ export default function HostSidebar() {
                     })}
                   </div>
                 )}
-              </div>
+                </div>
+              </React.Fragment>
             );
           }
 
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                itemActive
-                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                  : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-              }`}
-            >
-              {itemActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
-              <Icon className="w-4.5 h-4.5" />
-              <span className="truncate">{label}</span>
-            </Link>
+            <React.Fragment key={href}>
+              {sectionHeader}
+              <Link
+                href={href}
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
+                  itemActive
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                }`}
+              >
+                {itemActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                <Icon className="w-4.5 h-4.5" />
+                <span className="truncate">{label}</span>
+              </Link>
+            </React.Fragment>
           );
         })}
       </nav>

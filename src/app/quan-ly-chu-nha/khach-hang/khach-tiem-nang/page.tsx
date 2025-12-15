@@ -11,7 +11,7 @@ import Pagination from '@/components/Pagination';
 
 type StatusKey = 'new'|'appointment'|'sales'|'deposit_form'|'contract'|'failed';
 
-type Row = { id: number; name: string; email?: string; phone?: string; note?: string; customerStatus?: StatusKey | null };
+type Row = { id: number; name: string; email?: string; phone?: string; note?: string; customerStatus?: StatusKey | null; ownerId?: number };
 
 const STATUS_LIST: { key: StatusKey; label: string; bg?: string; accent?: string; icon?: React.ComponentType<React.SVGProps<SVGSVGElement>> }[] = [
   { key: 'new', label: 'Khách mới', bg: 'bg-slate-50', accent: 'bg-slate-600', icon: UserPlus },
@@ -34,7 +34,6 @@ export default function KhachTiemNangPage(){
     setLoading(true);
     try {
       const params: any = { page: p, limit };
-      // Khách tiềm năng: customers WITHOUT contract/deposit
       params.hasContractOrDeposit = false;
       if (meId) params.ownerId = meId;
       const res = await userService.listAdminUsers(params);
@@ -42,7 +41,7 @@ export default function KhachTiemNangPage(){
       const meta = res.meta ?? {};
       setTotal(meta.total ?? 0);
       setPage(meta.page ?? p);
-      const mapped = (users as any[]).map(u => ({ id: u.id, name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '', note: u.note ?? '', customerStatus: u.customerStatus ?? null }));
+  const mapped = (users as any[]).map(u => ({ id: u.id, name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '', note: u.note ?? '', customerStatus: u.customerStatus ?? null, ownerId: u.ownerId ?? undefined }));
       const statusKeys = STATUS_LIST.map(s => s.key);
       const filtered = mapped.filter(m => statusKeys.includes((m.customerStatus ?? 'new') as StatusKey));
       setRows(filtered);
@@ -100,7 +99,7 @@ export default function KhachTiemNangPage(){
   return (
     <div className="p-6">
       <Panel title="Khách tiềm năng" actions={(
-        <Link href="/quan-ly-chu-nha/khach-hang/cu-dan/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md h-8" title="Thêm khách hàng">
+        <Link href="/quan-ly-chu-nha/khach-hang/khach-tiem-nang/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-md h-8" title="Thêm khách hàng">
           <PlusCircle className="w-4 h-4" />
         </Link>
       )}>
@@ -149,9 +148,11 @@ export default function KhachTiemNangPage(){
                   <Link href={`/quan-ly-chu-nha/khach-hang/cu-dan/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
                     <Edit3 className="w-4 h-4 text-white" />
                   </Link>
-                  <button title="Xóa" onClick={() => onDelete(r)} className="p-2 rounded bg-red-500 hover:bg-red-600">
-                    <Trash2 className="w-4 h-4 text-white" />
-                  </button>
+                  {(!r.ownerId || r.ownerId === meId) && (
+                    <button title="Xóa" onClick={() => onDelete(r)} className="p-2 rounded bg-red-500 hover:bg-red-600">
+                      <Trash2 className="w-4 h-4 text-white" />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

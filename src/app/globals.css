@@ -165,3 +165,20 @@ input[type="submit"],
   cursor: pointer;
 }
 
+/* Hide floating chat buttons when a modal is open or during print */
+.hide-floating-buttons .floating-chat-buttons,
+html.hide-floating-buttons .floating-chat-buttons,
+body.hide-floating-buttons .floating-chat-buttons {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Ensure floating chat buttons never appear on printed output */
+@media print {
+  .floating-chat-buttons {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+

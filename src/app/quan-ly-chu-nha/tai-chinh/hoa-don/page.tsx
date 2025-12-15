@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from '@/components/Pagination';
@@ -35,6 +34,8 @@ export default function HoaDonPage() {
       setLoading(false);
     }
   };
+
+  
 
   useEffect(() => {
     load(meta.page, meta.limit);
@@ -97,6 +98,73 @@ export default function HoaDonPage() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Helper to hide/show floating chat buttons (CSS class + inline fallback)
+  const applyFloatingHide = (hide: boolean) => {
+    if (typeof document === 'undefined') return;
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      if (hide) {
+        root.classList.add('hide-floating-buttons');
+        body.classList.add('hide-floating-buttons');
+      } else {
+        root.classList.remove('hide-floating-buttons');
+        body.classList.remove('hide-floating-buttons');
+      }
+
+      const node = document.querySelector('.floating-chat-buttons') as HTMLElement | null;
+      if (node) {
+        if (hide) {
+          node.style.setProperty('display', 'none', 'important');
+          node.style.setProperty('visibility', 'hidden', 'important');
+          node.setAttribute('aria-hidden', 'true');
+        } else {
+          node.style.removeProperty('display');
+          node.style.removeProperty('visibility');
+          node.removeAttribute('aria-hidden');
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // Inject a small style into the iframe document to hide floating buttons inside the iframe
+  const injectHideIntoIframe = () => {
+    try {
+      const iframe = iframeRef.current;
+      const doc = iframe?.contentDocument;
+      if (!doc) return;
+      const existing = doc.getElementById('hide-floating-buttons-style');
+      if (existing) return;
+      const style = doc.createElement('style');
+      style.id = 'hide-floating-buttons-style';
+      style.innerHTML = `
+        .floating-chat-buttons { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+      `;
+      // Append to head if possible, fallback to body
+      (doc.head || doc.body || doc.documentElement).appendChild(style);
+    } catch (e) {
+      // ignore cross-origin or timing issues
+    }
+  };
+
+  // Ensure floating buttons are hidden when the viewer modal is open
+  useEffect(() => {
+    try {
+      applyFloatingHide(!!viewerOpen);
+      if (viewerOpen) {
+        // attempt injection shortly after opening in case iframe is still loading
+        setTimeout(() => injectHideIntoIframe(), 200);
+      }
+    } catch (e) {
+      // ignore
+    }
+    return () => {
+      try { applyFloatingHide(false); } catch (e) {}
+    };
+  }, [viewerOpen]);
+
 
   (window as any).__openInvoiceViewer = (id: number) => {
     setViewerId(id);
@@ -110,11 +178,27 @@ export default function HoaDonPage() {
 
   const viewerPrint = () => {
     try {
-      iframeRef.current?.contentWindow?.focus();
-      iframeRef.current?.contentWindow?.print();
+      // ensure floating buttons hidden during print
+      applyFloatingHide(true);
+
+      const win = iframeRef.current?.contentWindow;
+      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+
+      if (win) {
+        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        win.focus();
+        win.print();
+        // fallback cleanup in case afterprint isn't fired
+        setTimeout(cleanup, 1500);
+      } else {
+        // fallback to top-level print
+        window.print();
+        setTimeout(cleanup, 1500);
+      }
     } catch (e) {
       console.error('Print failed', e);
       toast.error('Không thể in (hãy mở trang chi tiết để in)');
+      try { applyFloatingHide(false); } catch {}
     }
   };
 
@@ -306,6 +390,10 @@ export default function HoaDonPage() {
             </div>
             <iframe
               ref={iframeRef}
+              onLoad={() => {
+                // When iframe finishes loading, try to inject CSS to hide floating buttons inside it
+                injectHideIntoIframe();
+              }}
               src={`/quan-ly-chu-nha/tai-chinh/print-invoice?id=${viewerId}`}
               className="w-full h-full border-0"
               title={`Invoice ${viewerId}`}
