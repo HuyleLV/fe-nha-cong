@@ -37,6 +37,17 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
 
   const isHostUI = (typeof window !== 'undefined') && (window.location.pathname || '').startsWith('/quan-ly-chu-nha');
 
+  // --- Special: public apartment endpoints should behave like anonymous on public UI pages
+  // When visiting the public site (not /admin and not /quan-ly-chu-nha), avoid sending any token
+  // for GET requests to apartment listing endpoints so that hosts (who also have user tokens)
+  // don't receive host-scoped results (created_by restriction). This ensures all viewers
+  // on the public pages see the same items.
+  const isPublicApartmentGet = m === 'get' && /^\/api\/apartments(\/|$)/.test(p);
+  const isPublicUI = (typeof window !== 'undefined') && !window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/quan-ly-chu-nha');
+  if (isPublicApartmentGet && isPublicUI) {
+    return null;
+  }
+
   if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
     // Admin endpoint or admin UI → ưu tiên token admin
     return adminToken || userToken || null;
