@@ -69,7 +69,7 @@ function BuildingAdminListInner() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-800">Quản lý Tòa Nhà</h1>
         <Link
-          href="/admin/building/create"
+          href="/admin/danh-muc/toa-nha/create"
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
         >
           <Plus className="w-4 h-4" />

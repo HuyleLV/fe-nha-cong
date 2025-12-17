@@ -69,6 +69,29 @@ export default function LoginPage() {
     }
   };
 
+  // Forgot password modal state & handler
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isSubmittingForgot, setIsSubmittingForgot] = useState(false);
+
+  const handleForgotSubmit = async () => {
+    try {
+      if (!forgotEmail || !/\S+@\S+\.\S+/.test(forgotEmail)) {
+        toast.warning('Vui lòng nhập email hợp lệ');
+        return;
+      }
+      setIsSubmittingForgot(true);
+      const res = await userService.postForgotPassword({ email: String(forgotEmail).trim() });
+      toast.success(res?.message || 'Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.');
+      setShowForgot(false);
+      setForgotEmail("");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsSubmittingForgot(false);
+    }
+  };
+
   // Register form state (when mode = register)
   const {
     register: reg,
@@ -249,7 +272,7 @@ export default function LoginPage() {
 
             <div className="relative">
             {/* Header + Tabs */}
-            <div className="px-7 pt-7 pb-2 text-center">
+            <div className="px-7 pt-7 pb-10 text-center">
               <div className="flex flex-col items-center">
                 <h1 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
                   {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
@@ -262,7 +285,7 @@ export default function LoginPage() {
               {/* Tabs removed per request; mode is set via route params */}
 
               {/* Role selector (bigger) */}
-              <div className="mt-4 text-center">
+              {/* <div className="mt-4 text-center">
                 <div className="text-sm md:text-base font-medium text-slate-700 mb-2">Tôi là</div>
                 <div className="inline-flex rounded-2xl border border-emerald-300 bg-white p-1">
                   <button
@@ -280,7 +303,7 @@ export default function LoginPage() {
                     Đối tác
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Forms */}
@@ -326,7 +349,7 @@ export default function LoginPage() {
                   <input type="checkbox" className="rounded border-gray-300" {...register("remember")} />
                   Ghi nhớ đăng nhập
                 </label>
-                <button type="button" className="text-sm text-emerald-700 hover:underline">
+                <button type="button" className="text-sm text-emerald-700 hover:underline" onClick={() => setShowForgot(true)}>
                   Quên mật khẩu?
                 </button>
               </div>
@@ -472,6 +495,23 @@ export default function LoginPage() {
               {/* Removed in-form switch to login */}
             </form>
             )}
+            {/* Forgot password modal (simple) */}
+            {showForgot ? (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setShowForgot(false)} />
+                <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+                  <h3 className="text-lg font-semibold">Quên mật khẩu</h3>
+                  <p className="mt-2 text-sm text-gray-600">Nhập email để nhận liên kết đặt lại mật khẩu.</p>
+                  <div className="mt-4">
+                    <input value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} type="email" placeholder="you@example.com" className="w-full rounded-xl border px-3 py-2 outline-none" />
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button type="button" onClick={() => setShowForgot(false)} className="rounded-xl px-4 py-2 border">Hủy</button>
+                    <button type="button" onClick={handleForgotSubmit} disabled={isSubmittingForgot} className="rounded-xl bg-emerald-600 px-4 py-2 text-white disabled:opacity-60">{isSubmittingForgot ? 'Đang gửi...' : 'Gửi'}</button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

@@ -9,12 +9,12 @@ import { Save, ChevronRight, Link as LinkIcon, CheckCircle2, Info } from "lucide
 import Spinner from "@/components/spinner";
 import UploadPicker from "@/components/UploadPicker";
 import VideoUploadPicker from "@/components/VideoUploadPicker";
-import LocationLookup from "../../components/locationLookup";
+import LocationLookup from "../../../components/locationLookup";
 import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment, ApartmentForm, ApartmentStatus } from "@/type/apartment";
 import { Location } from "@/type/location";
-import CustomSunEditor from "../../components/customSunEditor";
+import CustomSunEditor from "../../../components/customSunEditor";
 import SeoScoreCard from "@/components/SeoScoreCard";
 import { buildingService } from "@/services/buildingService";
 import type { Building } from "@/type/building";

@@ -9,18 +9,13 @@
   --font-roboto: "Roboto";
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
-}
-
-/* Tailwind v4: tùy biến theme inline */
-@theme inline {
+  /* Inline theme variables (moved from @theme block) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   /* Ưu tiên Roboto; nếu thiếu vẫn có fallback hệ thống */
   --font-sans: var(--font-roboto), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
   /* Mono có fallback đầy đủ (tránh var() rỗng) */
   --font-mono: var(--font-geist-mono);
 }

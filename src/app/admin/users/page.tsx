@@ -89,7 +89,7 @@ function AdminUsersPage() {
 
       {/* Table */}
       <AdminTable
-        headers={["ID", "Tên", "Email", "SĐT", "Vai trò", "Xác minh email", "Xác minh SĐT", "Cập nhật", "Thao tác"]}
+        headers={["ID", "Tên", <span key="email" className="block">Email</span>, "SĐT", "Vai trò", "Xác minh email", "Xác minh SĐT", "Cập nhật", "Thao tác"]}
         loading={loading}
         emptyText="Không có người dùng"
       >
@@ -97,7 +97,9 @@ function AdminUsersPage() {
           <tr key={u.id} className="hover:bg-slate-50 transition-colors text-[14px]">
             <td className="px-4 py-3">{u.id}</td>
             <td className="px-4 py-3 font-medium">{u.name || "—"}</td>
-            <td className="px-4 py-3 text-slate-600">{u.email || "—"}</td>
+            <td className="px-4 py-3 text-slate-600 text-left align-top">
+              <div className="break-words whitespace-normal">{u.email || "—"}</div>
+            </td>
             <td className="px-4 py-3">{u.phone || "—"}</td>
             <td className="px-4 py-3">
               <span

@@ -24,6 +24,21 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
   const adminToken = localStorage.getItem("tokenAdmin");
   const userToken = localStorage.getItem("access_token") || localStorage.getItem("tokenUser");
 
+  function isExpired(token?: string | null) {
+    if (!token) return false;
+    try {
+      const [, payload] = token.split('.');
+      if (!payload) return false;
+      const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      if (json.exp && typeof json.exp === 'number') {
+        return Date.now() / 1000 > json.exp;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   const p = pathname || "";
   const m = (method || "get").toLowerCase();
 
@@ -48,16 +63,29 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
     return null;
   }
 
+  // If tokens are expired locally, clear them and don't return them
+  try {
+    if (isExpired(adminToken)) {
+      localStorage.removeItem('tokenAdmin');
+      localStorage.removeItem('adminInfo');
+    }
+    if (isExpired(userToken)) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('tokenUser');
+      localStorage.removeItem('auth_user');
+    }
+  } catch {}
+
   if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
     // Admin endpoint or admin UI → ưu tiên token admin
-    return adminToken || userToken || null;
+    return (adminToken && !isExpired(adminToken) ? adminToken : (userToken && !isExpired(userToken) ? userToken : null)) || null;
   }
 
   // If we're in the host UI, prefer the user token and don't fall back to admin.
   if (isHostUI) return userToken || null;
 
   // Endpoint phía người dùng → ưu tiên token người dùng để không "đè" bằng admin
-  return userToken || adminToken || null;
+  return (userToken && !isExpired(userToken) ? userToken : (adminToken && !isExpired(adminToken) ? adminToken : null)) || null;
 }
 
 // ====== REQUEST Interceptor ======

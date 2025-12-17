@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -13,6 +13,7 @@ export default function Sidebar() {
   const [ready, setReady] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [moderationOpen, setModerationOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   useEffect(() => {
     setReady(true);
@@ -29,6 +30,11 @@ export default function Sidebar() {
     if (!ready) return;
     setLocationOpen(pathname.startsWith("/admin/location"));
     setModerationOpen(pathname.startsWith("/admin/moderation"));
+    // Auto-open any parent menu that has the current pathname as child
+    try {
+      const parent = menuItems.find((m: any) => Array.isArray((m as any).children) && (m as any).children.some((c: any) => pathname.startsWith(c.href)));
+      if (parent) setOpenMenu(parent.href as string);
+    } catch (e) {}
   }, [pathname, ready]);
 
   const initials = useMemo(() => {
@@ -42,12 +48,49 @@ export default function Sidebar() {
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
     { href: "/admin/moderation", label: "Kiểm duyệt", icon: CalendarDays },
+    { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
-    { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
-    { href: "/admin/building", label: "Quản lý Tòa Nhà", icon: House },
-    { href: "/admin/apartment", label: "Quản lý Căn Hộ", icon: House },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
+
+    // Replace Building & Apartment with operational groups similar to host's 'Vận hành'
+    {
+      href: "/admin/danh-muc",
+      label: "Danh mục dữ liệu",
+      icon: Home,
+      children: [
+        { href: "/admin/danh-muc/khu-vuc", label: "Khu vực", Icon: Home },
+        { href: "/admin/danh-muc/toa-nha", label: "Tòa nhà", Icon: PlusCircle },
+        { href: "/admin/danh-muc/can-ho", label: "Căn hộ", Icon: CalendarDays },
+        { href: "/admin/danh-muc/giuong", label: "Giường", Icon: Home },
+        { href: "/admin/danh-muc/dich-vu", label: "Dịch vụ", Icon: PlusCircle },
+        { href: "/admin/danh-muc/tai-san", label: "Tài sản", Icon: CalendarDays },
+      ],
+    },
+    {
+      href: "/admin/khach-hang",
+      label: "Khách hàng",
+      icon: Users,
+      children: [
+        { href: "/admin/khach-hang/khach-tiem-nang", label: "Khách tiềm năng", Icon: CalendarDays },
+        { href: "/admin/khach-hang/dat-coc", label: "Đặt cọc", Icon: CalendarDays },
+        { href: "/admin/khach-hang/hop-dong", label: "Hợp đồng", Icon: CalendarDays },
+        { href: "/admin/khach-hang/cu-dan", label: "Cư dân", Icon: Users },
+        { href: "/admin/khach-hang/phuong-tien", label: "Phương tiện", Icon: CalendarDays },
+      ],
+    },
+    {
+      href: "/admin/tai-chinh",
+      label: "Tài chính",
+      icon: BarChart2,
+      children: [
+        { href: "/admin/tai-chinh/ghi-chi-so", label: "Ghi chỉ số", Icon: BarChart2 },
+        { href: "/admin/tai-chinh/hoa-don", label: "Hóa đơn", Icon: FileText },
+        { href: "/admin/tai-chinh/thu-chi", label: "Thu chi", Icon: DollarSign },
+      ],
+    },
+    { href: "/admin/thong-bao", label: "Thông báo", icon: FileText },
+    { href: "/admin/cong-viec", label: "Công việc", icon: CalendarDays },
   ];
 
   const onLogout = () => {
@@ -91,10 +134,71 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="mt-3 px-3 space-y-1.5">
-        {menuItems.map(({ href, label, icon: Icon }) => {
+        {menuItems.map(({ href, label, icon: Icon, children }: any) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           const isLocation = href === "/admin/location";
           const isModeration = href === "/admin/moderation";
+
+          // Optional section header for specific admin groups
+          let sectionHeader: React.ReactNode = null;
+          if (href === "/admin/danh-muc") {
+            sectionHeader = (
+              <div key="__ops_header__" className="px-1 pt-2 pb-1">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quản lý Vận hành</div>
+              </div>
+            );
+          }
+
+          // Generic children group rendering (for building/apartment groups)
+          if (Array.isArray(children) && children.length) {
+            const anyChildActive = children.some((c: any) => pathname.startsWith(c.href));
+            const groupActive = active || anyChildActive;
+            return (
+              <div key={href} className="space-y-1">
+                {sectionHeader}
+                <button
+                  type="button"
+                  onClick={() => setOpenMenu((v) => (v === href ? null : href))}
+                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
+                    groupActive
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    {groupActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                    <Icon className="w-4.5 h-4.5" />
+                    <span className="truncate">{label}</span>
+                  </span>
+                  {openMenu === href ? <ChevronDown className="w-4 h-4 opacity-80" /> : <ChevronRight className="w-4 h-4 opacity-80" />}
+                </button>
+
+                {openMenu === href && (
+                  <div className="mt-1 space-y-1">
+                    {children.map((ch: any) => {
+                      const childActive = pathname === ch.href || pathname.startsWith(`${ch.href}/`);
+                      const ChIcon = ch.Icon || ch.icon || Home;
+                      return (
+                        <Link
+                          key={ch.href}
+                          href={ch.href}
+                          className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${
+                            childActive
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                              : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                          }`}
+                        >
+                          {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                          <ChIcon className="w-4 h-4" />
+                          <span className="truncate">{ch.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
 
           if (isModeration) {
             const subLinks = [
@@ -104,6 +208,7 @@ export default function Sidebar() {
 
             return (
               <div key={href} className="space-y-1">
+                {sectionHeader}
                 <button
                   type="button"
                   onClick={() => setModerationOpen((v) => !v)}
@@ -155,26 +260,56 @@ export default function Sidebar() {
           }
 
           if (!isLocation) {
+            // Insert a small section header above the Users link
+            if (href === "/admin/users") {
+              return (
+                <div key={href} className="space-y-1">
+                        <div className="px-1 pt-2 pb-1">
+                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quản lý Admin</div>
+                        </div>
+                  <Link
+                    href={href}
+                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
+                      active
+                        ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                        : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                    )}
+                    <Icon className="w-4.5 h-4.5" />
+                    <span className="truncate">{label}</span>
+                  </Link>
+                </div>
+              );
+            }
+
             return (
-              <Link
-                key={href}
-                href={href}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                  active
-                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                }`}
-              >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+              <div key={href}>
+                {href === "/admin/building" && (
+                  <div className="px-1 pt-2 pb-1">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quản lý Chủ nhà</div>
+                  </div>
                 )}
-                <Icon className="w-4.5 h-4.5" />
-                <span className="truncate">{label}</span>
-              </Link>
+                <Link
+                  href={href}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
+                    active
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                  }`}
+                >
+                  {active && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                  )}
+                  <Icon className="w-4.5 h-4.5" />
+                  <span className="truncate">{label}</span>
+                </Link>
+              </div>
             );
           }
 
-          // Fancy group for Location with a prettier submenu
           const subLinks = [
             { href: "/admin/location/province", label: "Tỉnh", Icon: Landmark },
             { href: "/admin/location/city", label: "Thành phố", Icon: Building2 },
@@ -184,7 +319,8 @@ export default function Sidebar() {
 
           return (
             <div key={href} className="space-y-1">
-              <button
+              <>
+                <button
                 type="button"
                 onClick={() => setLocationOpen((v) => !v)}
                 className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
@@ -206,30 +342,29 @@ export default function Sidebar() {
                   <ChevronRight className="w-4 h-4 opacity-80" />
                 )}
               </button>
-
-              {locationOpen && (
-                <div className="ml-4 border-l border-emerald-100 pl-3">
-                  <div className="rounded-md bg-emerald-50/60 p-1.5">
-                    {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
-                      const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
-                      return (
-                        <Link
-                          key={shref}
-                          href={shref}
-                          className={`flex items-center gap-2 px-2 py-2 rounded transition text-sm ${
-                            subActive
-                              ? "text-emerald-700 bg-white shadow-sm ring-1 ring-emerald-100"
-                              : "text-emerald-800/80 hover:bg-white hover:text-emerald-700"
-                          }`}
-                        >
-                          <SIcon className="w-4 h-4" />
-                          <span>{slabel}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                {locationOpen && (
+                  <div className="mt-1 space-y-1">
+                      {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
+                        const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
+                        return (
+                          <Link
+                            key={shref}
+                            href={shref}
+                            className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${
+                              subActive
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                                : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                            }`}
+                          >
+                            {subActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                            <SIcon className="w-4 h-4" />
+                            <span className="truncate">{slabel}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                )}
+              </>
             </div>
           );
         })}

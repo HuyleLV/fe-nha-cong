@@ -16,11 +16,9 @@ import { toSlug } from "@/utils/formatSlug";
 import { apartmentService } from "@/services/apartmentService";
 import type { Apartment } from "@/type/apartment";
 import { formatMoneyVND } from "@/utils/format-number";
-// Viewings calendar moved to dedicated page
-import LocationLookup from "../../components/locationLookup";
+import LocationLookup from "../../../components/locationLookup";
 import type { Location } from "@/type/location";
-import { tApartmentStatus } from "../../i18n";
-// Calendar UI moved to /admin/building/[id]/calendar
+import { tApartmentStatus } from "../../../i18n";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";

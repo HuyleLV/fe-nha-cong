@@ -17,6 +17,23 @@ function readStoredUser(): User | null {
         const [, payload] = token.split(".");
         if (payload) {
           const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+          // If token has exp and it's in the past, treat as not authenticated
+          if (json.exp && typeof json.exp === "number") {
+            const now = Date.now() / 1000;
+            if (now > json.exp) {
+              // clear stale auth storage
+              try {
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("tokenAdmin");
+                localStorage.removeItem("auth_user");
+                localStorage.removeItem("adminInfo");
+                sessionStorage.removeItem("access_token");
+                sessionStorage.removeItem("auth_user");
+              } catch {}
+              return null;
+            }
+          }
+
           return {
             id: Number(json.sub),
             email: json.email,

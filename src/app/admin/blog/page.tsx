@@ -103,9 +103,7 @@ export default function BlogPage() {
             <tr key={b.id} className="hover:bg-gray-50 transition-colors">
               <td className="px-4 py-2 font-medium text-gray-900">{b.id}</td>
               <td className="px-4 py-2">
-                <div className="flex items-center gap-2">
-                  <span className="line-clamp-1">{b.title}</span>
-                </div>
+                <span>{b.title}</span>
               </td>
               <td className="px-4 py-2 text-gray-700">{b.slug}</td>
               <td className="px-4 py-2 text-gray-700">{b.tags?.length ? b.tags.join(", ") : <span className="text-gray-400">—</span>}</td>

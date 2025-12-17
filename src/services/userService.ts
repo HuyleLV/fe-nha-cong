@@ -93,6 +93,23 @@ export const userService = {
         ) as unknown as { message: string };
         return res;
     },
+
+    // Forgot / Reset password
+    async postForgotPassword(data: { email: string }): Promise<{ message: string }> {
+        const res = await axiosClient.post<{ message: string }>(
+            apiUrl(`/api/auth/forgot-password`),
+            data
+        ) as unknown as { message: string };
+        return res;
+    },
+
+    async postResetPassword(data: { token: string; newPassword: string; confirmNewPassword: string }): Promise<{ message: string }> {
+        const res = await axiosClient.post<{ message: string }>(
+            apiUrl(`/api/auth/reset-password`),
+            data
+        ) as unknown as { message: string };
+        return res;
+    },
     /**
      * Yêu cầu gửi OTP xác thực email tới người dùng hiện tại (cần JWT)
      */
