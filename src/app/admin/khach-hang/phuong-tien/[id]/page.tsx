@@ -148,13 +148,61 @@ export default function VehicleEditPage(){
               </select>
               {errors.type && <div className="text-sm text-red-600 mt-1">{(errors.type as any).message}</div>}
             </div>
-            {/* other fields copied from host page */}
             <div>
               <label className="block text-sm text-slate-600 mb-1">Tên dòng xe <span className="text-red-600">*</span></label>
               <input className={inputCls} {...register('model', { required: 'Vui lòng nhập tên dòng xe' })} />
               {errors.model && <div className="text-sm text-red-600 mt-1">{(errors.model as any).message}</div>}
             </div>
-            {/* remaining fields omitted for brevity but kept functionally identical to host */}
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Màu xe <span className="text-red-600">*</span></label>
+              <input className={inputCls} {...register('color', { required: 'Vui lòng nhập màu xe' })} />
+              {errors.color && <div className="text-sm text-red-600 mt-1">{(errors.color as any).message}</div>}
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Biển số <span className="text-red-600">*</span></label>
+              <input className={inputCls} {...register('plateNumber', { required: 'Vui lòng nhập biển số' })} />
+              {errors.plateNumber && <div className="text-sm text-red-600 mt-1">{(errors.plateNumber as any).message}</div>}
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Tên chủ xe</label>
+              <input className={inputCls} {...register('ownerName')} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Số vé</label>
+              <input className={inputCls} {...register('ticketNumber')} />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Tòa nhà <span className="text-red-600">*</span></label>
+              <select className={inputCls} {...register('buildingId', { required: 'Vui lòng chọn tòa nhà' })}>
+                <option value="">-- Chọn tòa nhà --</option>
+                {buildings.map(b => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `Tòa #${b.id}`}</option>))}
+              </select>
+              {errors.buildingId && <div className="text-sm text-red-600 mt-1">{(errors.buildingId as any).message}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Căn hộ <span className="text-red-600">*</span></label>
+              <select className={inputCls} {...register('apartmentId', { required: 'Vui lòng chọn căn hộ' })}>
+                <option value="">-- Chọn căn hộ --</option>
+                {apartments.map(a => (<option key={a.id} value={String(a.id)}>{a.title || `Căn #${a.id}`}</option>))}
+              </select>
+              {errors.apartmentId && <div className="text-sm text-red-600 mt-1">{(errors.apartmentId as any).message}</div>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-600 mb-1">Khách hàng <span className="text-red-600">*</span></label>
+              <select className={inputCls} {...register('customerId', { required: 'Vui lòng chọn khách hàng' })}>
+                <option value="">-- Chọn khách hàng --</option>
+                {customers.map((c: any) => (<option key={c.id} value={String(c.id)}>{c.name || c.email || `#${c.id}`}</option>))}
+              </select>
+              {errors.customerId && <div className="text-sm text-red-600 mt-1">{(errors.customerId as any).message}</div>}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm text-slate-600 mb-1">Ảnh phương tiện</label>
+              <UploadPicker value={watch('photo') || null} onChange={(v) => setValue('photo', v)} />
+            </div>
           </div>
         </div>
       </form>

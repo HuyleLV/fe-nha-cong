@@ -111,7 +111,7 @@ export default function AdminThuChiEditPage() {
 
   return (
     <div className="mx-auto max-w-screen-xl">
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+  <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-300/80">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-emerald-600" /> 
@@ -126,33 +126,33 @@ export default function AdminThuChiEditPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 mt-4">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+  <div className="grid grid-cols-1 gap-6 mt-4">
+  <div className="bg-white rounded-xl border border-slate-300/80 shadow-sm p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm">Loại</label>
-              <select value={form.type} onChange={(e)=>setForm((s:any)=>({...s, type: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+              <select value={form.type} onChange={(e)=>setForm((s:any)=>({...s, type: e.target.value}))} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="thu">Phiếu thu</option>
                 <option value="chi">Phiếu chi</option>
               </select>
             </div>
             <div>
               <label className="block text-sm">Tòa nhà<span className="text-red-500 ml-1">*</span></label>
-              <select value={String(form.buildingId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, buildingId: v, apartmentId:'', contractId:'', items: [] })); if (v) { const a = await apartmentService.getAll({ page:1, limit:1000, buildingId: v }); setApartments((a as any)?.items ?? (a as any)?.data ?? a ?? []); } }} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+              <select value={String(form.buildingId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, buildingId: v, apartmentId:'', contractId:'', items: [] })); if (v) { const a = await apartmentService.getAll({ page:1, limit:1000, buildingId: v }); setApartments((a as any)?.items ?? (a as any)?.data ?? a ?? []); } }} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="">-- Chọn tòa nhà --</option>
                 {buildings.map(b=> <option key={b.id} value={String(b.id)}>{b.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm">Căn hộ<span className="text-red-500 ml-1">*</span></label>
-              <select value={String(form.apartmentId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, apartmentId: v, contractId:'', items: [] })); if (v) { const c = await contractService.list({ page:1, limit:200, apartmentId: v }); setContracts((c as any)?.items ?? (c as any)?.data ?? c ?? []); } }} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+              <select value={String(form.apartmentId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, apartmentId: v, contractId:'', items: [] })); if (v) { const c = await contractService.list({ page:1, limit:200, apartmentId: v }); setContracts((c as any)?.items ?? (c as any)?.data ?? c ?? []); } }} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="">-- Chọn căn hộ --</option>
                 {apartments.map(a=> <option key={a.id} value={String(a.id)}>{a.title || a.code}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm">Hợp đồng</label>
-              <select value={String(form.contractId ?? '')} onChange={(e)=>{ const v = e.target.value === '' ? '' : Number(e.target.value); setForm((s:any)=>({...s, contractId: v})); }} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+              <select value={String(form.contractId ?? '')} onChange={(e)=>{ const v = e.target.value === '' ? '' : Number(e.target.value); setForm((s:any)=>({...s, contractId: v})); }} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="">-- Chọn hợp đồng --</option>
                 {contracts.map(c=> <option key={c.id} value={String(c.id)}>{c.id + (c.code || c.name ? ' - ' + (c.code || c.name) : '')}</option>)}
               </select>
@@ -160,27 +160,27 @@ export default function AdminThuChiEditPage() {
 
             <div>
               <label className="block text-sm">Tiêu đề<span className="text-red-500 ml-1">*</span></label>
-              <input value={form.title} onChange={(e)=>setForm((s:any)=>({...s, title: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
+              <input value={form.title} onChange={(e)=>setForm((s:any)=>({...s, title: e.target.value}))} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3" />
             </div>
 
             <div>
               <label className="block text-sm">Tên người nộp<span className="text-red-500 ml-1">*</span></label>
-              <input value={form.payerName} onChange={(e)=>setForm((s:any)=>({...s, payerName: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
+              <input value={form.payerName} onChange={(e)=>setForm((s:any)=>({...s, payerName: e.target.value}))} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3" />
             </div>
 
             <div>
               <label className="block text-sm">Tài khoản</label>
-              <input value={form.account} onChange={(e)=>setForm((s:any)=>({...s, account: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
+              <input value={form.account} onChange={(e)=>setForm((s:any)=>({...s, account: e.target.value}))} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3" />
             </div>
 
             <div>
               <label className="block text-sm">Ngày thực thu</label>
-              <input type="date" value={form.date} onChange={(e)=>setForm((s:any)=>({...s, date: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
+              <input type="date" value={form.date} onChange={(e)=>setForm((s:any)=>({...s, date: e.target.value}))} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3" />
             </div>
 
             <div className="md:col-span-3">
               <label className="block text-sm">Ghi chú</label>
-              <textarea value={form.note} onChange={(e)=>setForm((s:any)=>({...s, note: e.target.value}))} className="mt-1 w-full border border-slate-200 rounded px-3 py-2" />
+              <textarea value={form.note} onChange={(e)=>setForm((s:any)=>({...s, note: e.target.value}))} className="mt-1 w-full border border-slate-300/80 rounded px-3 py-2" />
             </div>
 
             <div className="md:col-span-3">
@@ -204,10 +204,10 @@ export default function AdminThuChiEditPage() {
           ]}>
             {(form.items || []).length === 0 ? null : (form.items || []).map((it:any, idx:number)=> (
               <tr key={idx} className="border-t">
-                <td className="px-4 py-3"><input value={it.category} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], category: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-200 rounded px-3" /></td>
-                <td className="px-4 py-3"><input value={it.amount} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], amount: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-200 rounded px-3" /></td>
-                <td className="px-4 py-3"><input type="date" value={it.startDate} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], startDate: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-200 rounded px-3" /></td>
-                <td className="px-4 py-3"><input type="date" value={it.endDate} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], endDate: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-200 rounded px-3" /></td>
+                <td className="px-4 py-3"><input value={it.category} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], category: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-300/80 rounded px-3" /></td>
+                <td className="px-4 py-3"><input value={it.amount} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], amount: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-300/80 rounded px-3" /></td>
+                <td className="px-4 py-3"><input type="date" value={it.startDate} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], startDate: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-300/80 rounded px-3" /></td>
+                <td className="px-4 py-3"><input type="date" value={it.endDate} onChange={(e)=>{ const v=e.target.value; setForm((s:any)=>{ const arr=[...s.items]; arr[idx]={...arr[idx], endDate: v}; return {...s, items: arr}; }) }} className="w-full border border-slate-300/80 rounded px-3" /></td>
                 <td className="px-4 py-3 text-right"><button className="p-2 rounded bg-red-600 text-white" onClick={()=> setForm((s:any)=>{ const arr=[...s.items]; arr.splice(idx,1); return {...s, items: arr}; })}> <Trash2 className="w-4 h-4" /> </button></td>
               </tr>
             ))}

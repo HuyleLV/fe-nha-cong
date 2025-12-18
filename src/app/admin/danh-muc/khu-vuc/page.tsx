@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
-import Modal from "@/components/Modal";
+import Link from "next/link";
 import Pagination from "@/components/Pagination";
 import { PlusCircle, Edit3, Trash2, Check, X } from "lucide-react";
 import { toast } from 'react-toastify';
@@ -20,11 +20,6 @@ function KhuVucManager() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [name, setName] = useState("");
   const [districtId, setDistrictId] = useState<string>("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"add" | "edit" | "delete">("add");
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -67,66 +62,20 @@ function KhuVucManager() {
 
   useEffect(() => { fetchAreas(page, limit); }, [page, limit]);
 
-  const startEdit = (a: Area) => {
-    setEditingId(a.id);
-    setName(a.name);
-    setDistrictId(a.districtId);
-    setModalMode("edit");
-    setModalOpen(true);
-  };
+  // create/edit moved to route-based pages (src/app/admin/danh-muc/khu-vuc/[id]/page.tsx)
 
-  useEffect(() => { if (modalOpen && modalMode !== "delete") { setTimeout(() => inputRef.current?.focus(), 50); setError(null); } }, [modalOpen, modalMode]);
-
-  const resetForm = () => { setEditingId(null); setName(""); setDistrictId(""); };
-
-  const save = () => {
-    (async () => {
-      setError(null);
-      if (!name.trim()) return setError("Vui lòng nhập tên đường");
-      if (!districtId) return setError("Vui lòng chọn quận");
-
-      setActionLoading(true);
-      try {
-        if (editingId) {
-          const payload: any = { name: name.trim(), parentId: Number(districtId), level: 'Street' };
-          const res = await locationService.update(Number(editingId), payload);
-          setAreas((cur) => cur.map((it) => (it.id === String(res.id) ? { id: String(res.id), name: res.name ?? '', districtId: String(res.parent?.id ?? districtId) } : it)));
-          toast.success('Cập nhật khu vực thành công');
-        } else {
-          const payload: any = { name: name.trim(), parentId: Number(districtId), level: 'Street' };
-          const res = await locationService.create(payload);
-          const newItem: Area = { id: String(res.id), name: res.name ?? '', districtId: String(res.parent?.id ?? districtId) };
-          setAreas((cur) => [newItem, ...cur]);
-          toast.success('Thêm khu vực thành công');
-        }
-        resetForm();
-        setModalOpen(false);
-      } catch (err: any) {
-        const msg = err?.message ?? 'Lỗi khi lưu';
-        setError(msg);
-        toast.error(msg);
-      } finally {
-        setActionLoading(false);
-      }
-    })();
-  };
-
-  const remove = (id: string) => {
-    (async () => {
-      setActionLoading(true);
-      try {
-        await locationService.delete(Number(id));
-        setAreas((cur) => cur.filter((it) => it.id !== id));
-        setModalOpen(false);
-        toast.success('Xóa khu vực thành công');
-      } catch (err: any) {
-        const msg = err?.message ?? 'Lỗi khi xóa';
-        setError(msg);
-        toast.error(msg);
-      } finally {
-        setActionLoading(false);
-      }
-    })();
+  const remove = async (id: string) => {
+    if (!confirm('Bạn có chắc muốn xóa khu vực này?')) return;
+    setActionLoading(true);
+    try {
+      await locationService.delete(Number(id));
+      setAreas((cur) => cur.filter((it) => it.id !== id));
+      toast.success('Xóa khu vực thành công');
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Lỗi khi xóa');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const districtMap = useMemo(() => { const m: Record<string, string> = {}; districts.forEach((d) => (m[d.id] = d.name)); return m; }, [districts]);
@@ -134,13 +83,9 @@ function KhuVucManager() {
   return (
     <div>
       <Panel title="Quản lý khu vực" actions={(
-        <button
-          onClick={() => { resetForm(); setModalMode("add"); setModalOpen(true); }}
-          className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md"
-          title="Thêm khu vực"
-        >
+        <Link href="/admin/danh-muc/khu-vuc/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md" title="Thêm khu vực">
           <PlusCircle className="w-5 h-5" />
-        </button>
+        </Link>
       )}>
 
         <AdminTable headers={["Mã", "Tên khu vực", "Quận", "Số tòa nhà", "Hành động"]}>
@@ -167,18 +112,14 @@ function KhuVucManager() {
                 <td className="py-2 text-sm text-slate-700">{districtMap[a.districtId] ?? a.districtId}</td>
                 <td className="py-2 text-sm text-slate-700 text-center">{a.buildingCount ?? 0}</td>
                 <td className="py-2 text-sm text-slate-700 text-center">
-                  <div className="inline-flex items-center gap-2">
-                    <button onClick={() => startEdit(a)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => { setEditingId(a.id); setName(a.name); setDistrictId(a.districtId); setModalMode("delete"); setModalOpen(true); }}
-                      className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                      title="Xóa"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                    <div className="inline-flex items-center gap-2">
+                      <Link href={`/admin/danh-muc/khu-vuc/${a.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                        <Edit3 className="w-4 h-4" />
+                      </Link>
+                      <button onClick={() => remove(a.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                 </td>
               </tr>
             ))
@@ -195,55 +136,7 @@ function KhuVucManager() {
           />
         </div>
 
-        <Modal
-          open={modalOpen}
-          title={modalMode === "add" ? "Thêm khu vực" : modalMode === "edit" ? "Sửa khu vực" : "Xóa khu vực"}
-          onClose={() => setModalOpen(false)}
-          footer={
-            modalMode === "delete" ? (
-              <div className="flex justify-end gap-2">
-                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50">
-                  <X className="w-4 h-4" /> Hủy
-                </button>
-                <button disabled={actionLoading} onClick={() => remove(editingId ?? "")} className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md disabled:opacity-50">
-                  {actionLoading ? <Spinner /> : <Trash2 className="w-4 h-4" />} Xóa
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-end gap-2">
-                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50">
-                  <X className="w-4 h-4" /> Hủy
-                </button>
-                <button disabled={actionLoading} onClick={save} className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md disabled:opacity-50">
-                  {actionLoading ? <Spinner /> : <Check className="w-4 h-4" />} Lưu
-                </button>
-              </div>
-            )
-          }
-        >
-          {modalMode === "delete" ? (
-            <div>Bạn có chắc muốn xóa khu vực "{name}" không?</div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Quận</label>
-                <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200">
-                  <option value="">-- Chọn quận --</option>
-                  {districts.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-slate-500">Quận là danh mục do Admin quản lý.</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Tên đường</label>
-                <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nhập tên đường, ví dụ: Nguyễn Trãi" className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200" />
-                <p className="mt-1 text-xs text-slate-500">Nhập tên đường hoặc vị trí. Ví dụ: Nguyễn Trãi, Lý Thường Kiệt…</p>
-              </div>
-              {error && <div className="text-sm text-red-600">{error}</div>}
-            </div>
-          )}
-        </Modal>
+        {/* Create/edit moved to route pages. Modal removed. */}
       </Panel>
     </div>
   );

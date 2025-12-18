@@ -531,7 +531,7 @@ function BaseViewingModal({
                 <label className="text-sm text-emerald-800">{variant === "deposit" ? "Ngày" : "Ngày xem"}</label>
                 <div className="relative mt-1">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><CalendarDays className="h-4 w-4" /></span>
-                  <input type="date" min={todayStr} className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={date} onChange={(e) => setDate(e.target.value)} />
+                  <input type="date" min={todayStr} className={clsx("w-full rounded-lg border border-slate-300/80 px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={date} onChange={(e) => setDate(e.target.value)} />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   <button type="button" onClick={() => setDate(todayStr)} className="rounded-full border border-emerald-200 px-3 py-1 text-emerald-800 hover:bg-emerald-50">Hôm nay</button>
@@ -545,7 +545,7 @@ function BaseViewingModal({
                 <label className="text-sm text-emerald-800">Giờ</label>
                 <div className="relative mt-1">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><Clock className="h-4 w-4" /></span>
-                  <input type="time" className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={time} onChange={(e) => setTime(e.target.value)} />
+                  <input type="time" className={clsx("w-full rounded-lg border border-slate-300/80 px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.preferredAt && "border-rose-400") } value={time} onChange={(e) => setTime(e.target.value)} />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   {['09:00','14:00','18:00'].map(t => (
@@ -561,7 +561,7 @@ function BaseViewingModal({
                 <label className="text-sm text-emerald-800">Họ tên</label>
                 <div className="relative mt-1">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><User className="h-4 w-4" /></span>
-                  <input className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.name && "border-rose-400") } placeholder="Nguyễn Văn A" value={name} onChange={(e) => setName(e.target.value)} />
+                  <input className={clsx("w-full rounded-lg border border-slate-300/80 px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.name && "border-rose-400") } placeholder="Nguyễn Văn A" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 {fieldErrors?.name && (
                   <div className="mt-1 text-xs text-rose-600">{fieldErrors.name.join("; ")}</div>
@@ -571,7 +571,7 @@ function BaseViewingModal({
                 <label className="text-sm text-emerald-800">Số điện thoại</label>
                 <div className="relative mt-1">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600"><Phone className="h-4 w-4" /></span>
-                  <input inputMode="tel" className={clsx("w-full rounded-lg border px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.phone && "border-rose-400") } placeholder="09xx xxx xxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input inputMode="tel" className={clsx("w-full rounded-lg border border-slate-300/80 px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-emerald-400", fieldErrors?.phone && "border-rose-400") } placeholder="09xx xxx xxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
                 {fieldErrors?.phone && (
                   <div className="mt-1 text-xs text-rose-600">{fieldErrors.phone.join("; ")}</div>
@@ -580,7 +580,7 @@ function BaseViewingModal({
 
               <div className="md:col-span-2">
                 <label className="text-sm text-emerald-800">Ghi chú</label>
-                <textarea className="mt-1 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder={variant === "deposit" ? "Ví dụ: Tôi muốn chuyển khoản đặt cọc ngay hôm nay." : "Ví dụ: Tôi muốn xem phòng trong 15 phút, tôi có thể đến sớm hơn một chút."} />
+                <textarea className="mt-1 w-full rounded-lg border border-slate-300/80 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder={variant === "deposit" ? "Ví dụ: Tôi muốn chuyển khoản đặt cọc ngay hôm nay." : "Ví dụ: Tôi muốn xem phòng trong 15 phút, tôi có thể đến sớm hơn một chút."} />
               </div>
             </div>
 

@@ -147,8 +147,6 @@ export default function AdminHoaDonPage() {
   }, [viewerOpen]);
 
   useEffect(() => {
-    // expose a global helper only on client to open the invoice viewer from
-    // other pages/links. Guard with typeof window to avoid server-side errors
     if (typeof window === 'undefined') return;
     (window as any).__openInvoiceViewer = (id: number) => {
       setViewerId(id);

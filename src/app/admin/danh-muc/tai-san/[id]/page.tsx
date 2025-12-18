@@ -42,7 +42,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
-export default function AssetFormPage() {
+export default function AdminAssetFormPage() {
   const { id } = useParams() as { id: string };
   const isEdit = useMemo(() => id !== "create", [id]);
   const router = useRouter();
@@ -91,7 +91,6 @@ export default function AssetFormPage() {
           images: a.images || '',
         });
 
-        // load dependent lists
         if ((a as any).buildingId) {
           const r = await apartmentService.getAll({ buildingId: (a as any).buildingId, page: 1, limit: 200 });
           setApartments(r.items || []);
@@ -102,7 +101,7 @@ export default function AssetFormPage() {
         }
       } catch (err) {
         toast.error('Không tải được tài sản');
-        router.replace('/quan-ly-chu-nha/danh-muc/tai-san');
+        router.replace('/admin/danh-muc/tai-san');
       } finally {
         setLoading(false);
       }
@@ -110,16 +109,11 @@ export default function AssetFormPage() {
   }, [id, isEdit, reset, router]);
 
   const onBuildingChange = async (bid?: number) => {
-    if (!bid) {
-      setApartments([]); setBeds([]);
-      return;
-    }
+    if (!bid) { setApartments([]); setBeds([]); return; }
     try {
       const res = await apartmentService.getAll({ buildingId: bid, page: 1, limit: 200 });
       setApartments(res.items || []);
-    } catch (e) {
-      setApartments([]);
-    }
+    } catch (e) { setApartments([]); }
   };
 
   const onApartmentChange = async (apid?: number) => {
@@ -133,7 +127,6 @@ export default function AssetFormPage() {
   const onSubmit = async (vals: Form) => {
     try {
       const payload: any = { ...vals };
-      // normalize numeric fields
       payload.quantity = payload.quantity ? Number(payload.quantity) : 1;
       payload.value = payload.value ? String(payload.value) : undefined;
       if (payload.buildingId === "" || payload.buildingId === undefined) payload.buildingId = undefined;
@@ -143,11 +136,11 @@ export default function AssetFormPage() {
       if (isEdit) {
         await assetService.update(Number(id), payload);
         toast.success('Cập nhật tài sản thành công');
-        router.push('/quan-ly-chu-nha/danh-muc/tai-san');
+        router.push('/admin/danh-muc/tai-san');
       } else {
         const created = await assetService.create(payload);
         toast.success('Tạo tài sản thành công');
-        router.push('/quan-ly-chu-nha/danh-muc/tai-san');
+        router.push('/admin/danh-muc/tai-san');
       }
     } catch (err: any) {
       toast.error(err?.message || 'Lỗi khi lưu tài sản');

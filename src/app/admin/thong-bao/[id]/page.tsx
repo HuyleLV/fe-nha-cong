@@ -73,7 +73,7 @@ export default function AdminNotificationEditPage(){
 
   return (
     <div className="mx-auto max-w-screen-xl">
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+  <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-300/80">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-emerald-600" /> 
@@ -88,24 +88,24 @@ export default function AdminNotificationEditPage(){
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+  <div className="grid grid-cols-1 gap-6 mt-6">
+  <div className="bg-white rounded-xl border border-slate-300/80 shadow-sm p-6">
           <div>
             <label className="block text-sm font-medium text-slate-700">Tiêu đề<span className="text-red-500 ml-1">*</span></label>
-            <input value={form.title} onChange={(e)=>setForm((s:any)=>({...s, title: e.target.value}))} className="mt-2 h-11 w-full border border-slate-200 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <input value={form.title} onChange={(e)=>setForm((s:any)=>({...s, title: e.target.value}))} className="mt-2 h-11 w-full border border-slate-300/80 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700">Người nhận<span className="text-red-500 ml-1">*</span></label>
-              <select value={form.recipientType} onChange={(e)=>setForm((s:any)=>({...s, recipientType: e.target.value }))} className="mt-2 h-11 w-full border border-slate-200 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <select value={form.recipientType} onChange={(e)=>setForm((s:any)=>({...s, recipientType: e.target.value }))} className="mt-2 h-11 w-full border border-slate-300/80 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="apartment">Theo căn hộ</option>
                 <option value="building">Theo tòa nhà</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700">Tòa nhà<span className="text-red-500 ml-1">*</span></label>
-              <select value={form.buildingId || ''} onChange={(e)=>setForm((s:any)=>({...s, buildingId: e.target.value || undefined }))} className="mt-2 h-11 w-full border border-slate-200 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <select value={form.buildingId || ''} onChange={(e)=>setForm((s:any)=>({...s, buildingId: e.target.value || undefined }))} className="mt-2 h-11 w-full border border-slate-300/80 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="">-- Chọn tòa nhà --</option>
                 {buildings.map((b:any)=> (
                   <option key={b.id} value={b.id}>{b.id} - {b.name || b.code || b.address || ''}</option>
@@ -115,7 +115,7 @@ export default function AdminNotificationEditPage(){
             {form.recipientType==='apartment' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700">Căn hộ<span className="text-red-500 ml-1">*</span></label>
-                <select value={form.apartmentId || ''} onChange={(e)=>setForm((s:any)=>({...s, apartmentId: e.target.value || undefined }))} className="mt-2 h-11 w-full border border-slate-200 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-50" disabled={!form.buildingId}>
+                <select value={form.apartmentId || ''} onChange={(e)=>setForm((s:any)=>({...s, apartmentId: e.target.value || undefined }))} className="mt-2 h-11 w-full border border-slate-300/80 rounded-lg px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-50" disabled={!form.buildingId}>
                   <option value="">-- Chọn căn hộ --</option>
                   {apartments.map((a:any)=> (
                     <option key={a.id} value={a.id}>{a.id} - {a.name || a.code || a.number || ''}</option>

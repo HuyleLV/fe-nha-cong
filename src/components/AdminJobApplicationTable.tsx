@@ -175,7 +175,7 @@ export default function AdminJobApplicationTable({ jobId }: { jobId?: number }) 
                   </div>
                   <div>
                     <label className="text-slate-500 mb-1 text-[14px]">Ghi chú nội bộ</label>
-                    <textarea value={note} onChange={e=>setNote(e.target.value)} rows={4} className="w-full rounded-lg border p-3 text-[14px]" placeholder="Nhập ghi chú cho HR..." />
+                    <textarea value={note} onChange={e=>setNote(e.target.value)} rows={4} className="w-full rounded-lg border border-slate-300/80 p-3 text-[14px]" placeholder="Nhập ghi chú cho HR..." />
                   </div>
                   <div className="flex justify-end gap-3">
                     <button onClick={saveDetail} className="px-4 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Lưu</button>

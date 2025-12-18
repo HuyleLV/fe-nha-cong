@@ -207,7 +207,7 @@ export default function AdminGhiChiSoEditPage() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm text-slate-600 mb-1">Tòa nhà</label>
-              <select className="w-full rounded-md border p-2" value={buildingId ?? ''} onChange={(e) => setBuildingId(e.target.value ? Number(e.target.value) : null)}>
+              <select className="w-full rounded-md border border-slate-300/80 p-2" value={buildingId ?? ''} onChange={(e) => setBuildingId(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">-- Chọn tòa nhà --</option>
                 {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -215,7 +215,7 @@ export default function AdminGhiChiSoEditPage() {
 
             <div>
               <label className="block text-sm text-slate-600 mb-1">Căn hộ</label>
-              <select className="w-full rounded-md border p-2" value={apartmentId ?? ''} onChange={(e) => setApartmentId(e.target.value ? Number(e.target.value) : null)}>
+              <select className="w-full rounded-md border border-slate-300/80 p-2" value={apartmentId ?? ''} onChange={(e) => setApartmentId(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">-- Chọn căn hộ --</option>
                 {apartments.map(a => <option key={a.id} value={a.id}>{a.title || a.roomCode || `#${a.id}`}</option>)}
               </select>
@@ -223,7 +223,7 @@ export default function AdminGhiChiSoEditPage() {
 
             <div>
               <label className="block text-sm text-slate-600 mb-1">Loại công tơ</label>
-              <select className="w-full rounded-md border p-2" value={meterType} onChange={(e) => setMeterType(e.target.value as any)}>
+              <select className="w-full rounded-md border border-slate-300/80 p-2" value={meterType} onChange={(e) => setMeterType(e.target.value as any)}>
                 <option value="electricity">Công tơ điện</option>
                 <option value="water">Công tơ nước</option>
               </select>
@@ -233,14 +233,14 @@ export default function AdminGhiChiSoEditPage() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm text-slate-600 mb-1">Tháng chốt</label>
-              <select className="w-full rounded-md border p-2" value={period} onChange={(e) => setPeriod(e.target.value)}>
+              <select className="w-full rounded-md border border-slate-300/80 p-2" value={period} onChange={(e) => setPeriod(e.target.value)}>
                 {monthsOptions.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
 
             <div>
               <label className="block text-sm text-slate-600 mb-1">Ngày chốt</label>
-              <input type="date" className="w-full rounded-md border p-2" value={readingDate} onChange={(e) => setReadingDate(e.target.value)} />
+              <input type="date" className="w-full rounded-md border border-slate-300/80 p-2" value={readingDate} onChange={(e) => setReadingDate(e.target.value)} />
             </div>
 
             <div className="flex items-end"></div>
@@ -249,10 +249,10 @@ export default function AdminGhiChiSoEditPage() {
           <AdminTable headers={["Tên công tơ", "Chỉ số cũ", "Chỉ số mới", "Ngày chốt", "Ảnh", "Hành động"]}>
             {items.length === 0 ? null : items.map((r) => (
               <tr key={r.id} className="border-t">
-                <td className="px-3 py-2 text-left"><input className="w-full border rounded p-2" value={r.name} onChange={(e) => updateRow(r.id, { name: e.target.value })} /></td>
-                <td className="px-3 py-2 text-left"><input className="w-full border rounded p-2" value={formatDisplayNumber(r.previousIndex)} onChange={(e) => updateRow(r.id, { previousIndex: e.target.value })} /></td>
-                <td className="px-3 py-2 text-left"><input className="w-full border rounded p-2" value={formatDisplayNumber(r.newIndex)} onChange={(e) => updateRow(r.id, { newIndex: e.target.value })} /></td>
-                <td className="px-3 py-2 text-left"><input type="date" className="w-full border rounded p-2" value={r.readingDate || readingDate} onChange={(e) => updateRow(r.id, { readingDate: e.target.value })} /></td>
+                <td className="px-3 py-2 text-left"><input className="w-full rounded-md border border-slate-300/80 p-2" value={r.name} onChange={(e) => updateRow(r.id, { name: e.target.value })} /></td>
+                <td className="px-3 py-2 text-left"><input className="w-full rounded-md border border-slate-300/80 p-2" value={formatDisplayNumber(r.previousIndex)} onChange={(e) => updateRow(r.id, { previousIndex: e.target.value })} /></td>
+                <td className="px-3 py-2 text-left"><input className="w-full rounded-md border border-slate-300/80 p-2" value={formatDisplayNumber(r.newIndex)} onChange={(e) => updateRow(r.id, { newIndex: e.target.value })} /></td>
+                <td className="px-3 py-2 text-left"><input type="date" className="w-full rounded-md border border-slate-300/80 p-2" value={r.readingDate || readingDate} onChange={(e) => updateRow(r.id, { readingDate: e.target.value })} /></td>
                 <td className="px-3 py-2 text-left w-48">
                   <UploadPicker value={r.image || null} onChange={(v) => updateRow(r.id, { image: v })} />
                 </td>

@@ -150,7 +150,7 @@ function AdminViewingsPage() {
         <td className="px-4 py-3"><span className="inline-flex items-center gap-1"><Phone className="h-4 w-4" /> {v.phone || '-'}</span></td>
   <td className="px-4 py-3 max-w-[320px] truncate" title={displayNote}>{displayNote}{isDeposit && <span className="ml-1 inline-flex items-center rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px]">Đặt cọc</span>}</td>
         <td className="px-4 py-3">
-          <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-sm">
+          <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border border-slate-300/80 px-2 py-1 text-sm">
             <option value="pending">{isDeposit ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
             <option value="confirmed">{isDeposit ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
             <option value="cancelled">{isDeposit ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
@@ -176,7 +176,7 @@ function AdminViewingsPage() {
             <div className="text-sm font-medium text-slate-700 mb-2">Chọn phòng</div>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Search className="h-4 w-4" /></span>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm theo tiêu đề / mã" className="w-full rounded-lg border px-3 py-2 pl-9" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Tìm theo tiêu đề / mã" className="w-full rounded-lg border border-slate-300/80 px-3 py-2 pl-9" />
             </div>
             <div className="mt-2 max-h-72 overflow-auto divide-y">
               {aptLoading ? (
@@ -198,7 +198,7 @@ function AdminViewingsPage() {
                 <div className="text-sm text-slate-600">Đang xem lịch của:</div>
                 <div className="text-base font-semibold text-slate-900">{selectedApt ? `#${selectedApt.id} • ${selectedApt.title}` : 'Chưa chọn phòng'}</div>
               </div>
-              <select className="rounded-lg border px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
+              <select className="rounded-lg border border-slate-300/80 px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
                 <option value="">Tất cả trạng thái</option>
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
@@ -213,7 +213,7 @@ function AdminViewingsPage() {
                   <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Lịch</span>
                 </button>
               </div>
-              <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
+              <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border border-slate-300/80 px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
             </div>
 
             {!selectedApt ? (
@@ -312,7 +312,7 @@ function AdminViewingsPage() {
                                 ) : null;
                               })()}
                               <span className="ml-auto" />
-                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-xs">
+                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border border-slate-300/80 px-2 py-1 text-xs">
                                 <option value="pending">{isDepositViewing(v) ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
                                 <option value="confirmed">{isDepositViewing(v) ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
                                 <option value="cancelled">{isDepositViewing(v) ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
@@ -331,9 +331,9 @@ function AdminViewingsPage() {
             {/* Pagination */}
             {meta?.pageCount && meta.pageCount > 1 && (
               <div className="mt-3 flex items-center justify-center gap-2">
-                <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p-1))} className="rounded-lg border px-3 py-1 disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
+                <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p-1))} className="rounded-lg border border-slate-300/80 px-3 py-1 disabled:opacity-50"><ChevronLeft className="h-4 w-4" /></button>
                 <span className="text-sm text-slate-600">Trang {page}/{meta.pageCount}</span>
-                <button disabled={page >= (meta.pageCount || 1)} onClick={() => setPage(p => p+1)} className="rounded-lg border px-3 py-1 disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
+                <button disabled={page >= (meta.pageCount || 1)} onClick={() => setPage(p => p+1)} className="rounded-lg border border-slate-300/80 px-3 py-1 disabled:opacity-50"><ChevronRight className="h-4 w-4" /></button>
               </div>
             )}
           </section>
@@ -345,7 +345,7 @@ function AdminViewingsPage() {
                 <div className="text-sm text-slate-600">Đang xem lịch của:</div>
                 <div className="text-base font-semibold text-slate-900">{selectedApt ? `#${selectedApt.id} • ${selectedApt.title}` : 'Đang tải căn hộ...'}</div>
               </div>
-              <select className="rounded-lg border px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
+              <select className="rounded-lg border border-slate-300/80 px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
                 <option value="">Tất cả trạng thái</option>
                 <option value="pending">Đang chờ</option>
                 <option value="confirmed">Đã xác nhận</option>
@@ -360,7 +360,7 @@ function AdminViewingsPage() {
                   <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" /> Lịch</span>
                 </button>
               </div>
-              <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
+              <button onClick={() => loadViewings({ keepPage: true })} className="inline-flex items-center gap-2 rounded-lg border border-slate-300/80 px-3 py-2 text-sm hover:bg-slate-50"><RefreshCw className="h-4 w-4" /> Tải lại</button>
             </div>
             {!selectedApt ? (
               <div className="rounded-xl border bg-slate-50 p-6 text-sm text-slate-600">Đang tải dữ liệu…</div>
@@ -458,7 +458,7 @@ function AdminViewingsPage() {
                                 ) : null;
                               })()}
                               <span className="ml-auto" />
-                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border px-2 py-1 text-xs">
+                              <select value={v.status} onChange={(e) => onChangeStatus(v, e.target.value as any)} className="rounded-lg border border-slate-300/80 px-2 py-1 text-xs">
                                 <option value="pending">{isDepositViewing(v) ? 'Chờ đặt cọc' : 'Đang chờ'}</option>
                                 <option value="confirmed">{isDepositViewing(v) ? 'Xác nhận đặt cọc' : 'Đã xác nhận'}</option>
                                 <option value="cancelled">{isDepositViewing(v) ? 'Huỷ đặt cọc' : 'Đã huỷ'}</option>
@@ -476,9 +476,9 @@ function AdminViewingsPage() {
 
             {meta?.pageCount && meta.pageCount > 1 && (
               <div className="mt-3 flex items-center justify-center gap-2">
-                <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p-1))} className="rounded-lg border px-3 py-1 disabled:opacity-50">Trước</button>
+                <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p-1))} className="rounded-lg border border-slate-300/80 px-3 py-1 disabled:opacity-50">Trước</button>
                 <span className="text-sm text-slate-600">Trang {page}/{meta.pageCount}</span>
-                <button disabled={page >= (meta.pageCount || 1)} onClick={() => setPage(p => p+1)} className="rounded-lg border px-3 py-1 disabled:opacity-50">Sau</button>
+                <button disabled={page >= (meta.pageCount || 1)} onClick={() => setPage(p => p+1)} className="rounded-lg border border-slate-300/80 px-3 py-1 disabled:opacity-50">Sau</button>
               </div>
             )}
           </section>
