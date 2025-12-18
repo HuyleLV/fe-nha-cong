@@ -14,7 +14,23 @@ import {
 import { Slide } from "react-slideshow-image";
 import "react-slideshow-image/dist/styles.css";
 import Footer from "@/components/footer";
+import Image from "next/image";
+import veChungToiImg1 from "@/assets/ve-chung-toi-01.jpg";
+import veChungToiImg2 from "@/assets/ve-chung-toi-02.jpg";
+import veChungToiImg3 from "@/assets/ve-chung-toi-03.jpg";
+import veChungToiImg4 from "@/assets/ve-chung-toi-04.jpg";
+import veChungToiImg5 from "@/assets/ve-chung-toi-05.jpg";
+import veChungToiImg6 from "@/assets/ve-chung-toi-06.jpg";
 
+const veChungToiImages = [
+  veChungToiImg1, veChungToiImg2, veChungToiImg3, veChungToiImg4, veChungToiImg5, veChungToiImg6
+];
+const usedImages = veChungToiImages.filter((_, index) =>
+  [0, 1, 4, 5].includes(index)
+);
+const slideImages = veChungToiImages.filter((_, index) =>
+  [2].includes(index)
+);
 export default function VeChungToiPage() {
   return (
     <main className="min-h-screen bg-white text-slate-800">
@@ -30,74 +46,74 @@ export default function VeChungToiPage() {
           </header>
 
           <div className="grid gap-6 md:grid-cols-[1.15fr,0.85fr]">
-          {/* Left: Title + intro block + stats */}
-          <div>
-            <h1 className="text-[44px] leading-[1.08] font-black text-emerald-900 sm:text-5xl">
-              NHÀ CỘNG
-            </h1>
-            <p className="mt-1 text-2xl font-extrabold text-emerald-700">
-              THẾ GIỚI PHÒNG TRỌ
-            </p>
+            {/* Left: Title + intro block + stats */}
+            <div>
+              <h1 className="text-[44px] leading-[1.08] font-black text-emerald-900 sm:text-5xl">
+                NHÀ CỘNG
+              </h1>
+              <p className="mt-1 text-2xl font-extrabold text-emerald-700">
+                THẾ GIỚI PHÒNG TRỌ
+              </p>
 
-            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div className="group relative overflow-hidden rounded-2xl shadow-md border border-emerald-100 aspect-[4/3]">
-                <img
-                  src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1600&q=80"
-                  alt="Phòng studio thông tầng"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-              </div>
-              <div className="space-y-5">
-                <div className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm backdrop-blur">
-                  <h3 className="text-lg font-semibold text-emerald-900">Giới thiệu chung</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Nhà Cộng là nền tảng kết nối chủ nhà và người thuê với trải nghiệm nhanh, minh bạch, hiệu quả.
-                    Đăng tin dễ – tìm phòng đã mắt – xác thực rõ ràng – công cụ lọc sâu theo đúng nhu cầu.
-                  </p>
-                </div>
-                <div className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
-                  <img
-                    src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1600&q=80"
-                    alt="Phòng ngủ hiện đại"
+              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div className="group relative overflow-hidden rounded-2xl shadow-md border border-emerald-100 aspect-[4/3]">
+                  <Image
+                    src={veChungToiImg1}
+                    alt="Phòng studio thông tầng"
                     loading="lazy"
                     referrerPolicy="no-referrer"
-                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
+                <div className="space-y-5">
+                  <div className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm backdrop-blur">
+                    <h3 className="text-lg font-semibold text-emerald-900">Giới thiệu chung</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                      Nhà Cộng là nền tảng kết nối chủ nhà và người thuê với trải nghiệm nhanh, minh bạch, hiệu quả.
+                      Đăng tin dễ – tìm phòng đã mắt – xác thực rõ ràng – công cụ lọc sâu theo đúng nhu cầu.
+                    </p>
+                  </div>
+                  <div className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
+                    <Image
+                      src={veChungToiImg2}
+                      alt="Phòng ngủ hiện đại"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* stats under left block */}
+              <div className="mt-5 grid w-full grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                {[{ v: "150+", l: "Địa điểm", I: Building2 }, { v: "200+", l: "Số phòng trọ", I: Home }, { v: "350+", l: "Khách hàng", I: Users2 }].map(
+                  (s, i) => (
+                    <div key={i} className="h-full rounded-xl border border-emerald-100 bg-white p-3 shadow">
+                      <div className="mx-auto mb-1 grid h-7 w-7 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+                        {React.createElement(s.I, { className: "h-4 w-4" })}
+                      </div>
+                      <p className="text-2xl font-extrabold text-emerald-700">{s.v}</p>
+                      <p className="text-xs text-emerald-700/80">{s.l}</p>
+                    </div>
+                  )
+                )}
               </div>
             </div>
 
-            {/* stats under left block */}
-            <div className="mt-5 grid w-full grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-              {[{ v: "150+", l: "Địa điểm", I: Building2 }, { v: "200+", l: "Số phòng trọ", I: Home }, { v: "350+", l: "Khách hàng", I: Users2 }].map(
-                (s, i) => (
-                  <div key={i} className="h-full rounded-xl border border-emerald-100 bg-white p-3 shadow">
-                    <div className="mx-auto mb-1 grid h-7 w-7 place-items-center rounded-full bg-emerald-50 text-emerald-700">
-                      {React.createElement(s.I, { className: "h-4 w-4" })}
-                    </div>
-                    <p className="text-2xl font-extrabold text-emerald-700">{s.v}</p>
-                    <p className="text-xs text-emerald-700/80">{s.l}</p>
-                  </div>
-                )
-              )}
+            {/* Right: Big hero image */}
+            <div className="grid content-start gap-4">
+              <div className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
+                <Image
+                  src={veChungToiImg3}
+                  alt="Không gian thông tầng ấm cúng"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="h-[420px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </div>
             </div>
           </div>
-
-          {/* Right: Big hero image */}
-          <div className="grid content-start gap-4">
-            <div className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
-              <img
-                src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1600&q=80"
-                alt="Không gian thông tầng ấm cúng"
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                className="h-[420px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-            </div>
-          </div>
-        </div>
         </div>
       </section>
 
@@ -126,8 +142,8 @@ export default function VeChungToiPage() {
               </ul>
             </div>
             <div className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
-              <img
-                src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1300&q=80"
+              <Image
+                src={veChungToiImg4}
                 alt="Sứ mệnh hình minh họa"
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -178,19 +194,19 @@ export default function VeChungToiPage() {
           </div>
 
           <div className="grid content-start gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1300&q=80"
+            <Image
+              src={veChungToiImg5}
               alt="Nhà mẫu hiện đại"
               loading="lazy"
               referrerPolicy="no-referrer"
               className="aspect-[4/3] w-full rounded-2xl object-cover shadow-md transition-transform duration-500 hover:scale-[1.02]"
             />
-            <img
-              src="https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1300&q=80"
+            <Image
+              src={veChungToiImg6}
               alt="Phòng khách tối giản"
               loading="lazy"
               referrerPolicy="no-referrer"
-              className="aspect-[16/10] w-full rounded-2xl object-cover shadow-md transition-transform duration-500 hover:scale-[1.02]"
+              className="aspect-[4/3] w-full rounded-2xl object-cover shadow-md transition-transform duration-500 hover:scale-[1.02]"
             />
           </div>
         </div>
@@ -210,19 +226,16 @@ export default function VeChungToiPage() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
-                "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
-              ].map((src, i) => (
-                <div key={i} className="group overflow-hidden rounded-2xl shadow-md border border-emerald-100">
-                  <img
-                    src={src}
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    alt={`Interior ${i + 1}`}
-                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              {usedImages.map((img, i) => (
+                <div key={i} className="group relative overflow-hidden rounded-2xl shadow-md border border-emerald-100 aspect-[4/3]"
+                >
+                  <Image
+                    src={img.src}
+                    alt={`Về chúng tôi ${i + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    priority={i === 0}
                   />
                 </div>
               ))}
@@ -275,13 +288,9 @@ export default function VeChungToiPage() {
         {/* Slider (using react-slideshow-image) */}
         <div className="mt-8 overflow-hidden rounded-2xl border border-emerald-100">
           <Slide autoplay infinite duration={4000} transitionDuration={600} canSwipe pauseOnHover arrows indicators>
-            {[
-              "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=2000&q=80",
-              "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=2000&q=80",
-              "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=2000&q=80",
-            ].map((src, i) => (
+            {slideImages.map((src, i) => (
               <div key={i} className="relative">
-                <img
+                <Image
                   src={src}
                   alt={`Slider ${i + 1}`}
                   loading="lazy"
