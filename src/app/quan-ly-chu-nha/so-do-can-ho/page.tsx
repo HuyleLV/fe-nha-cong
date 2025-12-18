@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
+import { fNumber } from '@/utils/format-number';
 import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { userService } from '@/services/userService';
@@ -153,7 +154,7 @@ export default function FloorMapPage() {
                       <div className="font-medium">Phòng {room.name}</div>
                       <div className="text-xs">{room.beds} giường</div>
                     </div>
-                    <div className="mt-2 text-sm text-slate-700">{room.price.toLocaleString("vi-VN")} đ</div>
+                    <div className="mt-2 text-sm text-slate-700">{typeof room.price === 'number' ? fNumber(room.price) : room.price ? String(room.price) : ''} đ</div>
                   </div>
                 ))}
               </div>

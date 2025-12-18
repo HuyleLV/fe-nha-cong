@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { Job } from '@/type/job';
 import { MapPin, Clock, Target, ArrowRight, CalendarDays, ImageOff } from 'lucide-react';
+import { fNumber } from '@/utils/format-number';
 import MyImage from '@/components/myImage';
 
 export default function JobCard({ job }: { job: Job }) {
   const salary = job.salaryMin || job.salaryMax
-    ? `${job.salaryMin ? job.salaryMin.toLocaleString() : ''}${job.salaryMax ? ' - ' + job.salaryMax.toLocaleString() : ''} ${job.currency || 'VND'}`
+    ? `${job.salaryMin ? fNumber(Number(job.salaryMin)) : ''}${job.salaryMax ? ' - ' + fNumber(Number(job.salaryMax)) : ''} ${job.currency || 'VND'}`
     : 'Thoả thuận';
 
   const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');

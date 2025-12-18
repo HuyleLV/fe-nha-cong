@@ -7,6 +7,7 @@ import { Search, User, Bed } from "lucide-react";
 import clsx from "clsx";
 import type { Route } from "next";
 import { toSlug } from "@/utils/formatSlug";
+import { fNumber } from '@/utils/format-number';
 
 type Mode = 'phong' | 'nha' | 'mat-bang';
 
@@ -67,7 +68,7 @@ export default function SearchBar({
   const router = useRouter();
   const PRICE_SLIDER_MAX = 10000000;
   const PRICE_SLIDER_STEP = 500000;
-  const formatVND = (v?: number) => (typeof v === 'number' ? v.toLocaleString('vi-VN') : '');
+  const formatVND = (v?: number) => (typeof v === 'number' ? fNumber(v) : '');
 
   function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -11,6 +11,7 @@ import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
+import { formatMoneyVND, fNumber } from '@/utils/format-number';
 
 type Row = { id: number; status?: string; buildingId?: number; apartmentId?: number; customerInfo?: string; customerName?: string | null; customerPhone?: string | null; depositDate?: string; rentAmount?: number; depositAmount?: number };
 
@@ -204,8 +205,8 @@ export default function DatCocPage(){
                   return String(r.customerInfo ?? '');
                 } catch { return String(r.customerInfo ?? ''); }
               })()}</td>
-              <td className="px-4 py-3">{typeof r.rentAmount === 'number' ? r.rentAmount.toLocaleString() : (r.rentAmount ?? '')}</td>
-              <td className="px-4 py-3">{typeof r.depositAmount === 'number' ? r.depositAmount.toLocaleString() : (r.depositAmount ?? '')}</td>
+              <td className="px-4 py-3">{typeof r.rentAmount === 'number' ? fNumber(r.rentAmount) : (r.rentAmount ?? '')}</td>
+              <td className="px-4 py-3">{typeof r.depositAmount === 'number' ? fNumber(r.depositAmount) : (r.depositAmount ?? '')}</td>
               <td className="px-4 py-3">{r.depositDate ? new Date(r.depositDate).toLocaleDateString() : ''}</td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-center gap-2">

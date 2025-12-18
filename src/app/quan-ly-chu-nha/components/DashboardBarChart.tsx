@@ -15,6 +15,7 @@ import {
   ChartOptions,
   ChartDataset,
 } from "chart.js";
+import { fNumber } from '@/utils/format-number';
 
 ChartJS.register(
   CategoryScale,
@@ -111,7 +112,7 @@ const options: ChartOptions<MixedChartType> = {
           if (label) label += ": ";
           const value = ctx.parsed?.y ?? ctx.parsed;
           if (value !== null && value !== undefined) {
-            label += Number(value).toLocaleString("vi-VN") + " đ";
+            label += fNumber(Number(value)) + " đ";
           }
           return label;
         },
@@ -130,9 +131,9 @@ const options: ChartOptions<MixedChartType> = {
       ticks: {
         font: { size: 12 },
         callback: (value: any) => {
-          if (typeof value === "number") return value.toLocaleString("vi-VN");
+          if (typeof value === "number") return fNumber(value);
           const num = Number(value);
-          return Number.isNaN(num) ? value : num.toLocaleString("vi-VN");
+          return Number.isNaN(num) ? value : fNumber(num);
         },
       },
     },

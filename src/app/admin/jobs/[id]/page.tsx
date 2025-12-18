@@ -379,9 +379,9 @@ export default function JobFormPage() {
                     className="w-full rounded border border-dashed border-slate-300 bg-white focus:border-emerald-500 focus:ring-emerald-500"
                     {...register('status')}
                   >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="archived">Archived</option>
+                    <option value="draft">Nháp</option>
+                    <option value="published">Công khai</option>
+                    <option value="archived">Lưu trữ</option>
                   </select>
                 </div>
               </div>

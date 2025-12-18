@@ -28,7 +28,7 @@ export function fNumber(inputValue: InputNumberValue, options?: Options) {
     ...options,
   }).format(number);
 
-  return fm;
+  return normalizeNumberString(fm);
 }
 
 // ----------------------------------------------------------------------
@@ -47,7 +47,7 @@ export function fCurrency(inputValue: InputNumberValue, options?: Options) {
     ...options,
   }).format(number);
 
-  return fm;
+  return normalizeNumberString(fm);
 }
 
 // ----------------------------------------------------------------------
@@ -65,7 +65,7 @@ export function fPercent(inputValue: InputNumberValue, options?: Options) {
     ...options,
   }).format(number / 100);
 
-  return fm;
+  return normalizeNumberString(fm);
 }
 
 // ----------------------------------------------------------------------
@@ -82,7 +82,7 @@ export function fShortenNumber(inputValue: InputNumberValue, options?: Options) 
     ...options,
   }).format(number);
 
-  return fm.replace(/[A-Z]/g, (match) => match.toLowerCase());
+  return normalizeNumberString(fm).replace(/[A-Z]/g, (match) => match.toLowerCase());
 }
 
 // ----------------------------------------------------------------------
@@ -98,7 +98,7 @@ export function fData(inputValue: InputNumberValue) {
   const index = Math.floor(Math.log(number) / Math.log(baseValue));
   const fm = `${parseFloat((number / baseValue ** index).toFixed(decimal))} ${units[index]}`;
 
-  return fm;
+  return normalizeNumberString(fm);
 }
 
 // ----------------------------------------------------------------------
@@ -120,5 +120,51 @@ export function formatMoneyVND(amount: number | string, showSymbol: boolean = tr
     maximumFractionDigits: 0,
   }).format(value);
 
-  return formatted;
+  return normalizeNumberString(formatted);
+}
+
+// ----------------------------------------------------------------------
+// Normalize formatted number strings by removing unnecessary trailing zeros
+// Examples:
+//  - "12.00" -> "12"
+//  - "12.50" -> "12.5"
+//  - "1,234.00 ₫" -> "1,234 ₫"
+function normalizeNumberString(s: string) {
+  if (!s || typeof s !== 'string') return s;
+
+  // Split off any non-number suffix (like currency symbol or %), operate on number part
+  const match = s.match(/^([\d.,\s]+)(.*)$/);
+  if (!match) return s;
+
+  const numPart = match[1];
+  const suffix = match[2] || '';
+
+  // Find decimal separator: if both present, assume the last one is decimal separator
+  const lastDot = numPart.lastIndexOf('.');
+  const lastComma = numPart.lastIndexOf(',');
+
+  let integerPart = numPart;
+  let decimalPart = '';
+
+  if (lastDot > lastComma) {
+    integerPart = numPart.slice(0, lastDot);
+    decimalPart = numPart.slice(lastDot + 1);
+  } else if (lastComma > lastDot) {
+    integerPart = numPart.slice(0, lastComma);
+    decimalPart = numPart.slice(lastComma + 1);
+  }
+
+  if (decimalPart === '') return (integerPart + suffix).trim();
+
+  // Remove trailing zeros from decimal part
+  decimalPart = decimalPart.replace(/0+$/u, '');
+
+  let result = integerPart;
+  if (decimalPart.length > 0) {
+    // Use '.' as decimal if original used '.' as decimal separator, else ','
+    const sep = (lastDot > lastComma) ? '.' : ',';
+    result = `${integerPart}${sep}${decimalPart}`;
+  }
+
+  return (result + suffix).trim();
 }

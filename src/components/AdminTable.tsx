@@ -24,7 +24,7 @@ export default function AdminTable({ headers, children, emptyText = "Chưa có d
   return (
     <div className="mt-5 overflow-x-auto rounded bg-white shadow">
       <div className="min-w-full">
-  <table className={`w-full text-[15px] table-auto border-collapse [&_th]:border [&_th]:border-slate-200 [&_td]:border [&_td]:border-slate-200 [&_th]:bg-slate-100 [&_th]:text-center [&_td]:!text-center [&_td>img]:mx-auto [&_td>button]:mx-auto [&_td>a]:mx-auto [&_td>div]:mx-auto`}>
+  <table className={`w-full text-[15px] table-auto border-collapse [&_th]:border [&_th]:border-slate-200 [&_td]:border [&_td]:border-slate-200 [&_th]:bg-slate-100 [&_th]:text-center [&_td]:!text-center [&_td>img]:mx-auto [&_td>button]:mx-auto [&_td>a]:mx-auto [&_td>div]:mx-auto [&_th:last-child]:text-center [&_td:last-child]:text-center [&_td:last-child>div]:flex [&_td:last-child>div]:items-center [&_td:last-child>div]:justify-center [&_td:last-child>div]:gap-2`}>
           <thead className="sticky top-0 z-10">
             <tr>
               {headers.map((h, i) => {

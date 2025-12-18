@@ -1,4 +1,5 @@
 import { SeoCheck, SeoScoreResult } from "@/type/seo";
+import { fNumber } from '@/utils/format-number';
 
 // ---- helpers ----
 const stripHtml = (html: string) =>
@@ -82,14 +83,14 @@ export function useSeoScore({
     { id:'desc-length', label:'Mô tả ~120–160 ký tự', ok:descLen>=120&&descLen<=160, score:descLen?(descLen>=100&&descLen<=170?1:0.5):0, hint:`Hiện tại: ${descLen} ký tự.`, weight:1.2 },
     { id:'desc-has-kw', label:'Mô tả chứa từ khóa', ok:!!kw&&normalizeVi(excerpt).includes(normalizeVi(kw)), score:!!kw&&normalizeVi(excerpt).includes(normalizeVi(kw))?1:0 },
     { id:'content-words', label:'Nội dung ≥ 600 từ', ok:totalWords>=600, score:totalWords?Math.min(totalWords/600,1):0, hint:`Hiện tại: ${totalWords} từ.`, weight:1.4 },
-    { id:'density', label:'Mật độ từ khóa 0.5%–2.5%', ok:!!kw&&density>=0.5&&density<=2.5, score:!!kw?(density>=0.3&&density<=3?1:0.5):0, hint:!!kw?`Hiện tại: ${density.toFixed(2)}%`:'Hãy nhập từ khóa trọng tâm.', weight:1.4 },
+    { id:'density', label:'Mật độ từ khóa 0.5%–2.5%', ok:!!kw&&density>=0.5&&density<=2.5, score:!!kw?(density>=0.3&&density<=3?1:0.5):0, hint:!!kw?`Hiện tại: ${fNumber(density)}%`:'Hãy nhập từ khóa trọng tâm.', weight:1.4 },
     { id:'first-paragraph-kw', label:'Từ khóa ở đoạn đầu', ok:keywordInFirstParagraph(contentHtml, kw), score:keywordInFirstParagraph(contentHtml, kw)?1:0 },
     { id:'has-h2', label:'Có thẻ H2 chia nội dung', ok:hasH2(contentHtml), score:hasH2(contentHtml)?1:0.5 },
     { id:'kw-in-h2', label:'Từ khóa xuất hiện trong ≥1 H2', ok:keywordInH2(contentHtml, kw), score:keywordInH2(contentHtml, kw)?1:0 },
     { id:'image-alt', label:'Có ảnh & thuộc tính alt', ok:hasImage(contentHtml)&&hasImageWithAlt(contentHtml), score:hasImage(contentHtml)?(hasImageWithAlt(contentHtml)?1:0.5):0, weight:1.1 },
     { id:'internal-link', label:'Có liên kết nội bộ', ok:hasInternalLink(contentHtml), score:hasInternalLink(contentHtml)?1:0 },
     { id:'outbound-link', label:'Có liên kết ra ngoài', ok:hasOutboundLink(contentHtml), score:hasOutboundLink(contentHtml)?1:0 },
-    { id:'readability', label:'Độ dài câu trung bình ≤ 20 từ', ok:avgLen>0&&avgLen<=20, score:avgLen?(avgLen<=25?1:0.5):0, hint:avgLen?`Hiện tại: ~${avgLen.toFixed(1)} từ/câu.`:undefined, weight:1.1 },
+    { id:'readability', label:'Độ dài câu trung bình ≤ 20 từ', ok:avgLen>0&&avgLen<=20, score:avgLen?(avgLen<=25?1:0.5):0, hint:avgLen?`Hiện tại: ~${fNumber(avgLen, { maximumFractionDigits: 1 })} từ/câu.`:undefined, weight:1.1 },
     { id:'cover', label:'Có ảnh cover', ok:!!cover, score:cover?1:0 },
     { id:'has-tags', label:'Có ít nhất 1 tag', ok:(tags?.length||0)>0, score:(tags?.length||0)>0?1:0 },
     ];

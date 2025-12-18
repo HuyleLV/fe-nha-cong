@@ -1,6 +1,7 @@
 import { jobService } from '@/services/jobService';
 import { notFound } from 'next/navigation';
 import { MapPin, Clock, Target, CalendarDays, ArrowLeft, Wallet, Phone, Mail, Globe } from 'lucide-react';
+import { fNumber } from '@/utils/format-number';
 import JobApplyModal from '@/components/JobApplyModal';
 import Link from 'next/link';
 import ShareCopyButton from '@/components/ShareCopyButton';
@@ -11,7 +12,7 @@ export default async function JobDetailPage({ params }: { params: { slug: string
   try {
     const job = await jobService.get(params.slug);
     const salary = job.salaryMin || job.salaryMax
-      ? `${job.salaryMin ? job.salaryMin.toLocaleString() : ''}${job.salaryMax ? ' - ' + job.salaryMax.toLocaleString() : ''} ${job.currency || 'VND'}`
+      ? `${job.salaryMin ? fNumber(Number(job.salaryMin)) : ''}${job.salaryMax ? ' - ' + fNumber(Number(job.salaryMax)) : ''} ${job.currency || 'VND'}`
       : 'Thoả thuận';
 
     const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');

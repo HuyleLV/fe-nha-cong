@@ -9,6 +9,7 @@ import Spinner from "@/components/spinner";
 import { PlusCircle, Edit3, Trash2, CheckCircle, Key, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { apartmentService } from "@/services/apartmentService";
 import { toast } from "react-toastify";
+import { fNumber } from '@/utils/format-number';
 
 type Row = {
   id: number;
@@ -172,7 +173,7 @@ export default function Page() {
               <td className="px-4 py-3 text-center">{it.roomCode ?? it.id}</td>
               <td className="px-4 py-3 font-medium text-left">{it.title}</td>
               <td className="px-4 py-3 text-center">{it.bedrooms ? `${it.bedrooms} PN` : 'Studio'}</td>
-              <td className="px-4 py-3 text-center">{it.rentPrice ? Number(String(it.rentPrice)).toLocaleString('vi-VN') : '-'} đ</td>
+              <td className="px-4 py-3 text-center">{it.rentPrice ? fNumber(Number(String(it.rentPrice))) : '-'} đ</td>
               <td className="px-4 py-3 text-center">{it.depositAmount ?? '-'}</td>
               <td className="px-4 py-3 text-center">{it.areaM2 ?? '-'}</td>
               <td className="px-4 py-3 text-center">

@@ -8,6 +8,7 @@ import Pagination from '@/components/Pagination';
 import { meterReadingService } from '@/services/meterReadingService';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { fNumber } from '@/utils/format-number';
 
 export default function GhiChiSoListPage(){
   const translateMeterType = (t?: string) => {
@@ -133,7 +134,7 @@ export default function GhiChiSoListPage(){
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-sky-50 text-sky-700 shadow-sm"><Zap className="w-6 h-6" /></div>
             <div className="flex-1 text-left">
               <div className="text-sm text-slate-600">Tiêu thụ</div>
-              <div className="text-2xl font-semibold text-slate-800">{String(stats.totalConsumption).replace(/\.00$/,'')}</div>
+              <div className="text-2xl font-semibold text-slate-800">{fNumber(stats.totalConsumption)}</div>
             </div>
           </button>
         </div>
@@ -145,13 +146,13 @@ export default function GhiChiSoListPage(){
               <td className="px-4 py-3 text-left">{r.buildingName ?? r.buildingId}</td>
               <td className="px-4 py-3 text-left">{r.apartmentTitle ?? r.apartmentId}</td>
               <td className="px-4 py-3 text-left">{translateMeterType(r.meterType)}</td>
-              <td className="px-4 py-3 text-left">{(r.items && r.items[0] && r.items[0].previousIndex) ? String(r.items[0].previousIndex).replace(/\.00$/,'') : ''}</td>
-              <td className="px-4 py-3 text-left">{(r.items && r.items[0] && r.items[0].newIndex) ? String(r.items[0].newIndex).replace(/\.00$/,'') : ''}</td>
+              <td className="px-4 py-3 text-left">{(r.items && r.items[0] && r.items[0].previousIndex) ? fNumber(r.items[0].previousIndex) : ''}</td>
+              <td className="px-4 py-3 text-left">{(r.items && r.items[0] && r.items[0].newIndex) ? fNumber(r.items[0].newIndex) : ''}</td>
               <td className="px-4 py-3 text-left">{(() => {
                 const prev = r.items && r.items[0] && r.items[0].previousIndex ? parseFloat(String(r.items[0].previousIndex)) : 0;
                 const next = r.items && r.items[0] && r.items[0].newIndex ? parseFloat(String(r.items[0].newIndex)) : 0;
                 const val = (next - prev) || 0;
-                return String(val).replace(/\.00$/,'');
+                return fNumber(val);
               })()}</td>
               <td className="px-4 py-3 text-left">{r.period}</td>
               <td className="px-4 py-3 text-left">{r.readingDate ? new Date(r.readingDate).toLocaleDateString() : ''}</td>
