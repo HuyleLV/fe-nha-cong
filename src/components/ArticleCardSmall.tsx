@@ -1,4 +1,5 @@
 import { fDate, formatStr } from "@/utils/format-time";
+import MyImage from "@/components/myImage";
 
 export default function ArticleCardSmall({
   title,
@@ -20,10 +21,10 @@ export default function ArticleCardSmall({
       <article className="group flex items-stretch gap-3 rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm transition hover:shadow-md sm:gap-4">
         <div className="relative h-40 w-40 shrink-0 overflow-hidden rounded-xl bg-emerald-50 sm:h-40 sm:w-40">
           {cover ? (
-            <img
+            <MyImage
               src={(process.env.NEXT_PUBLIC_API_URL || "") + cover}
               alt={title ?? ""}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="absolute inset-0 h-full w-full"
             />
           ) : (
             <div className="absolute inset-0 animate-pulse bg-emerald-100" />

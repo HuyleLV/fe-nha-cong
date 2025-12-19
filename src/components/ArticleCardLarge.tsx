@@ -1,4 +1,5 @@
 import { fDate, formatStr } from "@/utils/format-time";
+import MyImage from "@/components/myImage";
 
 export default function ArticleCardLarge({
         title,
@@ -19,10 +20,10 @@ export default function ArticleCardLarge({
             <a href={`/blog/` + slug}>
                 <div className="relative aspect-[16/9] w-full overflow-hidden bg-emerald-50">
                     {cover ? (
-                        <img
-                        src={process.env.NEXT_PUBLIC_API_URL + cover}
-                        alt={title ?? ""}
-                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                        <MyImage
+                            src={(process.env.NEXT_PUBLIC_API_URL || "") + cover}
+                            alt={title ?? ""}
+                            className="h-full w-full"
                         />
                     ) : (
                         <div className="h-full w-full animate-pulse bg-emerald-100" />

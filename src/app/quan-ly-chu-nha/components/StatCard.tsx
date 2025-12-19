@@ -1,6 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
+import Link from "next/link";
 
 type StatCardProps = {
   title: string;
@@ -8,6 +9,7 @@ type StatCardProps = {
   sub?: string;
   color?: keyof typeof COLORS;
   icon?: ReactNode;
+  href?: string; // optional link to navigate to when card clicked
 };
 
 const COLORS = {
@@ -22,10 +24,10 @@ const COLORS = {
   slate: { bg: "bg-slate-50", text: "text-slate-700", ring: "ring-slate-200" },
 };
 
-export default function StatCard({ title, value, sub, color = "emerald", icon }: StatCardProps) {
+export default function StatCard({ title, value, sub, color = "emerald", icon, href }: StatCardProps) {
   const c = COLORS[color] ?? COLORS.emerald;
-  return (
-    <div className="rounded-2xl border border-slate-200/70 bg-white shadow-md p-6">
+  const content = (
+    <div className="rounded-2xl border border-slate-200/70 bg-white shadow-md p-6 h-full">
       <div className="flex items-center justify-between">
         <div className="text-base font-semibold text-slate-700">{title}</div>
         {icon && (
@@ -36,4 +38,13 @@ export default function StatCard({ title, value, sub, color = "emerald", icon }:
       {sub && <div className="mt-1 text-sm text-slate-500">{sub}</div>}
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block h-full hover:shadow-lg transition-shadow rounded-2xl">
+        {content}
+      </Link>
+    );
+  }
+  return content;
 }

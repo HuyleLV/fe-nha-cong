@@ -44,9 +44,16 @@ export default function LoginPage() {
       const res = (await userService.postLoginUser(payload)) as resLoginUser;
       console.log("Login response:", res);
       if (res?.accessToken && res?.user) {
+        const rawUser: any = res.user;
+        const normalizedUser = {
+          ...rawUser,
+          avatarUrl:
+            rawUser?.avatarUrl || rawUser?.avatar || rawUser?.picture || rawUser?.photo || rawUser?.avatar_url || rawUser?.profile_image || null,
+        } as typeof res.user;
+
         const storage = data.remember ? localStorage : sessionStorage;
         storage.setItem("access_token", res.accessToken);
-        storage.setItem("auth_user", JSON.stringify(res.user));
+        storage.setItem("auth_user", JSON.stringify(normalizedUser));
 
         if (typeof document !== "undefined") {
           const maxAge = data.remember ? 60 * 60 * 24 * 7 : undefined;
@@ -55,10 +62,10 @@ export default function LoginPage() {
           } SameSite=Lax`;
         }
 
-        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
+        window.dispatchEvent(new CustomEvent("auth:login", { detail: normalizedUser }));
 
         toast.success(res?.message || "Đăng nhập thành công");
-        router.replace("/"); 
+        router.replace("/");
       } else {
         toast.error(res?.message || "Tài khoản hoặc mật khẩu không đúng");
       }
@@ -163,9 +170,16 @@ export default function LoginPage() {
       }
       const res = (await userService.postLoginGoogleCode({ code, redirectUri: "postmessage" })) as resLoginUser;
       if (res?.accessToken && res?.user) {
+        const rawUser: any = res.user;
+        const normalizedUser = {
+          ...rawUser,
+          avatarUrl:
+            rawUser?.avatarUrl || rawUser?.avatar || rawUser?.picture || rawUser?.photo || rawUser?.avatar_url || rawUser?.profile_image || null,
+        } as typeof res.user;
+
         localStorage.setItem("access_token", res.accessToken);
-        localStorage.setItem("auth_user", JSON.stringify(res.user));
-        window.dispatchEvent(new CustomEvent("auth:login", { detail: res.user }));
+        localStorage.setItem("auth_user", JSON.stringify(normalizedUser));
+        window.dispatchEvent(new CustomEvent("auth:login", { detail: normalizedUser }));
         toast.success(res?.message || "Đăng nhập thành công");
         router.replace("/");
       } else {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import MyImage from "@/components/myImage";
 import logo from "../assets/logo-trang.png";
 import {
   Heart,
@@ -172,12 +173,14 @@ export default function Header() {
       return <UserRound className="text-white w-9 h-9 p-2" />;
     }
     return (
-      <img
-        src={asImageSrc(url)}
-        alt={auth?.name || auth?.email || "user"}
-        className="w-9 h-9 rounded-full object-cover"
-        onError={() => setAvatarBroken(true)}
-      />
+      <div className="w-9 h-9 rounded-full overflow-hidden">
+        <MyImage
+          src={asImageSrc(url)}
+          alt={auth?.name || auth?.email || "user"}
+          className="rounded-full"
+          priority={false}
+        />
+      </div>
     );
   };
 
@@ -331,15 +334,12 @@ export default function Header() {
                       <div className="shrink-0">
                         <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                           {auth.avatarUrl && !avatarBroken ? (
-                            <img
-                              src={asImageSrc(auth.avatarUrl)}
-                              alt="avatar"
-                              className="w-full h-full object-cover"
-                              onError={() => setAvatarBroken(true)}
-                            />
-                          ) : (
-                            <UserIcon className="w-5 h-5" />
-                          )}
+                              <div className="w-full h-full rounded-full overflow-hidden">
+                                <MyImage src={asImageSrc(auth.avatarUrl)} alt="avatar" className="rounded-full" priority={false} />
+                              </div>
+                            ) : (
+                              <UserIcon className="w-5 h-5" />
+                            )}
                         </div>
                       </div>
                       <div className="min-w-0">
@@ -474,12 +474,9 @@ export default function Header() {
               <div className="flex items-center gap-3 rounded-xl border px-4 py-3">
                 <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                   {auth.avatarUrl && !avatarBroken ? (
-                    <img
-                      src={asImageSrc(auth.avatarUrl)}
-                      alt="avatar"
-                      className="w-full h-full object-cover"
-                      onError={() => setAvatarBroken(true)}
-                    />
+                    <div className="w-full h-full overflow-hidden">
+                      <MyImage src={asImageSrc(auth.avatarUrl)} alt="avatar" className="rounded-full" priority={false} />
+                    </div>
                   ) : (
                     <UserIcon className="w-5 h-5" />
                   )}
