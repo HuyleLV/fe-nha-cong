@@ -47,6 +47,18 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
+// helper: strip trailing zeros from decimal strings for display (e.g. "12.00" -> "12", "12.50" -> "12.5")
+function stripTrailingZerosDecimal(v?: string | number | null) {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (!s.includes('.')) return s;
+  // remove trailing zeros
+  let r = s.replace(/0+$/u, '');
+  // if ends with decimal point, drop it
+  if (r.endsWith('.')) r = r.slice(0, -1);
+  return r;
+}
+
 export default function HostApartmentFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = useMemo(() => id !== "create", [id]);
@@ -65,7 +77,7 @@ export default function HostApartmentFormPage() {
     reset,
     control,
     formState: { errors, isSubmitting, dirtyFields },
-  } = useForm<ApartmentForm & { discountInput?: string }>({
+  } = useForm<ApartmentForm & { discountInput?: string; commissionAmount?: string }>({
     defaultValues: {
       title: "",
       slug: "",
@@ -92,7 +104,9 @@ export default function HostApartmentFormPage() {
   discountPercent: 0,
   discountAmount: "",
   discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
-  commissionPercent: 0,
+  commissionAmount: "",
+  needsFill: false,
+  fillPaymentAmount: "",
       coverImageUrl: "",
       images: [],
 
@@ -234,7 +248,7 @@ export default function HostApartmentFormPage() {
           return first || "";
         };
         const savedVideo = detectVideo((ap as any).images as string[]);
-        reset({
+  reset({
           title: ap.title,
           slug: ap.slug,
           excerpt: ap.excerpt || "",
@@ -271,7 +285,9 @@ export default function HostApartmentFormPage() {
           depositAmount: (ap as any).depositAmount ?? "",
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
-          commissionPercent: (ap as any).commissionPercent ?? 0,
+          commissionAmount: stripTrailingZerosDecimal((ap as any).commissionAmount ?? ((ap as any).commissionPercent != null ? String(Math.round(parseFloat(String(ap.rentPrice || '0').replace(/,/g,'')) * ((ap as any).commissionPercent || 0) / 100)) : "")),
+          needsFill: (ap as any).needsFill ?? (ap as any).needs_fill ?? false,
+          fillPaymentAmount: stripTrailingZerosDecimal((ap as any).fillPaymentAmount ?? (ap as any).fill_payment_amount ?? ""),
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
           buildingId: ap.buildingId ?? null,
 
@@ -436,7 +452,7 @@ export default function HostApartmentFormPage() {
         // For hosts: prefer numeric amount. If percent provided, convert it to amount using rentPrice.
         if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
           const amt = parseFloat(rawDiscount.replace(/,/g, '.'));
-          if (Number.isFinite(amt) && amt >= 0) (payload as any).discountAmount = amt.toFixed(2);
+          if (Number.isFinite(amt) && amt >= 0) (payload as any).discountAmount = String(Math.round(amt));
         } else if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
           const pct = parseFloat(rawDiscount.replace('%', ''));
           if (Number.isFinite(pct) && pct >= 0 && price > 0) {
@@ -454,7 +470,8 @@ export default function HostApartmentFormPage() {
         } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
           const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
           if (Number.isFinite(amt) && amt >= 0) {
-            (payload as any).discountAmount = amt.toFixed(2); // chuẩn hoá
+            // store as integer-string (VND doesn't use decimals) to avoid trailing .00
+            (payload as any).discountAmount = String(Math.round(amt)); // chuẩn hoá
           }
         }
       }
@@ -462,14 +479,41 @@ export default function HostApartmentFormPage() {
     // Không gửi discountInput lên API
     delete (payload as any).discountInput;
 
-    // Normalize commissionPercent: clamp to 0-100 if present
-    if ((values as any).commissionPercent != null && (values as any).commissionPercent !== "") {
+    // Normalize commission: prefer amount (VND). If amount provided, send commissionAmount (numeric string).
+    const rawCommissionAmount = (values as any).commissionAmount;
+    if (rawCommissionAmount != null && String(rawCommissionAmount).trim() !== "") {
+      const ca = Number(String(rawCommissionAmount).replace(/,/g, '').replace(/\s/g, ''));
+      if (Number.isFinite(ca) && ca >= 0) {
+        // store as integer-string (VND) to avoid trailing .00
+        (payload as any).commissionAmount = String(Math.round(ca));
+      }
+    } else if ((values as any).commissionPercent != null && (values as any).commissionPercent !== "") {
+      // backward compatibility: allow percent if present (admin might still send it)
       const cp = Number((values as any).commissionPercent);
       if (Number.isFinite(cp)) {
         (payload as any).commissionPercent = Math.min(100, Math.max(0, Math.round(cp)));
       }
     }
+    if ((payload as any).commissionAmount == null) delete (payload as any).commissionAmount;
     if ((payload as any).commissionPercent == null) delete (payload as any).commissionPercent;
+
+    // Normalize fill/lấp phòng fields
+    const needsFillRaw = (values as any).needsFill;
+    if (needsFillRaw) {
+      (payload as any).needsFill = true;
+      const raw = String((values as any).fillPaymentAmount || '').replace(/,/g, '').trim();
+      const ca = Number(raw || '');
+      if (raw !== '' && Number.isFinite(ca) && ca >= 0) {
+        // store as integer-string (VND) to avoid trailing .00
+        (payload as any).fillPaymentAmount = String(Math.round(ca));
+      } else {
+        // if checkbox checked but no valid amount, don't send fillPaymentAmount
+        delete (payload as any).fillPaymentAmount;
+      }
+    } else {
+      (payload as any).needsFill = false;
+      delete (payload as any).fillPaymentAmount;
+    }
 
   // Remove local-only fields
   delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
@@ -728,6 +772,19 @@ export default function HostApartmentFormPage() {
                     <option value="het_phong">Hết phòng</option>
                   </select>
                 </div>
+                <div className="md:col-span-2">
+                  <label className="inline-flex items-center gap-2">
+                    <input type="checkbox" {...register("needsFill")} />
+                    <span className="text-sm text-slate-700">Cần lấp phòng</span>
+                  </label>
+                </div>
+                {watch("needsFill") && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-slate-600 mb-1">Tiền hoa hồng lấp phòng (VND)</label>
+                    <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 200000" {...register("fillPaymentAmount")} />
+                    <p className="text-xs text-slate-500 mt-1">Nhập số tiền chi trả để lấp phòng. Chỉ áp dụng khi đánh dấu Cần lấp phòng.</p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Đơn vị tiền tệ</label>
                   <input className={inputCls} placeholder="VND" {...register("currency")} />
@@ -810,9 +867,9 @@ export default function HostApartmentFormPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (%)</label>
-                <input type="number" min={0} max={100} className={inputCls} placeholder="Ví dụ: 5" {...register("commissionPercent", { valueAsNumber: true })} />
-                <p className="text-xs text-slate-500 mt-1">Nhập phần trăm hoa hồng dành cho CTV (0-100). Để trống nếu không áp dụng.</p>
+                <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (VND)</label>
+                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 200000" {...register("commissionAmount" as any)} />
+                <p className="text-xs text-slate-500 mt-1">Nhập số tiền hoa hồng dành cho CTV (VND). Để trống nếu không áp dụng.</p>
               </div>
             </div>
             </div>

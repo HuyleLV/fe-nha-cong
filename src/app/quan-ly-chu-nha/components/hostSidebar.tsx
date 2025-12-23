@@ -51,10 +51,10 @@ export default function HostSidebar() {
         { href: "/quan-ly-chu-nha/khach-hang/khach-tiem-nang", label: "Khách tiềm năng", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/dat-coc", label: "Đặt cọc", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/khach-hang/hop-dong", label: "Hợp đồng", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/khach-hang/cu-dan", label: "Cư dân", icon: Users },
         { href: "/quan-ly-chu-nha/khach-hang/phuong-tien", label: "Phương tiện", icon: CalendarDays },
       ],
     },
+    { href: "/quan-ly-chu-nha/cu-dan", label: "Cư dân", icon: Users },
     {
       href: "/quan-ly-chu-nha/tai-chinh",
       label: "Tài chính",

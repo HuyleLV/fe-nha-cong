@@ -174,8 +174,17 @@ export default function Page() {
               <td className="px-4 py-3 font-medium text-left">{it.title}</td>
               <td className="px-4 py-3 text-center">{it.bedrooms ? `${it.bedrooms} PN` : 'Studio'}</td>
               <td className="px-4 py-3 text-center">{it.rentPrice ? fNumber(Number(String(it.rentPrice))) : '-'} đ</td>
-              <td className="px-4 py-3 text-center">{it.depositAmount ?? '-'}</td>
-              <td className="px-4 py-3 text-center">{it.areaM2 ?? '-'}</td>
+              <td className="px-4 py-3 text-center">{
+                (it.depositAmount === null || it.depositAmount === undefined || it.depositAmount === '') ? '-' : (
+                  // if numeric-like show formatted number without trailing .00
+                  !Number.isNaN(Number(String(it.depositAmount))) ? `${fNumber(Number(String(it.depositAmount)))} đ` : String(it.depositAmount)
+                )
+              }</td>
+              <td className="px-4 py-3 text-center">{
+                (it.areaM2 === null || it.areaM2 === undefined || it.areaM2 === '') ? '-' : (
+                  !Number.isNaN(Number(String(it.areaM2))) ? fNumber(Number(String(it.areaM2))) : String(it.areaM2)
+                )
+              }</td>
               <td className="px-4 py-3 text-center">
                 {(() => {
                   const k = roomStatusKey(it.occupancyRaw);

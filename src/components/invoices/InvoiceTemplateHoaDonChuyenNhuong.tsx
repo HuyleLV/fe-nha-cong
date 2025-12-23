@@ -11,6 +11,8 @@ export default function InvoiceTemplateHoaDonChuyenNhuong({ invoice }: Props) {
   const company = { name: COMPANY.name, taxCode: COMPANY.taxCode, address: COMPANY.address, logo: COMPANY.logo };
   const customer = invoice.customer || {};
   const apartment = invoice.apartment || {};
+  const roomCode = apartment.roomCode ?? apartment.code ?? apartment.roomNumber ?? invoice.roomCode ?? invoice.roomNumber ?? '';
+  const roomTitle = apartment.title ?? invoice.roomTitle ?? invoice.roomName ?? '';
   const id = invoice.id ?? '';
   const date = invoice.issueDate ? new Date(invoice.issueDate).toLocaleDateString() : '';
 
@@ -35,7 +37,8 @@ export default function InvoiceTemplateHoaDonChuyenNhuong({ invoice }: Props) {
 
         <div style={{ marginTop: 12 }}>
           <div><strong>Khách hàng:</strong> {customer.name ?? ''}</div>
-          <div><strong>Phòng:</strong> {apartment.roomNumber ?? apartment.title ?? ''}</div>
+          <div><strong>Mã phòng:</strong> {roomCode}</div>
+          <div><strong>Tên phòng:</strong> {roomTitle}</div>
         </div>
 
         <div style={{ marginTop: 12, background: '#fafafa', padding: 12, borderRadius: 6 }}>

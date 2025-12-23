@@ -7,6 +7,7 @@ import AdminTable from "@/components/AdminTable";
 import Spinner from "@/components/spinner";
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment } from "@/type/apartment";
+import { fNumber } from '@/utils/format-number';
 import { userService } from "@/services/userService";
 import { User } from "@/type/user";
 
@@ -18,7 +19,9 @@ export default function ModerationApartmentPage() {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await apartmentService.getAll({ page: 1, limit: 200, isApproved: false } as any);
+      // Request moderation list ordered by fill payment amount descending so admins
+      // can prioritize approvals that pay more to fill rooms.
+      const res = await apartmentService.getAll({ page: 1, limit: 200, isApproved: false, sort: 'fill_payment_desc' } as any);
       const apts = (res.items || []) as Apartment[];
       setItems(apts);
 
@@ -80,12 +83,14 @@ export default function ModerationApartmentPage() {
         {loading ? (
           <div className="min-h-[200px] grid place-items-center"><Spinner /></div>
         ) : (
-          <AdminTable headers={["Mã", "Tiêu đề", "Giá", "Chủ sở hữu (ID)", "Hành động"]} loading={loading}>
+          <AdminTable headers={["Mã", "Tiêu đề", "Giá", "Cần lấp", "Tiền lấp (VND)", "Chủ sở hữu (ID)", "Hành động"]} loading={loading}>
             {items.map((a) => (
               <tr key={a.id} className="hover:bg-slate-50">
                 <td className="px-4 py-2">{a.id}</td>
                 <td className="px-4 py-2">{a.title ?? `#${a.id}`}</td>
                 <td className="px-4 py-2">{a.rentPrice ?? '-'}</td>
+                <td className="px-4 py-2">{(a as any).needsFill ? 'Có' : '—'}</td>
+                <td className="px-4 py-2">{(a as any).fillPaymentAmount ? `${fNumber(Number(String((a as any).fillPaymentAmount || 0)))} đ` : '-'}</td>
                 <td className="px-4 py-2 align-top">
                   {(() => {
                     const ownerId = Number((a as any).createdById ?? (a as any).created_by ?? 0) || null;

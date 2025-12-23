@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from '@/components/AdminTable';
 import { userService } from '@/services/userService';
 import { contractService } from '@/services/contractService';
 import Link from 'next/link';
-import { Edit3, Trash2, FileText, Clock, AlertTriangle, XCircle, Plus, PlusCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Edit3, Trash2, FileText, Clock, AlertTriangle, XCircle, Plus, PlusCircle, Eye } from 'lucide-react';
 import type { ContractRow, ContractStats } from '@/type/contract';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
@@ -17,6 +18,7 @@ type Row = ContractRow;
 
 export default function HopDongPage(){
   const [rows, setRows] = useState<Row[]>([]);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
@@ -70,6 +72,113 @@ export default function HopDongPage(){
       toast.success('Đã xóa hợp đồng');
       await load();
     } catch (err) { console.error(err); toast.error('Lỗi khi xóa hợp đồng'); }
+  };
+
+  // Viewer modal state (reuse invoice viewer pattern)
+  const [viewerId, setViewerId] = useState<number | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const applyFloatingHide = (hide: boolean) => {
+    if (typeof document === 'undefined') return;
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      if (hide) {
+        root.classList.add('hide-floating-buttons');
+        body.classList.add('hide-floating-buttons');
+      } else {
+        root.classList.remove('hide-floating-buttons');
+        body.classList.remove('hide-floating-buttons');
+      }
+
+      // hide floating chat buttons
+      const node = document.querySelector('.floating-chat-buttons') as HTMLElement | null;
+      if (node) {
+        if (hide) {
+          node.style.setProperty('display', 'none', 'important');
+          node.style.setProperty('visibility', 'hidden', 'important');
+          node.setAttribute('aria-hidden', 'true');
+        } else {
+          node.style.removeProperty('display');
+          node.style.removeProperty('visibility');
+          node.removeAttribute('aria-hidden');
+        }
+      }
+
+      // (Don't hide header/sidebar in the parent document here.)
+      // The iframe content will be adjusted via injectHideIntoIframe to hide its own header/sidebar.
+    } catch (e) {}
+  };
+
+  const injectHideIntoIframe = () => {
+    try {
+      const iframe = iframeRef.current;
+      const doc = iframe?.contentDocument;
+      if (!doc) return;
+      const existing = doc.getElementById('hide-floating-buttons-style');
+      if (existing) return;
+      const style = doc.createElement('style');
+      style.id = 'hide-floating-buttons-style';
+      style.innerHTML = `
+        /* hide floating buttons inside iframe */
+        .floating-chat-buttons { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+        /* hide header and host sidebar inside iframe (print templates may include layout chrome) */
+        header { display: none !important; visibility: hidden !important; }
+        aside[class*="w-64"], aside.hostSidebar, aside[id*="sidebar"] { display: none !important; visibility: hidden !important; }
+      `;
+      (doc.head || doc.body || doc.documentElement).appendChild(style);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    try {
+      applyFloatingHide(!!viewerOpen);
+      if (viewerOpen) setTimeout(() => injectHideIntoIframe(), 200);
+    } catch (e) {}
+    return () => { try { applyFloatingHide(false); } catch (e) {} };
+  }, [viewerOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    (window as any).__openContractViewer = (id: number) => {
+      setViewerId(id);
+      setViewerOpen(true);
+    };
+    return () => { try { delete (window as any).__openContractViewer; } catch (e) {} };
+  }, []);
+
+  const closeViewer = () => { setViewerOpen(false); setViewerId(null); };
+  const viewerPrint = () => {
+    try {
+      applyFloatingHide(true);
+      const win = iframeRef.current?.contentWindow;
+      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      if (win) {
+        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        win.focus();
+        win.print();
+        setTimeout(cleanup, 1500);
+      } else {
+        window.print();
+        setTimeout(cleanup, 1500);
+      }
+    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch {} }
+  };
+
+  const downloadDoc = async () => {
+    try {
+      const doc = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? '';
+      const blob = new Blob([doc], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contract-${viewerId || 'unknown'}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) { console.error('Download doc failed', e); toast.error('Không thể tải file Word'); }
   };
 
   // status change removed from this page
@@ -136,6 +245,14 @@ export default function HopDongPage(){
                 <td className="px-4 py-3">{r.expiryDate ? new Date(r.expiryDate).toLocaleDateString() : '-'}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      title="Xem"
+                      onClick={() => { setViewerId(Number(r.id)); setViewerOpen(true); }}
+                      className="inline-flex items-center justify-center p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                    >
+                      <Eye className="w-4 h-4 text-slate-700" />
+                    </button>
                     <Link href={`/quan-ly-chu-nha/khach-hang/hop-dong/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
                       <Edit3 className="w-4 h-4 text-white" />
                     </Link>
@@ -152,6 +269,29 @@ export default function HopDongPage(){
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
       </Panel>
+        {/* Viewer modal for contract preview */}
+        {viewerOpen && viewerId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={closeViewer} />
+            <div className="relative w-[95%] md:w-3/4 lg:w-2/3 h-[85%] bg-white rounded-lg shadow-lg overflow-hidden z-60">
+              <div className="flex items-center justify-between p-3 border-b">
+                <div className="text-sm font-semibold">Xem hợp đồng #{viewerId}</div>
+                <div className="flex items-center gap-2">
+                  <button onClick={viewerPrint} className="px-3 py-1 bg-emerald-600 text-white rounded">In / Save as PDF</button>
+                  <button onClick={downloadDoc} className="px-3 py-1 bg-sky-600 text-white rounded">Tải Word</button>
+                  <button onClick={closeViewer} className="p-2 rounded bg-slate-200" aria-label="Đóng"><XCircle className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <iframe
+                ref={iframeRef}
+                onLoad={() => injectHideIntoIframe()}
+                src={`/quan-ly-chu-nha/khach-hang/print-contract?id=${viewerId}`}
+                className="w-full h-full border-0"
+                title={`Contract ${viewerId}`}
+              />
+            </div>
+          </div>
+        )}
     </div>
   );
 }

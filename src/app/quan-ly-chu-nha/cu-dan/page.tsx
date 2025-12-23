@@ -34,7 +34,6 @@ export default function CuDanListPage(){
     setLoading(true);
     try {
       const params: any = { page: p, limit };
-      // Show only customers who have contract or deposit on the main customers page
       params.hasContractOrDeposit = true;
       if (meId) params.ownerId = meId;
       const res = await userService.listAdminUsers(params);
@@ -105,7 +104,7 @@ export default function CuDanListPage(){
                 <td className="px-4 py-3">{r.address ?? ''}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link href={`/quan-ly-chu-nha/khach-hang/cu-dan/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                    <Link href={`/quan-ly-chu-nha/cu-dan/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
                       <Edit3 className="w-4 h-4 text-white" />
                     </Link>
                     <button title="Xóa" onClick={() => onDelete(r)} className="p-2 rounded bg-red-500 hover:bg-red-600">

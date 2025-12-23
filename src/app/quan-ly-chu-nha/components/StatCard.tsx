@@ -9,7 +9,7 @@ type StatCardProps = {
   sub?: string;
   color?: keyof typeof COLORS;
   icon?: ReactNode;
-  href?: string; // optional link to navigate to when card clicked
+  href?: string; 
 };
 
 const COLORS = {

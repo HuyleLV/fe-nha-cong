@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Panel from '@/app/quan-ly-chu-nha/components/Panel';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -11,13 +11,23 @@ import { apartmentService } from '@/services/apartmentService';
 import { userService } from '@/services/userService';
 import { serviceService } from '@/services/serviceService';
 import { toast } from 'react-toastify';
-import { Save, CheckCircle2, ChevronRight, PlusCircle } from 'lucide-react';
+import { Save, CheckCircle2, ChevronRight, PlusCircle, Eye, XCircle } from 'lucide-react';
 import { formatMoneyVND } from '@/utils/format-number';
 import Spinner from '@/components/spinner';
 import AdminTable from '@/components/AdminTable';
 import UploadPicker from '@/components/UploadPicker';
 
 // Removed local FormData type
+
+// helper: strip trailing zeros from decimal strings for input/display (e.g. "12.00" -> "12", "12.50" -> "12.5")
+function stripTrailingZerosForInput(v?: string | number | null) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (!s.includes('.')) return s;
+  let r = s.replace(/0+$/u, '');
+  if (r.endsWith('.')) r = r.slice(0, -1);
+  return r;
+}
 
 export default function ContractEditPage() {
   const params = useParams();
@@ -48,6 +58,109 @@ export default function ContractEditPage() {
     xe: 'Xe',
     luot: 'Lượt/Lần',
   } as Record<string, string>)[String(u ?? '')] ?? (u ?? '');
+  
+  // Viewer modal state for contract preview
+  const [viewerId, setViewerId] = useState<number | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const applyFloatingHide = (hide: boolean) => {
+    if (typeof document === 'undefined') return;
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      if (hide) {
+        root.classList.add('hide-floating-buttons');
+        body.classList.add('hide-floating-buttons');
+      } else {
+        root.classList.remove('hide-floating-buttons');
+        body.classList.remove('hide-floating-buttons');
+      }
+
+      // hide floating chat buttons
+      const node = document.querySelector('.floating-chat-buttons') as HTMLElement | null;
+      if (node) {
+        if (hide) {
+          node.style.setProperty('display', 'none', 'important');
+          node.style.setProperty('visibility', 'hidden', 'important');
+          node.setAttribute('aria-hidden', 'true');
+        } else {
+          node.style.removeProperty('display');
+          node.style.removeProperty('visibility');
+          node.removeAttribute('aria-hidden');
+        }
+      }
+
+      // Do not hide parent headers/sidebars here. We'll inject styles into the iframe instead.
+    } catch (e) {}
+  };
+
+  const injectHideIntoIframe = () => {
+    try {
+      const iframe = iframeRef.current;
+      const doc = iframe?.contentDocument;
+      if (!doc) return;
+      const existing = doc.getElementById('hide-floating-buttons-style');
+      if (existing) return;
+      const style = doc.createElement('style');
+      style.id = 'hide-floating-buttons-style';
+      style.innerHTML = `
+        /* hide floating buttons inside iframe */
+        .floating-chat-buttons { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+        /* hide header and host sidebar inside iframe (print templates may include layout chrome) */
+        header { display: none !important; visibility: hidden !important; }
+        aside[class*="w-64"], aside.hostSidebar, aside[id*="sidebar"] { display: none !important; visibility: hidden !important; }
+      `;
+      (doc.head || doc.body || doc.documentElement).appendChild(style);
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    try {
+      applyFloatingHide(!!viewerOpen);
+      if (viewerOpen) setTimeout(() => injectHideIntoIframe(), 200);
+    } catch (e) {}
+    return () => { try { applyFloatingHide(false); } catch (e) {} };
+  }, [viewerOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    (window as any).__openContractViewer = (id: number) => { setViewerId(id); setViewerOpen(true); };
+    return () => { try { delete (window as any).__openContractViewer; } catch (e) {} };
+  }, []);
+
+  const closeViewer = () => { setViewerOpen(false); setViewerId(null); };
+  const viewerPrint = () => {
+    try {
+      applyFloatingHide(true);
+      const win = iframeRef.current?.contentWindow;
+      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      if (win) {
+        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        win.focus();
+        win.print();
+        setTimeout(cleanup, 1500);
+      } else {
+        window.print();
+        setTimeout(cleanup, 1500);
+      }
+    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch {} }
+  };
+
+  const downloadDoc = async () => {
+    try {
+      const doc = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? '';
+      const blob = new Blob([doc], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contract-${viewerId || 'unknown'}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) { console.error('Download doc failed', e); toast.error('Không thể tải file Word'); }
+  };
 
 
   useEffect(() => {
@@ -61,8 +174,8 @@ export default function ContractEditPage() {
           buildingId: data.buildingId ?? undefined,
           apartmentId: data.apartmentId ?? undefined,
           customerId: data.customerId ?? undefined,
-          rentAmount: data.rentAmount ?? 0,
-          depositAmount: data.depositAmount ?? 0,
+          rentAmount: stripTrailingZerosForInput(data.rentAmount ?? 0),
+          depositAmount: stripTrailingZerosForInput(data.depositAmount ?? 0),
           depositPaid: data.depositPaid ?? '0',
           startDate: data.startDate ? new Date(data.startDate).toISOString().slice(0,10) : '',
           expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString().slice(0,10) : '',
@@ -259,6 +372,18 @@ export default function ContractEditPage() {
             >
               {isSubmitting ? (<><Spinner /> <span>Đang lưu…</span></>) : (<><CheckCircle2 className="w-5 h-5" /> <span>{isEdit ? 'Cập nhật' : 'Tạo mới'}</span></>)}
             </button>
+            {/* View contract (print/preview) - only for existing contracts */}
+            {isEdit && id && (
+              <button
+                type="button"
+                title="Xem hợp đồng"
+                onClick={() => { setViewerId(Number(id)); setViewerOpen(true); }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+              >
+                <Eye className="w-5 h-5 text-slate-700" />
+                <span className="text-sm text-slate-700">Xem</span>
+              </button>
+            )}
             <button type="button" onClick={() => router.push('/quan-ly-chu-nha/khach-hang/hop-dong')} className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50">Hủy</button>
           </div>
         </div>
@@ -565,6 +690,30 @@ export default function ContractEditPage() {
           )}
         </div>
       </form>
+
+      {/* Viewer modal for contract preview */}
+      {viewerOpen && viewerId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={closeViewer} />
+          <div className="relative w-[95%] md:w-3/4 lg:w-2/3 h-[85%] bg-white rounded-lg shadow-lg overflow-hidden z-60">
+            <div className="flex items-center justify-between p-3 border-b">
+              <div className="text-sm font-semibold">Xem hợp đồng #{viewerId}</div>
+              <div className="flex items-center gap-2">
+                <button onClick={viewerPrint} className="px-3 py-1 bg-emerald-600 text-white rounded">In / Save as PDF</button>
+                <button onClick={downloadDoc} className="px-3 py-1 bg-sky-600 text-white rounded">Tải Word</button>
+                <button onClick={closeViewer} className="p-2 rounded bg-slate-200" aria-label="Đóng"><XCircle className="w-4 h-4" /></button>
+              </div>
+            </div>
+            <iframe
+              ref={iframeRef}
+              onLoad={() => injectHideIntoIframe()}
+              src={`/quan-ly-chu-nha/khach-hang/print-contract?id=${viewerId}`}
+              className="w-full h-full border-0"
+              title={`Contract ${viewerId}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

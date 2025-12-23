@@ -14,6 +14,8 @@ export default function InvoiceTemplateHoaDonHangThang({ invoice }: Props) {
   const company = { name: COMPANY.name, taxCode: COMPANY.taxCode, address: COMPANY.address, logo: COMPANY.logo };
   const customer = invoice.customer || {};
   const apartment = invoice.apartment || {};
+  const roomCode = apartment.roomCode ?? apartment.code ?? apartment.roomNumber ?? invoice.roomCode ?? invoice.roomNumber ?? '';
+  const roomTitle = apartment.title ?? invoice.roomTitle ?? invoice.roomName ?? '';
   const id = invoice.id ?? '';
   const monthLabel = invoice.period ?? invoice.month ?? '';
 
@@ -38,7 +40,8 @@ export default function InvoiceTemplateHoaDonHangThang({ invoice }: Props) {
 
         <div style={{ marginBottom: 12 }}>
           <div><strong>Khách hàng:</strong> {customer.name ?? invoice.payerName ?? ''}</div>
-          <div><strong>Phòng số:</strong> {apartment.roomNumber ?? invoice.roomNumber ?? apartment.title ?? ''}</div>
+          <div><strong>Mã phòng:</strong> {roomCode}</div>
+          <div><strong>Tên phòng:</strong> {roomTitle}</div>
         </div>
 
         <div style={{ marginBottom: 12, background: '#fafafa', padding: 12, borderRadius: 6 }}>

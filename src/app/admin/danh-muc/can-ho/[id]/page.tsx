@@ -46,6 +46,15 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
+// helper: strip trailing zeros from decimal strings for display (e.g. "12.00" -> "12", "12.50" -> "12.5")
+function stripTrailingZerosDecimal(v?: string | number | null) {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (!s.includes('.')) return s;
+  let r = s.replace(/0+$/u, '');
+  if (r.endsWith('.')) r = r.slice(0, -1);
+  return r;
+}
 export default function ApartmentFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = useMemo(() => id !== "create", [id]);
@@ -241,15 +250,15 @@ export default function ApartmentFormPage() {
           bathrooms: ap.bathrooms,
           floorNumber: (ap as any).floorNumber ?? (undefined as unknown as number),
           areaM2: ap.areaM2 || "",
-          rentPrice: ap.rentPrice,
+          rentPrice: stripTrailingZerosDecimal(ap.rentPrice),
           currency: ap.currency,
           status: ap.status,
           roomStatus: (ap as any).roomStatus ?? 'o_ngay',
           discountPercent: (ap as any).discountPercent ?? 0,
-          discountAmount: (ap as any).discountAmount ?? "",
+          discountAmount: stripTrailingZerosDecimal((ap as any).discountAmount ?? ""),
           commissionPercent: (ap as any).commissionPercent ?? 0,
           coverImageUrl: ap.coverImageUrl || "",
-          depositAmount: (ap as any).depositAmount ?? "",
+          depositAmount: stripTrailingZerosDecimal((ap as any).depositAmount ?? ""),
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
@@ -400,7 +409,8 @@ export default function ApartmentFormPage() {
     if ((values as any).discountAmount != null && String((values as any).discountAmount).trim() !== "") {
       const amt = parseFloat(String((values as any).discountAmount).replace(/,/g, '.'));
       if (Number.isFinite(amt) && amt >= 0) {
-        (payload as any).discountAmount = amt.toFixed(2);
+        // store as integer-string (VND) to avoid trailing .00
+        (payload as any).discountAmount = String(Math.round(amt));
       }
     }
 

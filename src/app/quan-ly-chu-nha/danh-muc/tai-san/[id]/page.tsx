@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import { Save, CheckCircle2, ChevronRight } from "lucide-react";
 import Spinner from "@/components/spinner";
@@ -22,6 +22,9 @@ type Form = {
   quantity?: number;
   status?: string;
   warrantyPeriod?: string;
+  purchaseDate?: string;
+  manufacturerWarrantyDate?: string;
+  ownerWarrantyMonths?: number | '';
   buildingId?: number | null;
   apartmentId?: number | null;
   bedId?: number | null;
@@ -42,13 +45,29 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
+function ManufacturerWarrantyStatus({ control }: { control: any }) {
+  // watch manufacturerWarrantyDate and display whether in warranty
+  const mDate = useWatch({ control, name: 'manufacturerWarrantyDate' }) as string | undefined;
+  if (!mDate) return null;
+  try {
+    const today = new Date();
+    // normalize to start of day for comparison
+    const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const end = new Date(mDate);
+    const inWarranty = end >= now;
+    return (<div className="mt-2 text-sm font-medium" style={{ color: inWarranty ? '#059669' : '#dc2626' }}>{inWarranty ? 'Còn bảo hành' : 'Hết bảo hành'}</div>);
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function AssetFormPage() {
   const { id } = useParams() as { id: string };
   const isEdit = useMemo(() => id !== "create", [id]);
   const router = useRouter();
 
   const { register, handleSubmit, reset, control, formState: { isSubmitting, errors, dirtyFields } } = useForm<Form>({
-    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', warrantyPeriod: '', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
+    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', warrantyPeriod: '', purchaseDate: '', manufacturerWarrantyDate: '', ownerWarrantyMonths: '', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
   });
 
   const [loading, setLoading] = useState<boolean>(isEdit);
@@ -84,6 +103,9 @@ export default function AssetFormPage() {
           quantity: a.quantity ?? 1,
           status: a.status || 'available',
           warrantyPeriod: a.warrantyPeriod || '',
+          purchaseDate: (a as any).purchaseDate ? String((a as any).purchaseDate).split('T')[0] : '',
+          manufacturerWarrantyDate: (a as any).manufacturerWarrantyDate ? String((a as any).manufacturerWarrantyDate).split('T')[0] : '',
+          ownerWarrantyMonths: (a as any).ownerWarrantyMonths ?? '',
           buildingId: (a as any).buildingId ?? undefined,
           apartmentId: (a as any).apartmentId ?? undefined,
           bedId: (a as any).bedId ?? undefined,
@@ -132,10 +154,14 @@ export default function AssetFormPage() {
 
   const onSubmit = async (vals: Form) => {
     try {
-      const payload: any = { ...vals };
+  const payload: any = { ...vals };
       // normalize numeric fields
       payload.quantity = payload.quantity ? Number(payload.quantity) : 1;
-      payload.value = payload.value ? String(payload.value) : undefined;
+  payload.value = payload.value ? String(payload.value) : undefined;
+  // normalize date/warranty fields
+  payload.purchaseDate = payload.purchaseDate ? String(payload.purchaseDate) : undefined;
+  payload.manufacturerWarrantyDate = payload.manufacturerWarrantyDate ? String(payload.manufacturerWarrantyDate) : undefined;
+  payload.ownerWarrantyMonths = payload.ownerWarrantyMonths === '' || payload.ownerWarrantyMonths == null ? undefined : Number(payload.ownerWarrantyMonths);
       if (payload.buildingId === "" || payload.buildingId === undefined) payload.buildingId = undefined;
       if (payload.apartmentId === "" || payload.apartmentId === undefined) payload.apartmentId = undefined;
       if (payload.bedId === "" || payload.bedId === undefined) payload.bedId = undefined;
@@ -290,14 +316,36 @@ export default function AssetFormPage() {
                   <select {...field} className={inputCls}>
                     <option value="available">Sẵn sàng</option>
                     <option value="in_use">Đang sử dụng</option>
-                    <option value="maintenance">Bảo trì</option>
-                    <option value="retired">Thanh lý</option>
+                    <option value="maintenance">Sửa chữa</option>
+                    <option value="retired">Hỏng</option>
                   </select>
                 )} />
               </div>
 
               <div>
-                <label className="block text-sm text-slate-600 mb-1">Thời hạn bảo hành</label>
+                <label className="block text-sm text-slate-600 mb-1">Ngày mua</label>
+                <input type="date" className={inputCls} {...register('purchaseDate')} />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Bảo hành của hãng (ngày kết thúc)</label>
+                <input type="date" className={inputCls} {...register('manufacturerWarrantyDate')} />
+                {/* derived status */}
+                <ManufacturerWarrantyStatus control={control} />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Bảo hành chủ nhà (tháng)</label>
+                <Controller control={control} name="ownerWarrantyMonths" render={({ field }) => (
+                  <select {...field} className={inputCls} value={field.value === undefined || field.value === null ? '' : String(field.value)} onChange={(e) => { const v = e.target.value; field.onChange(v === '' ? '' : Number(v)); }}>
+                    <option value="">-- Chọn (1-12 tháng, tuỳ chọn) --</option>
+                    {Array.from({ length: 12 }).map((_, i) => (<option key={i+1} value={String(i+1)}>{i+1} tháng</option>))}
+                  </select>
+                )} />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Thời hạn bảo hành (hiển thị)</label>
                 <input className={inputCls} {...register('warrantyPeriod')} />
               </div>
             </div>

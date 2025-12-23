@@ -150,7 +150,7 @@ export default function DepositEditPage() {
     try {
       // Coerce numeric fields to numbers where backend expects integers/numbers
       const payload: any = { ...data };
-      const intFields = ['buildingId', 'apartmentId', 'customerId', 'occupantsCount', 'contractDuration', 'paymentCycle'];
+  const intFields = ['buildingId', 'apartmentId', 'customerId', 'occupantsCount'];
       for (const f of intFields) {
         const v = (payload as any)[f];
         if (v === '' || v === null || v === undefined) {
@@ -297,19 +297,19 @@ export default function DepositEditPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Ngày đặt cọc</label>
+                  <label className="block text-sm text-slate-600 mb-1">Ngày đặt cọc <span className="text-rose-600">*</span></label>
                   <input type="date" className={inputCls} {...register('depositDate', { required: 'Vui lòng chọn ngày đặt cọc' })} />
                   {errors.depositDate && <div className="text-sm text-red-600 mt-1">{errors.depositDate.message}</div>}
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Ngày chuyển vào</label>
+                  <label className="block text-sm text-slate-600 mb-1">Ngày chuyển vào <span className="text-rose-600">*</span></label>
                   <input type="date" className={inputCls} {...register('moveInDate', { required: 'Vui lòng chọn ngày chuyển vào' })} />
                   {errors.moveInDate && <div className="text-sm text-red-600 mt-1">{errors.moveInDate.message}</div>}
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Ngày bắt đầu tính tiền</label>
+                  <label className="block text-sm text-slate-600 mb-1">Ngày bắt đầu tính tiền <span className="text-rose-600">*</span></label>
                   <input type="date" className={inputCls} {...register('billingStartDate', { required: 'Vui lòng chọn ngày bắt đầu tính tiền' })} />
                   {errors.billingStartDate && <div className="text-sm text-red-600 mt-1">{errors.billingStartDate.message}</div>}
                 </div>
@@ -327,13 +327,13 @@ export default function DepositEditPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Thuê từ ngày</label>
+                  <label className="block text-sm text-slate-600 mb-1">Thuê từ ngày <span className="text-rose-600">*</span></label>
                   <input type="date" className={inputCls} {...register('rentFrom', { required: 'Vui lòng chọn ngày thuê từ' })} />
                   {errors.rentFrom && <div className="text-sm text-red-600 mt-1">{errors.rentFrom.message}</div>}
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-600 mb-1">Thuê đến ngày</label>
+                  <label className="block text-sm text-slate-600 mb-1">Thuê đến ngày <span className="text-rose-600">*</span></label>
                   <input type="date" className={inputCls} {...register('rentTo', { required: 'Vui lòng chọn ngày thuê đến' })} />
                   {errors.rentTo && <div className="text-sm text-red-600 mt-1">{errors.rentTo.message}</div>}
                 </div>

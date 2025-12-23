@@ -14,6 +14,9 @@ export default function InvoiceTemplateHoaDonDatCoc({ invoice }: Props) {
   // Use global company info
   const company = { name: COMPANY.name, taxCode: COMPANY.taxCode, address: COMPANY.address, logo: COMPANY.logo };
   const customer = invoice.customer || {};
+  const apartment = invoice.apartment || {};
+  const roomCode = apartment.roomCode ?? apartment.code ?? apartment.roomNumber ?? invoice.roomCode ?? invoice.roomNumber ?? '';
+  const roomTitle = apartment.title ?? invoice.roomTitle ?? invoice.roomName ?? '';
   const id = invoice.id ?? '';
   const date = invoice.issueDate ? new Date(invoice.issueDate).toLocaleDateString() : '';
   const amount = invoice.total ?? invoice.amount ?? invoice.depositAmount ?? '';
@@ -44,6 +47,8 @@ export default function InvoiceTemplateHoaDonDatCoc({ invoice }: Props) {
           <div><strong>Khách hàng:</strong> {customer.name ?? invoice.payerName ?? ''}</div>
           <div><strong>CCCD/MST:</strong> {customer.idNumber ?? customer.taxCode ?? invoice.payerId ?? ''}</div>
           <div><strong>Địa chỉ:</strong> {customer.address ?? ''}</div>
+          <div style={{ marginTop: 6 }}><strong>Mã phòng:</strong> {roomCode}</div>
+          <div><strong>Tên phòng:</strong> {roomTitle}</div>
         </div>
 
         <div style={{ marginBottom: 12 }}>

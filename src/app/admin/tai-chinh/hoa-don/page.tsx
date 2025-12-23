@@ -107,6 +107,8 @@ export default function AdminHoaDonPage() {
         root.classList.remove('hide-floating-buttons');
         body.classList.remove('hide-floating-buttons');
       }
+
+      // hide floating chat buttons
       const node = document.querySelector('.floating-chat-buttons') as HTMLElement | null;
       if (node) {
         if (hide) {
@@ -119,6 +121,42 @@ export default function AdminHoaDonPage() {
           node.removeAttribute('aria-hidden');
         }
       }
+
+      // hide header(s)
+      try {
+        const headers = Array.from(document.querySelectorAll('header')) as HTMLElement[];
+        headers.forEach(h => {
+          if (hide) {
+            h.style.setProperty('display', 'none', 'important');
+            h.style.setProperty('visibility', 'hidden', 'important');
+            h.setAttribute('aria-hidden', 'true');
+          } else {
+            h.style.removeProperty('display');
+            h.style.removeProperty('visibility');
+            h.removeAttribute('aria-hidden');
+          }
+        });
+      } catch (e) {}
+
+      // hide host sidebar (aside with w-64)
+      try {
+        const asides = Array.from(document.querySelectorAll('aside')) as HTMLElement[];
+        asides.forEach(a => {
+          const cls = String(a.className || '');
+          if (cls.includes('w-64') || cls.includes('hostSidebar') || (a.id || '').toLowerCase().includes('sidebar')) {
+            if (hide) {
+              a.style.setProperty('display', 'none', 'important');
+              a.style.setProperty('visibility', 'hidden', 'important');
+              a.setAttribute('aria-hidden', 'true');
+            } else {
+              a.style.removeProperty('display');
+              a.style.removeProperty('visibility');
+              a.removeAttribute('aria-hidden');
+            }
+          }
+        });
+      } catch (e) {}
+
     } catch (e) {}
   };
 
