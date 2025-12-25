@@ -898,6 +898,23 @@ export default function HostApartmentFormPage() {
                 )}
               </div>
 
+              {/* Bulk multi-image uploader: keeps existing per-image editors below for fine edits */}
+              <div className="space-y-2">
+                <label className="block text-sm text-slate-600">Chọn nhiều ảnh</label>
+                <UploadPicker
+                  multiple
+                  max={9}
+                  value={images as string[]}
+                  onChange={(val) => {
+                    const arr = Array.isArray(val) ? val : val ? [val] : [];
+                    const merged = [...(images as string[]), ...arr].filter(Boolean).slice(0, 9);
+                    setValue("images", merged, { shouldDirty: true });
+                  }}
+                  aspectClass="aspect-[4/3]"
+                />
+                <p className="text-xs text-slate-500 mt-1">Bạn có thể chọn nhiều ảnh cùng lúc. Ảnh video sẽ được ưu tiên hiển thị đầu tiên.</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(images as string[]).map((img, idx) => (
                   <div key={idx} className="space-y-2">
@@ -905,7 +922,9 @@ export default function HostApartmentFormPage() {
                       value={img || null}
                       onChange={(val) => {
                         const next = [...(images as string[])];
-                        next[idx] = val || "";
+                        // UploadPicker may return string | string[] | null depending on multiple prop;
+                        // ensure we always store a single string for per-image editors
+                        next[idx] = Array.isArray(val) ? (val[0] || "") : (val || "");
                         setValue("images", next, { shouldDirty: true });
                       }}
                       aspectClass="aspect-[4/3]"
