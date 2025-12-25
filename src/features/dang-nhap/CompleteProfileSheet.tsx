@@ -151,7 +151,7 @@ export default function CompleteProfileSheet({ onDone, initialName, initialPhone
 
       <div>
         <span className="block text-xs font-medium text-slate-600 mb-1">Ảnh đại diện</span>
-        <UploadPicker value={avatarUrl || null} onChange={setAvatarUrl} aspectClass="aspect-square" />
+  <UploadPicker value={avatarUrl || null} onChange={(val) => setAvatarUrl(Array.isArray(val) ? (val[0] || null) : val)} aspectClass="aspect-square" />
       </div>
 
       {null}

@@ -328,21 +328,21 @@ export default function CustomerEditPage() {
               <div className="col-span-1">
                 <label className="block text-sm text-slate-600 mb-2">Ảnh đại diện</label>
                 <div className="rounded-lg overflow-hidden bg-slate-50">
-                  <UploadPicker value={watch('avatar') as string | null} onChange={(v) => setValue('avatar', v)} aspectClass="aspect-[1/1]" />
+                  <UploadPicker value={watch('avatar') as string | null} onChange={(v) => setValue('avatar', Array.isArray(v) ? (v[0] || null) : v)} aspectClass="aspect-[1/1]" />
                 </div>
               </div>
 
               <div className="col-span-1">
                 <label className="block text-sm text-slate-600 mb-2">Mặt trước CCCD/CMND</label>
                 <div className="rounded-lg overflow-hidden bg-slate-50">
-                  <UploadPicker value={watch('idCardFront') as string | null} onChange={(v) => setValue('idCardFront', v)} aspectClass="aspect-[4/3]" />
+                  <UploadPicker value={watch('idCardFront') as string | null} onChange={(v) => setValue('idCardFront', Array.isArray(v) ? (v[0] || null) : v)} aspectClass="aspect-[4/3]" />
                 </div>
               </div>
 
               <div className="col-span-1">
                 <label className="block text-sm text-slate-600 mb-2">Mặt sau CCCD/CMND</label>
                 <div className="rounded-lg overflow-hidden bg-slate-50">
-                  <UploadPicker value={watch('idCardBack') as string | null} onChange={(v) => setValue('idCardBack', v)} aspectClass="aspect-[4/3]" />
+                  <UploadPicker value={watch('idCardBack') as string | null} onChange={(v) => setValue('idCardBack', Array.isArray(v) ? (v[0] || null) : v)} aspectClass="aspect-[4/3]" />
                 </div>
               </div>
             </div>

@@ -403,7 +403,7 @@ export default function BlogFormPage() {
             <div className="p-3">
               <UploadPicker
                 value={cover || null}
-                onChange={(val) => setValue('coverImageUrl', val || '', { shouldDirty: true })}
+                onChange={(val) => setValue('coverImageUrl', Array.isArray(val) ? (val[0] || '') : (val || ''), { shouldDirty: true })}
               />
             </div>
           </Section>

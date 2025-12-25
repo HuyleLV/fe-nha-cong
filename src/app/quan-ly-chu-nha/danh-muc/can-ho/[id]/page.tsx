@@ -876,7 +876,7 @@ export default function HostApartmentFormPage() {
           </Section>
 
           <Section title="Ảnh cover (tuỳ chọn)">
-            <UploadPicker value={cover || null} onChange={(val) => setValue("coverImageUrl", val || "", { shouldDirty: true })} />
+            <UploadPicker value={cover || null} onChange={(val) => setValue("coverImageUrl", Array.isArray(val) ? (val[0] || "") : (val || ""), { shouldDirty: true })} />
           </Section>
 
           <Section title="Bộ ảnh (gallery)">
@@ -906,7 +906,11 @@ export default function HostApartmentFormPage() {
                   max={9}
                   value={images as string[]}
                   onChange={(val) => {
-                    const arr = Array.isArray(val) ? val : val ? [val] : [];
+                    if (Array.isArray(val)) {
+                      setValue("images", val.slice(0, 9), { shouldDirty: true });
+                      return;
+                    }
+                    const arr = val ? [val] : [];
                     const merged = [...(images as string[]), ...arr].filter(Boolean).slice(0, 9);
                     setValue("images", merged, { shouldDirty: true });
                   }}

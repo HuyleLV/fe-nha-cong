@@ -273,7 +273,7 @@ export default function JobFormPage() {
               <label className="block text-sm text-slate-600 mb-1">Ảnh bìa</label>
               <UploadPicker
                 value={banner || ''}
-                onChange={(v) => setValue('bannerImageUrl', v || '', { shouldDirty: true })}
+                onChange={(v) => setValue('bannerImageUrl', Array.isArray(v) ? (v[0] || '') : (v || ''), { shouldDirty: true })}
                 aspectClass="aspect-[16/9]"
               />
               <p className="mt-2 text-xs text-slate-500">Gợi ý: Tỉ lệ 16:9, dung lượng &lt; 2MB. Ảnh này sẽ hiển thị ở hero trang chi tiết.</p>
@@ -286,7 +286,7 @@ export default function JobFormPage() {
                 <label className="block text-sm text-slate-600 mb-1">Ảnh đại diện</label>
                 <UploadPicker
                   value={cover || ''}
-                  onChange={(v) => setValue('coverImageUrl', v || '', { shouldDirty: true })}
+                  onChange={(v) => setValue('coverImageUrl', Array.isArray(v) ? (v[0] || '') : (v || ''), { shouldDirty: true })}
                   aspectClass="aspect-[3/1]"
                 />
               </div>

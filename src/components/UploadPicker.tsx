@@ -32,6 +32,7 @@ export default function UploadPicker({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
 
   const API_BASE =
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "https://api.nhacong.com.vn";
@@ -143,8 +144,31 @@ export default function UploadPicker({
           currentValues.length > 0 ? (
             <div className="grid grid-cols-3 gap-2">
               {displayUrls.map((src, i) => (
-                <div key={i} className="relative rounded-lg overflow-hidden border border-slate-200 bg-white">
-                  <img src={src} alt={`img-${i}`} className={`w-full h-28 object-cover cursor-pointer`} onClick={() => { setPreviewIndex(i); setPreviewOpen(true); }} />
+                    <div
+                      key={i}
+                      draggable
+                      onDragStart={(ev) => {
+                        dragIndexRef.current = i;
+                        try { ev.dataTransfer?.setData('text/plain', String(i)); } catch {}
+                      }}
+                      onDragOver={(ev) => {
+                        ev.preventDefault();
+                      }}
+                      onDrop={(ev) => {
+                        ev.preventDefault();
+                        const from = dragIndexRef.current ?? parseInt(ev.dataTransfer?.getData('text/plain') || "" , 10);
+                        const to = i;
+                        if (Number.isFinite(from) && from >= 0 && from !== to) {
+                          const arr = getCurrentValues();
+                          const item = arr.splice(from, 1)[0];
+                          arr.splice(to, 0, item);
+                          onChange(arr.length === 0 ? null : arr);
+                        }
+                        dragIndexRef.current = null;
+                      }}
+                      className="relative rounded-lg overflow-hidden border border-slate-200 bg-white"
+                    >
+                      <img src={src} alt={`img-${i}`} className={`w-full h-28 object-cover cursor-pointer`} onClick={() => { setPreviewIndex(i); setPreviewOpen(true); }} />
                   <div className="absolute top-1 right-1 flex gap-1">
                     <button type="button" title="Lên" onClick={() => { if (i <= 0) return; const arr = getCurrentValues(); const tmp = arr[i-1]; arr[i-1] = arr[i]; arr[i] = tmp; onChange(arr); }} className="bg-white/90 p-1 rounded shadow text-xs">↑</button>
                     <button type="button" title="Xuống" onClick={() => { if (i >= currentValues.length -1) return; const arr = getCurrentValues(); const tmp = arr[i+1]; arr[i+1] = arr[i]; arr[i] = tmp; onChange(arr); }} className="bg-white/90 p-1 rounded shadow text-xs">↓</button>

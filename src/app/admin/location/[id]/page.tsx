@@ -290,7 +290,7 @@ export default function LocationFormPage() {
               <div className="flex items-center gap-2">
                 <UploadPicker
                   value={cover || null}
-                  onChange={(val) => setValue('coverImageUrl', val || '', { shouldDirty: true })}
+                  onChange={(val) => setValue('coverImageUrl', Array.isArray(val) ? (val[0] || '') : (val || ''), { shouldDirty: true })}
                 />
                 {!cover && (
                   <div className="shrink-0 grid place-items-center size-10 rounded-lg border bg-slate-50">

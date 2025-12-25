@@ -268,7 +268,7 @@ export default function GhiChiSoEditPage() {
                 <td className="px-3 py-2 text-left"><input className="w-full rounded-md border border-slate-300/80 p-2" value={formatDisplayNumber(r.newIndex)} onChange={(e) => updateRow(r.id, { newIndex: e.target.value })} /></td>
                 <td className="px-3 py-2 text-left"><input type="date" className="w-full rounded-md border border-slate-300/80 p-2" value={r.readingDate || readingDate} onChange={(e) => updateRow(r.id, { readingDate: e.target.value })} /></td>
                 <td className="px-3 py-2 text-left w-48">
-                  <UploadPicker value={r.image || null} onChange={(v) => updateRow(r.id, { image: v })} />
+                  <UploadPicker value={r.image || null} onChange={(v) => updateRow(r.id, { image: Array.isArray(v) ? (v[0] || null) : v })} />
                 </td>
                 <td className="px-3 py-2 text-center">
                   <button type="button" onClick={() => removeRow(r.id)} className="px-2 py-1 rounded bg-red-500 text-white">Xóa</button>
