@@ -8,11 +8,21 @@ import ShareCopyButton from '@/components/ShareCopyButton';
 
 export const dynamic = 'force-dynamic';
 
-export default async function JobDetailPage({ params }: { params: { slug: string } }) {
+export default async function JobDetailPage(props: any) {
   try {
+    // `props` may be a Promise in some Next.js runtimes — await it to be safe.
+    const { params } = await props;
     const job = await jobService.get(params.slug);
+    const formatSalaryValue = (val?: number | null) => {
+      if (val == null) return '';
+      let n = Number(val);
+      if (Number.isNaN(n)) return '';
+      if (!job.currency || String(job.currency).toUpperCase() === 'VND') n = n * 1000;
+      return fNumber(n);
+    };
+
     const salary = job.salaryMin || job.salaryMax
-      ? `${job.salaryMin ? fNumber(Number(job.salaryMin)) : ''}${job.salaryMax ? ' - ' + fNumber(Number(job.salaryMax)) : ''} ${job.currency || 'VND'}`
+      ? `${job.salaryMin ? formatSalaryValue(job.salaryMin) : ''}${job.salaryMax ? ' - ' + formatSalaryValue(job.salaryMax) : ''} ${job.currency || 'VND'}`
       : 'Thoả thuận';
 
     const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');
@@ -171,8 +181,8 @@ export default async function JobDetailPage({ params }: { params: { slug: string
                     currency: job.currency || 'VND',
                     value: {
                       '@type': 'QuantitativeValue',
-                      minValue: job.salaryMin || undefined,
-                      maxValue: job.salaryMax || undefined,
+                      minValue: job.salaryMin != null ? ((job.currency && String(job.currency).toUpperCase() !== 'VND') ? job.salaryMin : job.salaryMin * 1000) : undefined,
+                      maxValue: job.salaryMax != null ? ((job.currency && String(job.currency).toUpperCase() !== 'VND') ? job.salaryMax : job.salaryMax * 1000) : undefined,
                     },
                   }
                 : undefined,

@@ -168,7 +168,13 @@ export default function CustomerEditPage() {
         address: data.address ?? undefined,
       });
       toast.success('Cập nhật khách hàng thành công');
-      router.push('/quan-ly-chu-nha/khach-hang/khach-hang');
+      // Go back to previous page if possible so user returns to where they started editing.
+      if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+        router.back();
+      } else {
+        // fallback to the customers list
+        router.push('/quan-ly-chu-nha/khach-hang/khach-tiem-nang');
+      }
     } catch (err: any) {
       console.error(err);
       const serverMsg = err?.response?.data?.message ?? err?.message;

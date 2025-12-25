@@ -160,7 +160,13 @@ export default function AdminCustomerLeadEditPage() {
         address: data.address ?? undefined,
       });
       toast.success('Cập nhật khách hàng thành công');
-      router.push('/admin/khach-hang/khach-tiem-nang');
+      // Go back to previous page if possible so admin returns to where they started editing.
+      if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+        router.back();
+      } else {
+        // fallback to the admin customers list
+        router.push('/admin/khach-hang/khach-tiem-nang');
+      }
     } catch (err: any) {
       console.error(err);
       const serverMsg = err?.response?.data?.message ?? err?.message;

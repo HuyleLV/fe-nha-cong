@@ -5,8 +5,17 @@ import { fNumber } from '@/utils/format-number';
 import MyImage from '@/components/myImage';
 
 export default function JobCard({ job }: { job: Job }) {
+  const formatSalaryValue = (val?: number | null) => {
+    if (val == null) return '';
+    let n = Number(val);
+    if (Number.isNaN(n)) return '';
+    // Backend stores salary in thousands for VND (e.g., 5,000 -> 5,000,000 VND)
+    if (!job.currency || String(job.currency).toUpperCase() === 'VND') n = n * 1000;
+    return fNumber(n);
+  };
+
   const salary = job.salaryMin || job.salaryMax
-    ? `${job.salaryMin ? fNumber(Number(job.salaryMin)) : ''}${job.salaryMax ? ' - ' + fNumber(Number(job.salaryMax)) : ''} ${job.currency || 'VND'}`
+    ? `${job.salaryMin ? formatSalaryValue(job.salaryMin) : ''}${job.salaryMax ? ' - ' + formatSalaryValue(job.salaryMax) : ''} ${job.currency || 'VND'}`
     : 'Thoả thuận';
 
   const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/,'');
