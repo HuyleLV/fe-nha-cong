@@ -772,7 +772,6 @@ export default function ApartmentFormPage() {
 
           <Section title="Bộ ảnh (gallery)">
             <div className="space-y-3">
-              {/* Video URL (optional) */}
               <div className="space-y-2">
                 <label className="block text-sm text-slate-600">Video (tuỳ chọn)</label>
                 <VideoUploadPicker
