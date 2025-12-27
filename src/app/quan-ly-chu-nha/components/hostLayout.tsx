@@ -29,7 +29,7 @@ function readStoredUser(): User | null {
                 localStorage.removeItem("adminInfo");
                 sessionStorage.removeItem("access_token");
                 sessionStorage.removeItem("auth_user");
-              } catch {}
+              } catch { }
               return null;
             }
           }
@@ -43,7 +43,7 @@ function readStoredUser(): User | null {
             phone: json.phone,
           } as User;
         }
-      } catch {}
+      } catch { }
     }
     return null;
   } catch {
