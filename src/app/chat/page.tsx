@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Send, Paperclip } from "lucide-react";
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { io, Socket } from 'socket.io-client';
 import { apartmentService } from '@/services/apartmentService';
@@ -27,11 +27,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
-  const search = useSearchParams();
   const router = useRouter();
-  const convQuery = search?.get('c') ?? null;
-  const ownerParam = search?.get('ownerId') ?? null;
-  const apartmentParam = search?.get('apartmentId') ?? null;
+  // read search params from window when available to avoid using useSearchParams in a context
+  // that Next may attempt to prerender. These are read-once on the client.
+  const getParam = (k: string) => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(k) : null);
+  const convQuery = getParam('c');
+  const ownerParam = getParam('ownerId');
+  const apartmentParam = getParam('apartmentId');
   const [meId, setMeId] = useState<number | null>(null);
   const [apartment, setApartment] = useState<any | null>(null);
   const [owner, setOwner] = useState<any | null>(null);
