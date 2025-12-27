@@ -1177,16 +1177,38 @@ export default function RoomPage({ slug }: { slug: string }) {
                               <Phone className="h-4 w-4" /> Gọi ngay
                             </button>
                           )}
-                          {zaloUrl && (
-                            <a
-                              href={zaloUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
-                            >
-                              <MessageCircle className="h-4 w-4" /> Chat
-                            </a>
-                          )}
+                          {/* Internal chat button (replaces external Zalo link) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const ownerId = (data as any)?.createdById;
+                              if (!ownerId) {
+                                toast.error('Không tìm thấy chủ nhà để chat');
+                                return;
+                              }
+                              router.push(`/chat?apartmentId=${(data as any)?.id}&ownerId=${ownerId}`);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-xl border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+                          >
+                            <MessageCircle className="h-4 w-4" /> Chat
+                          </button>
+                          
+                          {/* Internal chat with owner */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const ownerId = (data as any)?.createdById;
+                              if (!ownerId) {
+                                toast.error('Không tìm thấy chủ nhà để chat');
+                                return;
+                              }
+                              // Navigate immediately to chat page with params; chat page will create/open conversation
+                              router.push(`/chat?apartmentId=${(data as any)?.id}&ownerId=${ownerId}`);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <MessageCircle className="h-4 w-4" /> Chat với chủ nhà
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1239,16 +1261,21 @@ export default function RoomPage({ slug }: { slug: string }) {
                               <Phone className="h-4 w-4" /> Gọi ngay
                             </button>
                           )}
-                          {zaloUrl && (
-                            <a
-                              href={zaloUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
-                            >
-                              <MessageCircle className="h-4 w-4" /> Chat
-                            </a>
-                          )}
+                          {/* Internal chat button (replaces external Zalo link) */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const ownerId = (data as any)?.createdById;
+                              if (!ownerId) {
+                                toast.error('Không tìm thấy chủ nhà để chat');
+                                return;
+                              }
+                              router.push(`/chat?apartmentId=${(data as any)?.id}&ownerId=${ownerId}`);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-100"
+                          >
+                            <MessageCircle className="h-4 w-4" /> Chat
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1510,14 +1537,20 @@ export default function RoomPage({ slug }: { slug: string }) {
                         >
                           <Phone className="h-4 w-4" /> {showPhone ? phoneRaw : 'Hiện số chủ nhà'}
                         </button>
-                        <a
-                          href={zaloUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ownerId = (data as any)?.createdById;
+                            if (!ownerId) {
+                              toast.error('Không tìm thấy chủ nhà để chat');
+                              return;
+                            }
+                            router.push(`/chat?apartmentId=${(data as any)?.id}&ownerId=${ownerId}`);
+                          }}
                           className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-800 hover:bg-sky-100"
                         >
                           <MessageCircle className="h-4 w-4" /> Chat
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>

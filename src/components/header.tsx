@@ -23,7 +23,7 @@ import {
   LogOut,
   User as UserIcon,
   Map,
-  Search,
+  MessageSquare,
   FileSearch,
 } from "lucide-react";
 import { User } from "@/type/user";
@@ -279,11 +279,11 @@ export default function Header() {
               )}
             </div>
             <Link
-              href="/tim-phong-quanh-day"
-              aria-label="Tìm phòng"
+              href="/chat"
+              aria-label="Chat"
               className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
             >
-              <Search className="text-white w-5 h-5" />
+              <MessageSquare className="text-white w-5 h-5" />
             </Link>
 
             <button

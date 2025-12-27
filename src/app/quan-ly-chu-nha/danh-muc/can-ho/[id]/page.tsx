@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -75,6 +75,7 @@ export default function HostApartmentFormPage() {
     watch,
     setValue,
     reset,
+    setError,
     control,
     formState: { errors, isSubmitting, dirtyFields },
   } = useForm<ApartmentForm & { discountInput?: string; commissionAmount?: string }>({
@@ -216,11 +217,21 @@ export default function HostApartmentFormPage() {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // auto slug
+  // auto slug: on CREATE page, update slug live while user types title
+  // but avoid overwriting if user manually edited the slug.
+  const autoSlugRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!slug?.trim() && title?.trim()) setValue("slug", toSlug(title), { shouldDirty: true });
+    if (isEdit) return; // only auto-update on create
+    const titleVal = String(title || "").trim();
+    const newAuto = titleVal ? toSlug(titleVal) : "";
+    const currentSlug = String(slug || "");
+    // Update slug when it's empty OR when it still equals the last auto-generated slug
+    if (!currentSlug || currentSlug === autoSlugRef.current) {
+      setValue("slug", newAuto, { shouldDirty: true });
+      autoSlugRef.current = newAuto;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title]);
+  }, [title, isEdit]);
 
   // load detail
   useEffect(() => {
@@ -522,16 +533,81 @@ export default function HostApartmentFormPage() {
     try {
       if (isEdit) {
         // First update core fields/images
-        const updated = await apartmentService.update(Number(id), payload);
+        const updated: any = await apartmentService.update(Number(id), payload);
+        // If backend returned validation/error payload (normalized OK envelope), it may be an object
+        // without an `id` property. Treat that as an error and surface messages.
+        if (!updated || !updated.id) {
+          // If server returned a message string
+          if (updated && typeof updated.message === 'string') {
+            toast.error(updated.message);
+            return;
+          }
+          // If server returned field-level errors as object, map them to form errors
+          if (updated && typeof updated === 'object') {
+            let shown = false;
+            for (const k of Object.keys(updated)) {
+              const v = (updated as any)[k];
+              const msg = Array.isArray(v) ? v.join('; ') : String(v || 'Lỗi không xác định');
+              try {
+                // setError from react-hook-form to show inline messages
+                setError(k as any, { type: 'server', message: msg });
+                shown = true;
+              } catch {}
+            }
+            if (!shown) toast.error('Có lỗi từ server. Vui lòng kiểm tra lại.');
+            return;
+          }
+
+          toast.error('Cập nhật thất bại. Vui lòng thử lại.');
+          return;
+        }
+
         // Then update video through dedicated endpoint to ensure ordering first
         const v = (values.videoUrl || "").trim();
-        await apartmentService.updateVideo(Number(id), v || null);
+        if (v) {
+          const vidResp: any = await apartmentService.updateVideo(Number(id), v || null);
+          // If updateVideo returned an error message object, show it but don't prevent success of core update
+          if (vidResp && !vidResp.images && typeof vidResp.message === 'string') {
+            toast.warn(vidResp.message);
+          }
+        }
+
         toast.success("Cập nhật căn hộ thành công!");
       } else {
         // Create then optionally set video after we have an id
-        const created = await apartmentService.create(payload);
+        const created: any = await apartmentService.create(payload);
+        // If server returned validation/errors instead of an entity, surface them
+        if (!created || !created.id) {
+          if (created && typeof created.message === 'string') {
+            toast.error(created.message);
+            return;
+          }
+          if (created && typeof created === 'object') {
+            let shown = false;
+            for (const k of Object.keys(created)) {
+              const v = (created as any)[k];
+              const msg = Array.isArray(v) ? v.join('; ') : String(v || 'Lỗi không xác định');
+              try {
+                setError(k as any, { type: 'server', message: msg });
+                shown = true;
+              } catch {}
+            }
+            if (!shown) toast.error('Có lỗi từ server. Vui lòng kiểm tra lại.');
+            return;
+          }
+
+          toast.error('Tạo căn hộ thất bại. Vui lòng thử lại.');
+          return;
+        }
+
         const v = (values.videoUrl || "").trim();
-        if (v) await apartmentService.updateVideo(created.id, v);
+        if (v) {
+          const vidResp: any = await apartmentService.updateVideo(created.id, v);
+          if (vidResp && typeof vidResp.message === 'string') {
+            toast.warn(vidResp.message);
+          }
+        }
+
         toast.success("Tạo căn hộ thành công!");
       }
       router.push("/quan-ly-chu-nha/danh-muc/can-ho");
