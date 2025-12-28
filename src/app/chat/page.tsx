@@ -28,8 +28,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  // read search params from window when available to avoid using useSearchParams in a context
-  // that Next may attempt to prerender. These are read-once on the client.
+
   const getParam = (k: string) => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(k) : null);
   const convQuery = getParam('c');
   const ownerParam = getParam('ownerId');
@@ -44,7 +43,6 @@ export default function ChatPage() {
   const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
-    // scroll to bottom on messages change
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
@@ -54,7 +52,6 @@ export default function ChatPage() {
     if (!input.trim()) return;
 
     try {
-      // Ensure authenticated
       const hasToken = (typeof window !== 'undefined') && (
         !!localStorage.getItem('access_token') || !!localStorage.getItem('tokenUser') || !!localStorage.getItem('tokenAdmin') || document.cookie.includes('auth_user=')
       );
@@ -64,7 +61,6 @@ export default function ChatPage() {
         return;
       }
 
-      // If there's no active conversation, create one including current user and owner
       let convId = activeConv;
       if (!convId) {
         const me = await userService.getMe().catch(() => null);
@@ -77,14 +73,12 @@ export default function ChatPage() {
         const participantIds = [Number(owner?.id ?? ownerParam), Number(me.id)];
         try {
             const createRes = await conversationService.create(participantIds, apartmentParam ? Number(apartmentParam) : undefined);
-            // If server returned a wrapper with conversation and possible messageError, surface messageError but continue
             if (createRes && (createRes as any).messageError) {
               try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch {}
             }
             const convObj = createRes && (createRes.conversation ? createRes.conversation : createRes);
             const id = convObj?.id ?? (convObj && convObj.id === 0 ? 0 : undefined);
             if (id == null) {
-              // If server didn't return id, try to infer: if createRes is an id or contains 'conversationId'
               if (typeof createRes === 'number') {
                 convId = String(createRes);
               } else if (createRes && (createRes.conversationId || createRes.id)) {
@@ -96,7 +90,6 @@ export default function ChatPage() {
               convId = String(id);
             }
           setActiveConv(convId);
-          // ensure conversation appears in list
             setConversations((s) => {
               try {
                 const toAdd = convObj || createRes;
@@ -107,12 +100,13 @@ export default function ChatPage() {
                 return s;
               }
             });
-          // set owner if not set
           try {
               const participants = Array.isArray((convObj || createRes)?.participants) ? (convObj || createRes).participants : [];
               const other = participants.find((p: any) => Number(p.id) === Number(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me.id)) || participants[0] || null;
             setOwner(other);
           } catch {}
+          // load messages for the newly created conversation
+          try { loadMessagesForConv(convId); } catch (e) {}
         } catch (err: any) {
           console.error('Không thể tạo cuộc trò chuyện', err);
           try { toast.error(typeof err === 'string' ? err : (err?.message || 'Không thể tạo cuộc trò chuyện')); } catch {}
@@ -120,32 +114,23 @@ export default function ChatPage() {
         }
       }
 
-      // Now post the message to convId (include attachments and optional icon)
+      // Post message and optimistically append the returned message (server also emits via socket)
       const res = await conversationService.postMessage(Number(convId), input.trim(), attachments.length ? attachments : undefined, icon ?? undefined);
-      const msg = res ?? res;
-
-      // After posting, fetch authoritative message list for the conversation
-      try {
-        const fetched = await conversationService.getMessages(Number(convId));
-        const msgs = fetched ?? [];
-        const mapped: Message[] = (msgs || []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }));
-        setMessages(mapped);
-        // set owner from current conversation participants if available
-        try {
-          const conv = conversations.find((c) => String(c?.id ?? '') === String(convId));
-          if (conv) {
-            const participants = Array.isArray(conv.participants) ? conv.participants : [];
-            const other = participants.find((p: any) => Number(p.id) !== Number(meId)) || participants[0] || null;
-            setOwner(other);
-          }
-        } catch {}
-      } catch (e) {
-        // fallback: append local temporary message if fetch fails
-        const local: Message = { id: String((msg && msg.id) || Date.now()), fromMe: true, text: (msg && msg.text) || input.trim(), createdAt: (msg && msg.createdAt) || new Date().toISOString(), attachments: (msg && msg.attachments) || attachments, icon: (msg && msg.icon) || icon };
-        setMessages((s) => [...s, local]);
+      const msg = res ?? null;
+      if (msg && msg.id) {
+        setMessages((prev) => {
+          try {
+            if ((prev || []).some((x) => String(x.id) === String(msg.id))) return prev;
+            const mapped: Message = { id: String(msg.id), fromMe: Number(msg.from?.id) === Number(meId), text: msg.text, createdAt: msg.createdAt, attachments: msg.attachments || [], icon: msg.icon ?? null };
+            return [...(prev || []), mapped];
+          } catch { return prev || []; }
+        });
+      } else {
+        // fallback: optimistic local message
+        const local: Message = { id: String(Date.now()), fromMe: true, text: input.trim(), createdAt: new Date().toISOString(), attachments: attachments || [], icon: icon || null };
+        setMessages((s) => [...(s || []), local]);
       }
       setInput('');
-      // clear attachments/icon after send
       setAttachments([]);
       setIcon(null);
     } catch (e) {
@@ -154,7 +139,6 @@ export default function ChatPage() {
     }
   };
 
-  // Load current user and conversation list
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -164,7 +148,6 @@ export default function ChatPage() {
         setMeId(me?.id ?? null);
         const list = await conversationService.listMine().catch(() => []);
         if (!mounted) return;
-        // Normalize response to array
         let arr: any[] = [];
         if (Array.isArray(list)) arr = list;
         else if (list && Array.isArray((list as any).data)) arr = (list as any).data;
@@ -174,15 +157,123 @@ export default function ChatPage() {
           console.warn('conversationService.listMine returned unexpected value, coercing to array:', list);
           arr = [];
         }
+        // If ownerParam is present, prefer showing conversations that include that owner first
         setConversations(arr);
+
+        // If ownerParam provided in URL and we already have a matching conversation, open it
+        try {
+          if (ownerParam) {
+            const found = (arr || []).find((c: any) => {
+              try {
+                const parts = Array.isArray(c?.participants) ? c.participants : [];
+                return parts.some((p: any) => String(p?.id) === String(ownerParam)) || String(c?.owner?.id) === String(ownerParam) || String(c?.user?.id) === String(ownerParam);
+              } catch { return false; }
+            });
+            if (found) {
+              const idStr = String(found?.id);
+              setActiveConv(idStr);
+              // ensure owner is set from participants
+              try {
+                const participants = Array.isArray(found.participants) ? found.participants : [];
+                const other = participants.find((p: any) => String(p?.id) === String(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me?.id)) || participants[0] || null;
+                if (other) setOwner(other);
+              } catch {}
+            }
+          }
+        } catch (e) {}
       } catch (e) {
-        // ignore
+        console.error('Failed to load conversations', e);
+        try { toast.error('Không thể tải danh sách cuộc trò chuyện'); } catch {}
       }
     })();
     return () => { mounted = false; };
   }, []);
 
-  // If chat opened from room (ownerId+apartmentId), create or open conversation and set active
+  // If URL contains a conversation id (c=...), open it on load so refresh preserves the active chat
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!convQuery) return;
+        // ensure we have current user id before loading messages (auth may affect results)
+        if (!meId) {
+          try {
+            const me = await userService.getMe().catch(() => null);
+            setMeId(me?.id ?? null);
+          } catch {}
+        }
+        setActiveConv(String(convQuery));
+        // load messages for the conversation from URL
+        try { await loadMessagesForConv(convQuery); } catch (e) { /* ignore */ }
+      } catch (e) {}
+    })();
+  }, [convQuery]);
+
+  // Helper to load messages and set owner with extra logging for debugging
+  const loadMessagesForConv = async (convIdRaw: string | number | null | undefined) => {
+    try {
+      if (!convIdRaw) return;
+      const convId = Number(convIdRaw);
+      const fetched = await conversationService.getMessages(convId).catch((e) => { throw e; });
+      const mapped: Message[] = (fetched ?? []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }));
+      // If no messages returned, but conversation list has a lastMessageText, show that as a fallback
+      if ((!Array.isArray(mapped) || mapped.length === 0)) {
+        try {
+          const convObj = conversations.find((c) => String(c?.id) === String(convId));
+          if (convObj && (convObj.lastMessageText || convObj.lastMessageAt || convObj.lastMessageFrom)) {
+            const lastFrom = convObj.lastMessageFrom || convObj.lastMessageFrom || (convObj.owner || convObj.user || null);
+            const synthetic: Message = {
+              id: `last-${convObj.id}`,
+              fromMe: Number(lastFrom?.id) === Number(meId),
+              text: String(convObj.lastMessageText || convObj.preview || ''),
+              createdAt: convObj.lastMessageAt || new Date().toISOString(),
+              attachments: [],
+              icon: null,
+            };
+            setMessages([synthetic]);
+          } else {
+            setMessages([]);
+          }
+        } catch (e) {
+          setMessages([]);
+        }
+      } else {
+        setMessages(mapped);
+      }
+
+      // Try to set owner from conversation participants if available, otherwise derive from first non-me message
+      try {
+        const convObj = conversations.find((c) => String(c?.id) === String(convId));
+        if (convObj) {
+          // Prefer explicit owner field if present, otherwise derive from participants or lastMessageFrom
+          const ownerCandidate = convObj.owner || (Array.isArray(convObj.participants) ? convObj.participants.find((p: any) => Number(p.id) !== Number(meId)) : null) || convObj.lastMessageFrom || convObj.user || null;
+          if (ownerCandidate) {
+            setOwner(ownerCandidate);
+            return;
+          }
+        }
+
+        const last = mapped.find((m) => !m.fromMe);
+        if (last) {
+          const raw = (fetched || []).find((x: any) => String(x.id) === String(last.id));
+          if (raw && raw.from) setOwner(raw.from);
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // After messages set, scroll to bottom
+      try {
+        setTimeout(() => {
+          if (listRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+          }
+        }, 30);
+      } catch {}
+    } catch (e) {
+      console.error('[Chat] loadMessagesForConv failed', e);
+    }
+  };
+
   useEffect(() => {
     if (!ownerParam) return;
     if (createdForParams.current) return;
@@ -196,13 +287,12 @@ export default function ChatPage() {
         router.push(`/dang-nhap?next=${encodeURIComponent(next)}`);
         return;
       }
-      // Fetch apartment info (if provided) so header can show it
+
       if (apartmentParam) {
         try {
           const a = await apartmentService.getById(Number(apartmentParam));
           setApartment(a);
         } catch (err: any) {
-          // ignore apartment fetch errors but show a short toast
           try { toast.info('Không thể tải thông tin căn hộ'); } catch {}
         }
       }
@@ -217,19 +307,19 @@ export default function ChatPage() {
         }
         setMeId(me.id ?? null);
 
-  // Compose preset message including apartment info and 'Đang quan tâm'
-  const title = apartment?.title || apartment?.name || (apartmentParam ? `Căn hộ #${apartmentParam}` : 'căn hộ này');
-  const addr = apartment?.address || apartment?.district?.name || '';
-  const preset = `${title}${addr ? ' - ' + addr : ''}\nĐang quan tâm`;
+        // Compose preset message including apartment info and 'Đang quan tâm'
+        const title = apartment?.title || apartment?.name || (apartmentParam ? `Căn hộ #${apartmentParam}` : 'căn hộ này');
+        const addr = apartment?.address || apartment?.district?.name || '';
+        const preset = `${title}${addr ? ' - ' + addr : ''}\nĐang quan tâm`;
 
-  const createRes = await conversationService.create([Number(ownerParam), Number(me.id)], apartmentParam ? Number(apartmentParam) : undefined, preset);
-  // If server returned a wrapper with a messageError, show a warning but continue
-  if (createRes && (createRes as any).messageError) {
-    try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch {}
-  }
-  // createRes may be the conversation object or { conversation, message }
-  const conv = createRes && (createRes.conversation ? createRes.conversation : createRes);
-  const id = conv?.id ?? (conv && conv.id === 0 ? 0 : undefined);
+        const createRes = await conversationService.create([Number(ownerParam), Number(me.id)], apartmentParam ? Number(apartmentParam) : undefined, preset);
+        // If server returned a wrapper with a messageError, show a warning but continue
+        if (createRes && (createRes as any).messageError) {
+          try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch {}
+        }
+        // createRes may be the conversation object or { conversation, message }
+        const conv = createRes && (createRes.conversation ? createRes.conversation : createRes);
+        const id = conv?.id ?? (conv && conv.id === 0 ? 0 : undefined);
         if (id == null) throw new Error('Không nhận được id cuộc trò chuyện từ server');
         createdForParams.current = true;
         const idStr = String(id);
@@ -262,13 +352,9 @@ export default function ChatPage() {
             const mappedAfter: Message[] = [{ id: String(m.id), fromMe: Number(m.from?.id) === Number(me.id), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }];
             setMessages(mappedAfter);
           } else {
-            // otherwise fetch existing messages for the conversation
-            const existing = await conversationService.getMessages(Number(id));
-            const mappedAfter: Message[] = (existing ?? []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(me.id), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }));
-            setMessages(mappedAfter);
+            await loadMessagesForConv(id);
           }
         } catch (err) {
-          // ignore message-fetch errors
         }
       } catch (e) {
         console.error('Failed to create/open conversation from params', e);
@@ -277,7 +363,6 @@ export default function ChatPage() {
     })();
   }, [ownerParam, apartmentParam, router]);
 
-  // Setup socket.io connection and listen for real-time messages
   useEffect(() => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
     if (!baseUrl) return;
@@ -285,7 +370,6 @@ export default function ChatPage() {
     sockRef.current = s;
 
     s.on('connect', () => {
-      // join user room and conversation room if available
       try {
         if (meId) s.emit('join', { room: `user:${meId}` });
         if (activeConv) s.emit('join', { room: `conversation:${activeConv}` });
@@ -296,7 +380,6 @@ export default function ChatPage() {
       try {
         const m = payload?.message;
         if (!m) return;
-        // Only add if it belongs to current active conversation
         if (String(payload?.conversationId) !== String(activeConv)) return;
         setMessages((prev) => {
           const exists = (prev || []).some((x) => String(x.id) === String(m.id));
@@ -324,47 +407,15 @@ export default function ChatPage() {
 
   // When active conversation changes (user clicked a conversation or opened via c=), load messages and owner
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!activeConv) {
-        setMessages([]);
-        return;
-      }
+    if (!activeConv) {
+      setMessages([]);
+      setOwner(null);
+      return;
+    }
 
-      try {
-        const convId = Number(activeConv);
-        // fetch authoritative messages
-        const msgs = await conversationService.getMessages(convId).catch((e) => { throw e; });
-        if (!mounted) return;
-  const mapped: Message[] = (msgs ?? []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }));
-        setMessages(mapped);
-
-        // try to set owner from conversations list if available
-        try {
-          const convObj = conversations.find((c) => String(c?.id) === String(activeConv));
-          if (convObj) {
-            const participants = Array.isArray(convObj.participants) ? convObj.participants : [];
-            const other = participants.find((p: any) => Number(p.id) !== Number(meId)) || participants[0] || null;
-            setOwner(other);
-          } else {
-            // fallback: derive owner from latest message
-            const last = mapped.find((m) => !m.fromMe);
-            if (last) {
-              // try to get sender info from message 'from' if present
-              try {
-                const raw = msgs.find((x: any) => String(x.id) === String(last.id));
-                if (raw && raw.from) setOwner(raw.from);
-              } catch {}
-            }
-          }
-        } catch (e) {}
-      } catch (e: any) {
-        console.error('Lỗi khi tải tin nhắn:', e);
-        try { toast.error((e && (e.message || (e.response && e.response.data && e.response.data.message))) || 'Không thể tải tin nhắn'); } catch {}
-      }
-    })();
-    return () => { mounted = false; };
-  }, [activeConv, meId, conversations]);
+    // load messages once when conversation switches; subsequent new messages come via socket
+    loadMessagesForConv(activeConv as string);
+  }, [activeConv, meId]);
 
   return (
     <div className="min-h-screen bg-slate-50 pt-2">
@@ -376,10 +427,8 @@ export default function ChatPage() {
           </div>
             <div className="divide-y divide-slate-200">
             {conversations.map((c) => {
-              // derive display name: prefer explicit name -> participant (other than me) -> fallback
               const participants = Array.isArray(c?.participants) ? c.participants : [];
               const other = participants.find((p: any) => Number(p.id) !== Number(meId)) || participants[0] || null;
-              // Default to empty string until there is a message or explicit name
               const displayName = (c && (c.name || c.displayName)) || (other && (other.name || other.fullName || other.phone)) || '';
               const lastText = c && (c.last || c.lastMessage || c.preview) || '';
               const idStr = String(c?.id ?? '');
@@ -387,7 +436,18 @@ export default function ChatPage() {
               return (
                 <button
                   key={idStr}
-                  onClick={() => setActiveConv(idStr)}
+                  onClick={async () => {
+                    try {
+                      setActiveConv(idStr);
+                      // set owner from participants if available
+                      try {
+                        const otherLocal = Array.isArray(c?.participants) ? c.participants.find((p: any) => Number(p.id) !== Number(meId)) || c.participants[0] || null : null;
+                        if (otherLocal) setOwner(otherLocal);
+                      } catch {}
+                      // load messages immediately for this conversation
+                      try { await loadMessagesForConv(idStr); } catch (e) {}
+                    } catch (e) {}
+                  }}
                   className={`w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 ${activeConv === idStr ? 'bg-emerald-50' : ''}`}>
                   <div className="w-10 h-10 rounded-full bg-emerald-100 grid place-items-center text-emerald-700 font-semibold">{initial}</div>
                   <div className="min-w-0">
@@ -401,18 +461,27 @@ export default function ChatPage() {
         </aside>
 
         {/* Main chat area */}
-  <main className="lg:col-span-3 bg-white rounded-xl shadow flex flex-col overflow-hidden h-full">
+        <main className="lg:col-span-3 bg-white rounded-xl shadow flex flex-col overflow-hidden h-full">
           <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-md bg-emerald-100 grid place-items-center font-semibold text-emerald-700">{owner ? String((owner.name || owner.fullName || owner.phone || '')).charAt(0) : 'H'}</div>
-              <div className="min-w-0">
-                <div className="font-semibold truncate">{owner ? (owner.name || owner.fullName || owner.phone) : (apartment ? (apartment.title || apartment.name || `Căn hộ #${apartment?.id}`) : 'Hỗ trợ')}</div>
-                {apartment ? (
-                  <div className="text-xs text-slate-500 truncate">{apartment?.title ? `${apartment?.title}${apartment?.address ? ' - ' + apartment?.address : ''}` : (apartment?.address || apartment?.district?.name || '')}</div>
-                ) : (
-                  <div className="text-xs text-slate-500">Hoạt động 5 phút trước</div>
-                )}
-              </div>
+              {/* Compute display name: prefer owner state, then participants from the active conversation, then apartment fallback */}
+              {(() => {
+                const convObj = conversations.find((c) => String(c?.id) === String(activeConv));
+                const participantFromConv = convObj && Array.isArray(convObj.participants) ? (convObj.participants.find((p: any) => Number(p.id) !== Number(meId)) || convObj.participants[0]) : null;
+                const displayParticipant = owner || participantFromConv || null;
+                const initial = displayParticipant ? String((displayParticipant.name || displayParticipant.fullName || displayParticipant.phone || '')).charAt(0) : (apartment ? String((apartment.title || apartment.name || '')).charAt(0) : 'H');
+                const titleName = displayParticipant ? (displayParticipant.name || displayParticipant.fullName || displayParticipant.phone) : (apartment ? (apartment.title || apartment.name || `Căn hộ #${apartment?.id}`) : 'Hỗ trợ');
+                const subtitle = displayParticipant ? 'Hoạt động 5 phút trước' : (apartment ? (apartment?.title ? `${apartment?.title}${apartment?.address ? ' - ' + apartment?.address : ''}` : (apartment?.address || apartment?.district?.name || '')) : 'Hoạt động 5 phút trước');
+                return (
+                  <>
+                    <div className="w-12 h-12 rounded-md bg-emerald-100 grid place-items-center font-semibold text-emerald-700">{initial}</div>
+                    <div className="min-w-0">
+                      <div className="font-semibold truncate">{titleName}</div>
+                      <div className="text-xs text-slate-500 truncate">{subtitle}</div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -420,22 +489,21 @@ export default function ChatPage() {
             <div className="space-y-4">
               {messages.map((m) => {
                 const isMe = m.fromMe;
-                // conversations may have numeric ids; activeConv is string -> normalize compare
                 const conv = conversations.find((c) => String(c?.id ?? '') === String(activeConv));
                 const otherInitial = conv && conv.name ? String(conv.name).charAt(0) : "H";
                 const meInitial = "B";
                 return (
                   <div
                     key={m.id}
-                    className={`flex items-start gap-3 py-3 ${isMe ? "justify-end" : "justify-start"}`}>
+                    className={`flex items-start gap-3 ${isMe ? "justify-end" : "justify-start"}`}>
                     {!isMe && (
                       <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 grid place-items-center font-semibold">{otherInitial}</div>
                     )}
 
                     <div className="flex flex-col">
-                      <div className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800"} rounded-xl px-4 py-2 max-w-[70%]`}>
+                      <div className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800"} rounded-xl px-4 py-2 inline-block break-words whitespace-pre-wrap`}> 
                         {m.icon ? <div className="text-xl mb-1">{m.icon}</div> : null}
-                        {m.text ? <div className="whitespace-pre-wrap">{m.text}</div> : null}
+                        {m.text ? <div>{m.text}</div> : null}
                         {m.attachments && m.attachments.length ? (
                           <div className="mt-2 grid grid-cols-3 gap-2">
                             {m.attachments.map((a: any, i: number) => {

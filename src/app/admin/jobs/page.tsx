@@ -8,6 +8,7 @@ import Pagination from '@/components/Pagination';
 import { jobService } from '@/services/jobService';
 import { jobApplicationService } from '@/services/jobApplicationService';
 import { Job } from '@/type/job';
+import ConfirmModal from '@/components/ConfirmModal';
 
 function AdminJobsPage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ function AdminJobsPage() {
   const [q, setQ] = React.useState<string>(searchParams.get('q') || '');
 
   const [counts, setCounts] = React.useState<Record<number,{ total:number; byStatus: Record<string, number> }>>({});
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [targetId, setTargetId] = React.useState<number | null>(null);
 
   const fetchData = React.useCallback(async () => {
     setLoading(true);
@@ -65,13 +68,8 @@ function AdminJobsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Xoá tin tuyển dụng này?')) return;
-    try {
-      await jobService.remove(id);
-      fetchData();
-    } catch (e) {
-      alert('Không thể xoá');
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   return (
@@ -165,6 +163,25 @@ function AdminJobsPage() {
           );
         })}
       </AdminTable>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá tin tuyển dụng"
+        message={`Bạn có chắc muốn xoá tin tuyển dụng #${targetId ?? ''}?`}
+        onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId) return;
+          try {
+            await jobService.remove(targetId);
+            fetchData();
+          } catch (e) {
+            alert('Không thể xoá');
+          } finally {
+            setConfirmOpen(false);
+            setTargetId(null);
+          }
+        }}
+      />
 
       {/* Pagination */}
       <div className="mt-4">

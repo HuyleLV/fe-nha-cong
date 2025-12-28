@@ -12,6 +12,7 @@ import { buildingService } from "@/services/buildingService";
 import { Building, BuildingStatus } from "@/type/building";
 import { locationService } from "@/services/locationService";
 import type { Location } from "@/type/location";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
@@ -23,6 +24,8 @@ function BuildingAdminListInner() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Building[]>([]);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetBuilding, setTargetBuilding] = useState<Building | null>(null);
   const [meta, setMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
   const [locations, setLocations] = useState<Location[]>([]);
 
@@ -61,7 +64,7 @@ function BuildingAdminListInner() {
       if (v === undefined || v === null || v === "") params.delete(k);
       else params.set(k, String(v));
     }
-    router.push(`/admin/building?${params.toString()}`);
+    router.push(`/admin/danh-muc/toa-nha?${params.toString()}`);
   };
 
   return (
@@ -134,7 +137,7 @@ function BuildingAdminListInner() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => router.push(`/admin/building/${b.id}`)}
+                  onClick={() => router.push(`/admin/danh-muc/toa-nha/${b.id}`)}
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer"
                   title="Sửa tòa nhà"
                 >
@@ -142,7 +145,7 @@ function BuildingAdminListInner() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push(`/admin/building/${b.id}/calendar`)}
+                  onClick={() => router.push(`/admin/danh-muc/toa-nha/${b.id}/calendar`)}
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition cursor-pointer"
                   title="Lịch xem"
                 >
@@ -150,7 +153,7 @@ function BuildingAdminListInner() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push(`/admin/building/${b.id}/rooms`)}
+                  onClick={() => router.push(`/admin/danh-muc/toa-nha/${b.id}/rooms`)}
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-sky-600 text-white rounded-md hover:bg-sky-700 transition cursor-pointer"
                   title="Xem phòng dạng lưới"
                 >
@@ -158,18 +161,7 @@ function BuildingAdminListInner() {
                 </button>
                 <button
                   type="button"
-                  onClick={async () => {
-                    const ok = confirm(`Xóa tòa nhà '${b.name}'?`);
-                    if (!ok) return;
-                    try {
-                      await buildingService.remove(b.id);
-                      setItems((prev) => prev.filter((x) => x.id !== b.id));
-                      setMeta((m) => ({ ...m, total: Math.max(0, m.total - 1) }));
-                      toast.success('Đã xóa');
-                    } catch (e: any) {
-                      toast.error(e?.message || 'Xóa thất bại');
-                    }
-                  }}
+                  onClick={() => { setTargetBuilding(b); setConfirmOpen(true); }}
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer"
                   title="Xóa tòa nhà"
                 >
@@ -187,6 +179,26 @@ function BuildingAdminListInner() {
         onPrev={() => onFilterChange({ page: Math.max(1, meta.page - 1) })}
         onNext={() => onFilterChange({ page: Math.min(meta.pageCount, meta.page + 1) })}
         onPageChange={(p) => onFilterChange({ page: p })}
+      />
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xóa tòa nhà"
+        message={`Bạn có chắc muốn xóa tòa nhà '${targetBuilding?.name ?? ''}'?`}
+        onCancel={() => { setConfirmOpen(false); setTargetBuilding(null); }}
+        onConfirm={async () => {
+          if (!targetBuilding) return;
+          try {
+            await buildingService.remove(targetBuilding.id);
+            setItems((prev) => prev.filter((x) => x.id !== targetBuilding.id));
+            setMeta((m) => ({ ...m, total: Math.max(0, m.total - 1) }));
+            toast.success('Đã xóa');
+          } catch (e: any) {
+            toast.error(e?.message || 'Xóa thất bại');
+          } finally {
+            setConfirmOpen(false);
+            setTargetBuilding(null);
+          }
+        }}
       />
     </div>
   );

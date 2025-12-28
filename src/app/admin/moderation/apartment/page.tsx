@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { Check, X } from "lucide-react";
 import AdminTable from "@/components/AdminTable";
 import Spinner from "@/components/spinner";
+import ConfirmModal from '@/components/ConfirmModal';
 import { apartmentService } from "@/services/apartmentService";
 import { Apartment } from "@/type/apartment";
 import { fNumber } from '@/utils/format-number';
@@ -15,6 +16,9 @@ export default function ModerationApartmentPage() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Apartment[]>([]);
   const [owners, setOwners] = useState<Record<number, User>>({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'approve'|'reject'|null>(null);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const fetch = async () => {
     setLoading(true);
@@ -52,25 +56,15 @@ export default function ModerationApartmentPage() {
   useEffect(() => { fetch(); }, []);
 
   const onApprove = async (id: number) => {
-    if (!confirm('Duyệt căn hộ này để hiển thị trên website?')) return;
-    try {
-      await apartmentService.update(id, { status: 'published', isApproved: true } as any);
-      toast.success('Đã duyệt căn hộ');
-      setItems((prev) => prev.filter((p) => p.id !== id));
-    } catch (e: any) {
-      toast.error(e?.message || 'Duyệt thất bại');
-    }
+    setTargetId(id);
+    setConfirmAction('approve');
+    setConfirmOpen(true);
   };
 
   const onReject = async (id: number) => {
-    if (!confirm('Bạn có chắc muốn từ chối căn hộ này?')) return;
-    try {
-      await apartmentService.update(id, { status: 'archived', isApproved: false } as any);
-      toast.success('Đã từ chối căn hộ');
-      setItems((prev) => prev.filter((p) => p.id !== id));
-    } catch (e: any) {
-      toast.error(e?.message || 'Từ chối thất bại');
-    }
+    setTargetId(id);
+    setConfirmAction('reject');
+    setConfirmOpen(true);
   };
 
   return (
@@ -130,6 +124,31 @@ export default function ModerationApartmentPage() {
                 </td>
               </tr>
             ))}
+            <ConfirmModal
+              open={confirmOpen}
+              title={confirmAction === 'approve' ? 'Duyệt căn hộ' : 'Từ chối căn hộ'}
+              message={confirmAction === 'approve' ? 'Duyệt căn hộ này để hiển thị trên website?' : 'Bạn có chắc muốn từ chối căn hộ này?'}
+              onCancel={() => { setConfirmOpen(false); setConfirmAction(null); setTargetId(null); }}
+              onConfirm={async () => {
+                if (!targetId || !confirmAction) return;
+                try {
+                  if (confirmAction === 'approve') {
+                    await apartmentService.update(targetId, { status: 'published', isApproved: true } as any);
+                    toast.success('Đã duyệt căn hộ');
+                  } else {
+                    await apartmentService.update(targetId, { status: 'archived', isApproved: false } as any);
+                    toast.success('Đã từ chối căn hộ');
+                  }
+                  setItems((prev) => prev.filter((p) => p.id !== targetId));
+                } catch (e: any) {
+                  toast.error(e?.message || (confirmAction === 'approve' ? 'Duyệt thất bại' : 'Từ chối thất bại'));
+                } finally {
+                  setConfirmOpen(false);
+                  setConfirmAction(null);
+                  setTargetId(null);
+                }
+              }}
+            />
           </AdminTable>
         )}
       </div>

@@ -9,6 +9,7 @@ import { formatDateTime } from "@/utils/format-time";
 import { locationService } from "@/services/locationService";
 import { Location, LocationLevel } from "@/type/location";
 import AdminTable from "@/components/AdminTable";
+import ConfirmModal from '@/components/ConfirmModal';
 
 function LevelTag({ level }: { level: LocationLevel }) {
   const map: Record<LocationLevel, string> = {
@@ -35,6 +36,8 @@ export default function CityLocationPage() {
   const [items, setItems] = useState<Location[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const [page, setPage] = useState<number>(1);
   const limit = 10;
@@ -101,18 +104,7 @@ export default function CityLocationPage() {
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 transition cursor-pointer"
-                  onClick={async () => {
-                    const ok = confirm(`Xoá Thành phố "${loc.name}"?`);
-                    if (!ok) return;
-                    try {
-                      await locationService.delete(loc.id);
-                      toast.success("Đã xoá!");
-                      fetchlocation();
-                    } catch (err) {
-                      console.error(err);
-                      toast.error("Xoá thất bại, vui lòng thử lại!");
-                    }
-                  }}
+                  onClick={() => { setTargetId(loc.id); setConfirmOpen(true); }}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -121,6 +113,27 @@ export default function CityLocationPage() {
           </tr>
         ))}
       </AdminTable>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá Thành phố"
+        message={`Xoá Thành phố "${items.find(i=>i.id===targetId)?.name ?? ''}"?`}
+        onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId) return;
+          try {
+            await locationService.delete(targetId);
+            toast.success('Đã xoá!');
+            fetchlocation();
+          } catch (err) {
+            console.error(err);
+            toast.error('Xoá thất bại, vui lòng thử lại!');
+          } finally {
+            setConfirmOpen(false);
+            setTargetId(null);
+          }
+        }}
+      />
 
       <div className="mt-4">
         <Pagination page={page} totalPages={totalPages} onPageChange={(n) => setPage(n)} onPrev={handlePrev} onNext={handleNext} />

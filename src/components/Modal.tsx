@@ -2,19 +2,21 @@
 
 import React from "react";
 
-export default function Modal({ open, title, onClose, children, footer }: {
+export default function Modal({ open, title, onClose, children, footer, maxWidthClass }: {
   open: boolean;
   title?: React.ReactNode;
   onClose: () => void;
   children?: React.ReactNode;
   footer?: React.ReactNode;
+  // Tailwind max-width class, e.g. 'max-w-2xl', 'max-w-md'
+  maxWidthClass?: string;
 }) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-5xl mx-4 max-h-[92vh]">
+  <div className={`relative w-full ${maxWidthClass ?? 'max-w-5xl'} mx-4 max-h-[92vh]`}>
         <div className="rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
           <div className="px-6 py-4 flex items-center justify-between bg-slate-100">
             <div className="text-lg font-semibold text-slate-800">{title}</div>

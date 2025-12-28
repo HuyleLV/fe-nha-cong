@@ -8,6 +8,7 @@ import { PlusCircle, Edit3, Trash2 } from "lucide-react";
 import { bedService } from "@/services/bedService";
 import { Bed } from "@/type/bed";
 import { toast } from "react-toastify";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function Page() {
   const [items, setItems] = useState<Bed[]>([]);
@@ -32,16 +33,13 @@ export default function Page() {
 
   useEffect(() => { load(); }, []);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
+
   const remove = async (id?: number) => {
     if (!id) return;
-    if (!confirm('Bạn có chắc muốn xóa giường này không?')) return;
-    try {
-      await bedService.remove(id);
-      await load();
-      toast.success('Xóa giường thành công');
-    } catch (err: any) {
-      alert(err?.message || 'Xóa thất bại');
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   return (
@@ -68,6 +66,25 @@ export default function Page() {
             </tr>
           ))}
         </AdminTable>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa giường"
+          message={`Bạn có chắc muốn xóa giường #${targetId ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await bedService.remove(targetId);
+              await load();
+              toast.success('Xóa giường thành công');
+            } catch (err: any) {
+              alert(err?.message || 'Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
       </Panel>
     </div>
   );

@@ -9,11 +9,14 @@ import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repe
 import { formatMoneyVND } from '@/utils/format-number';
 import { toast } from "react-toastify";
 import { invoiceService } from "@/services/invoiceService";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function AdminHoaDonPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [meta, setMeta] = useState({ page: 1, limit: 10, totalPages: 1, total: 0 });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
   const router = useRouter();
 
   const load = async (page = 1, limit = 10) => {
@@ -80,14 +83,8 @@ export default function AdminHoaDonPage() {
   const due = totalMoney - collected + totalRefunded;
 
   const onDelete = async (id: number) => {
-    if (!confirm("Xoá hóa đơn này?")) return;
-    try {
-      await invoiceService.remove(id);
-      await load();
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message || "Không xoá được");
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   // Viewer modal state
@@ -370,6 +367,26 @@ export default function AdminHoaDonPage() {
           <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p)=> load(p, meta.limit)} />
         </div>
       </Panel>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá hóa đơn"
+        message={`Bạn chắc chắn muốn xoá hóa đơn #${targetId ?? ''}?`}
+        onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId) return;
+          try {
+            await invoiceService.remove(targetId);
+            await load();
+          } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || "Không xoá được");
+          } finally {
+            setConfirmOpen(false);
+            setTargetId(null);
+          }
+        }}
+      />
 
       {/* Viewer modal */}
       {viewerOpen && viewerId && (

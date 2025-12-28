@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Edit3, Trash2, UserPlus, Calendar, ShoppingCart, FileText, FileCheck, XCircle, PlusCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
+import ConfirmModal from '@/components/ConfirmModal';
 
 type StatusKey = 'new'|'appointment'|'sales'|'deposit_form'|'contract'|'failed';
 
@@ -29,6 +30,8 @@ export default function KhachTiemNangPage(){
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [total, setTotal] = useState<number>(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetRow, setTargetRow] = useState<Row | null>(null);
 
   const load = async (p = page) => {
     setLoading(true);
@@ -63,12 +66,8 @@ export default function KhachTiemNangPage(){
   }, [rows]);
 
   const onDelete = async (r: Row) => {
-    if (!confirm(`Xóa khách hàng \"${r.name}\" ?`)) return;
-    try {
-      await userService.deleteAdminUser(r.id);
-      toast.success('Đã xóa');
-      await load();
-    } catch (err) { console.error(err); toast.error('Lỗi khi xóa'); }
+    setTargetRow(r);
+    setConfirmOpen(true);
   };
 
   const onChangeStatus = async (id: number, status: StatusKey | null) => {
@@ -142,6 +141,21 @@ export default function KhachTiemNangPage(){
           ))}
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá khách hàng"
+          message={`Xoá khách hàng "${targetRow?.name ?? ''}" ?`}
+          onCancel={() => { setConfirmOpen(false); setTargetRow(null); }}
+          onConfirm={async () => {
+            if (!targetRow) return;
+            try {
+              await userService.deleteAdminUser(targetRow.id);
+              toast.success('Đã xóa');
+              await load();
+            } catch (err) { console.error(err); toast.error('Lỗi khi xóa'); }
+            finally { setConfirmOpen(false); setTargetRow(null); }
+          }}
+        />
       </Panel>
     </div>
   );

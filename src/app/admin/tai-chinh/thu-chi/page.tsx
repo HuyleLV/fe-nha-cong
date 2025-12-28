@@ -8,6 +8,7 @@ import { thuChiService } from '@/services/thuChiService';
 import { buildingService } from '@/services/buildingService';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 import { toast } from 'react-toastify';
 
 export default function AdminThuChiPage() {
@@ -15,6 +16,8 @@ export default function AdminThuChiPage() {
   const [items, setItems] = useState<any[]>([]);
   const [meta, setMeta] = useState({ page: 1, limit: 10, totalPages: 1, total: 0 });
   const [buildings, setBuildings] = useState<any[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const load = async (page = 1, limit = 10) => {
     try {
@@ -69,13 +72,32 @@ export default function AdminThuChiPage() {
               <td className="py-3 text-sm text-slate-700 text-center">
                 <div className="inline-flex items-center gap-2">
                   <button onClick={() => router.push(`/admin/tai-chinh/thu-chi/${r.id}`)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></button>
-                  <button onClick={async()=>{ if (!confirm('Xóa?')) return; try{ await thuChiService.remove(r.id); await load(meta.page, meta.limit); }catch(e){ console.error(e); toast.error('Xóa thất bại')} }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <button onClick={() => { setTargetId(r.id); setConfirmOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>
             </tr>
           ))}
         </AdminTable>
         <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p)=> load(p, meta.limit)} />
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa phiếu thu/chi"
+          message={`Bạn có chắc muốn xóa phiếu #${targetId ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await thuChiService.remove(targetId);
+              await load(meta.page, meta.limit);
+            } catch (e) {
+              console.error(e);
+              toast.error('Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
       </Panel>
     </div>
   );

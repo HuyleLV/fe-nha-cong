@@ -10,6 +10,7 @@ import { Trash2, Edit, Plus, RotateCcw } from "lucide-react";
 import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import { formatDateTime } from "@/utils/format-time";
+import ConfirmModal from '@/components/ConfirmModal';
 
 function AdminUsersPage() {
   const router = useRouter();
@@ -17,6 +18,8 @@ function AdminUsersPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<User[]>([]);
   const [meta, setMeta] = useState<any>({ page: 1, limit: 10, total: 0, pageCount: 0 });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const page = Number(search?.get("page") || 1);
   const limit = Number(search?.get("limit") || 10);
@@ -44,14 +47,8 @@ function AdminUsersPage() {
   useEffect(() => { fetchData(); }, [page, limit]);
 
   const onDelete = async (id: number) => {
-    if (!confirm("Xoá người dùng này?")) return;
-    try {
-      await userService.deleteAdminUser(id);
-      toast.success("Đã xoá thành công");
-      fetchData();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Không xoá được người dùng");
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   const goto = (p: number) => {
@@ -150,6 +147,26 @@ function AdminUsersPage() {
           </tr>
         ))}
       </AdminTable>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá người dùng"
+        message={`Bạn muốn xoá người dùng #${targetId ?? ''}?`}
+        onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId) return;
+          try {
+            await userService.deleteAdminUser(targetId);
+            toast.success('Đã xoá thành công');
+            fetchData();
+          } catch (e: any) {
+            toast.error(e?.response?.data?.message || 'Không xoá được người dùng');
+          } finally {
+            setConfirmOpen(false);
+            setTargetId(null);
+          }
+        }}
+      />
 
       {/* Pagination */}
       <div className="mt-4">

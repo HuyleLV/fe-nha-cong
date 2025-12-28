@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import { formatMoneyVND } from '@/utils/format-number';
 import { tContractStatus } from '@/app/admin/i18n';
+import ConfirmModal from '@/components/ConfirmModal';
 
 type Row = ContractRow;
 
@@ -20,6 +21,8 @@ export default function HopDongAdminPage(){
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [total, setTotal] = useState<number>(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetRow, setTargetRow] = useState<Row | null>(null);
 
   const load = async (p = page) => {
     setLoading(true);
@@ -51,14 +54,8 @@ export default function HopDongAdminPage(){
   }, []);
 
   const onDelete = async (r: Row) => {
-    if (!confirm(`Xóa hợp đồng #${r.id} ?`)) return;
-    try {
-      const id = Number(r.id);
-      if (!id) { toast.error('Không tìm thấy id hợp đồng'); return; }
-      await contractService.remove(id);
-      toast.success('Đã xóa hợp đồng');
-      await load();
-    } catch (err) { console.error(err); toast.error('Lỗi khi xóa hợp đồng'); }
+    setTargetRow(r);
+    setConfirmOpen(true);
   };
 
   return (
@@ -138,6 +135,23 @@ export default function HopDongAdminPage(){
           )}
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá hợp đồng"
+          message={`Xoá hợp đồng #${targetRow?.id ?? ''} ?`}
+          onCancel={() => { setConfirmOpen(false); setTargetRow(null); }}
+          onConfirm={async () => {
+            if (!targetRow) return;
+            try {
+              const id = Number(targetRow.id);
+              if (!id) { toast.error('Không tìm thấy id hợp đồng'); return; }
+              await contractService.remove(id);
+              toast.success('Đã xóa hợp đồng');
+              await load();
+            } catch (err) { console.error(err); toast.error('Lỗi khi xóa hợp đồng'); }
+            finally { setConfirmOpen(false); setTargetRow(null); }
+          }}
+        />
       </Panel>
     </div>
   );

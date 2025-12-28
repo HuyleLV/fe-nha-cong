@@ -9,6 +9,7 @@ import { meterReadingService } from '@/services/meterReadingService';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { fNumber } from '@/utils/format-number';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function AdminGhiChiSoPage(){
   const translateMeterType = (t?: string) => {
@@ -21,6 +22,8 @@ export default function AdminGhiChiSoPage(){
   const [loading, setLoading] = useState(false);
   const [meta, setMeta] = useState({ page: 1, limit: 10, totalPages: 1, total: 0 });
   const [stats, setStats] = useState({ notFinalized: 0, reviewed: 0, notReviewed: 0, totalConsumption: 0 });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
   const router = useRouter();
   const [approvingIds, setApprovingIds] = useState<number[]>([]);
 
@@ -82,14 +85,8 @@ export default function AdminGhiChiSoPage(){
   useEffect(() => { load(meta.page, meta.limit); loadStats(); }, []);
 
   const onDelete = async (id: number) => {
-    if (!confirm('Xoá ghi chỉ số này?')) return;
-    try {
-      await meterReadingService.remove(id);
-      await load();
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message || 'Không xoá được');
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   return (
@@ -183,6 +180,25 @@ export default function AdminGhiChiSoPage(){
         <div className="mt-4">
           <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p) => load(p, meta.limit)} />
         </div>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá ghi chỉ số"
+          message={`Xoá ghi chỉ số #${targetId ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await meterReadingService.remove(targetId);
+              await load();
+            } catch (e: any) {
+              console.error(e);
+              toast.error(e?.message || 'Không xoá được');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
       </Panel>
     </div>
   );

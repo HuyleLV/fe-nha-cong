@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 
 import { viewingService, type Viewing } from "@/services/viewingService";
 import { apartmentService } from "@/services/apartmentService";
+import ConfirmModal from '@/components/ConfirmModal';
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -27,6 +28,7 @@ export default function ViewingAdminDetailPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Viewing | null>(null);
   const [apartmentTitle, setApartmentTitle] = useState<string>("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -128,20 +130,30 @@ export default function ViewingAdminDetailPage() {
           <button
             className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
             onClick={async () => {
-              if (!confirm('Xoá lịch này?')) return;
-              try {
-                await viewingService.adminRemove(data.id);
-                toast.success('Đã xoá lịch');
-                router.replace('/admin/viewings');
-              } catch (e: any) {
-                toast.error(e?.message || 'Không thể xoá');
-              }
+              setConfirmOpen(true);
             }}
           >
             <Trash2 className="w-4 h-4 inline-block mr-1" /> Xoá
           </button>
         </div>
       </Section>
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá lịch" 
+        message={`Xoá lịch #${data?.id ?? ''}?`}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          try {
+            await viewingService.adminRemove(data!.id);
+            toast.success('Đã xoá lịch');
+            router.replace('/admin/viewings');
+          } catch (e: any) {
+            toast.error(e?.message || 'Không thể xoá');
+          } finally {
+            setConfirmOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -679,9 +679,17 @@ export default function HostApartmentFormPage() {
           {/* Title & slug */}
           <Section title="Tiêu đề & Permalink">
             <div className="space-y-3">
-              <input className={inputCls} placeholder="Nhập tiêu đề căn hộ…" {...register("title", { required: "Vui lòng nhập tiêu đề căn hộ" })} />
-              {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
-
+                  <label className="block text-sm font-medium text-slate-700">
+                    Tiêu đề <span className="text-red-600 ml-1">*</span>
+                  </label>
+                  <input
+                    className={inputCls}
+                    placeholder="Nhập tiêu đề căn hộ…"
+                    aria-required="true"
+                    required
+                    {...register("title", { required: "Vui lòng nhập tiêu đề căn hộ" })}
+                  />
+                {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
               <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-slate-400" />
                 <span className="font-medium">Permalink:</span>
@@ -797,18 +805,23 @@ export default function HostApartmentFormPage() {
         <div className="space-y-6">
           <Section title="Khu vực & Trạng thái">
             <div className="space-y-4">
+              <label className="block text-sm text-slate-600 mb-1">
+                Khu vực <span className="text-red-600 ml-1">*</span>
+              </label>
               <Controller
                 control={control}
                 name="locationId"
                 rules={{ required: "Vui lòng chọn khu vực" }}
                 render={({ field }) => (
-                  <LocationLookup
-                    value={selectedLocation}
-                    onChange={(loc) => {
-                      setSelectedLocation(loc);
-                      field.onChange(loc?.id);
-                    }}
-                  />
+                  <div aria-required="true">
+                    <LocationLookup
+                      value={selectedLocation}
+                      onChange={(loc) => {
+                        setSelectedLocation(loc);
+                        field.onChange(loc?.id);
+                      }}
+                    />
+                  </div>
                 )}
               />
               {errors.locationId && <p className="text-red-600 text-sm">{String(errors.locationId.message)}</p>}
@@ -922,8 +935,8 @@ export default function HostApartmentFormPage() {
               </div>
 
               <div className="my-2">
-                <label className="block text-sm text-slate-600 mb-1">Giá thuê</label>
-                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
+                <label className="block text-sm text-slate-600 mb-1">Giá thuê <span className="text-red-600 ml-1">*</span></label>
+                <input inputMode="numeric" aria-required="true" required className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
                 {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
               </div>
               <div className="my-2">

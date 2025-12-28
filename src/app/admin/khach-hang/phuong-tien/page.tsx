@@ -5,12 +5,15 @@ import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from '@/components/AdminTable';
 import Link from 'next/link';
 import { PlusCircle, Edit3, Trash2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 
 export default function AdminPhuongTienPage(){
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -44,22 +47,32 @@ export default function AdminPhuongTienPage(){
               <td className="py-3 text-sm text-slate-700 text-center">
                 <div className="inline-flex items-center gap-2">
                   <Link href={`/admin/khach-hang/phuong-tien/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></Link>
-                  <button onClick={async () => {
-                    if (!confirm('Bạn có chắc muốn xóa phương tiện này không?')) return;
-                    try {
-                      await vehicleService.remove(it.id);
-                      toast.success('Xóa phương tiện thành công');
-                      await load();
-                    } catch (err: any) {
-                      console.error(err);
-                      toast.error(err?.response?.data?.message ?? 'Xóa thất bại');
-                    }
-                  }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <button onClick={() => { setTargetId(it.id); setConfirmOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>
             </tr>
           ))}
         </AdminTable>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa phương tiện"
+          message={`Bạn có chắc muốn xóa phương tiện #${targetId ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await vehicleService.remove(targetId);
+              toast.success('Xóa phương tiện thành công');
+              await load();
+            } catch (err: any) {
+              console.error(err);
+              toast.error(err?.response?.data?.message ?? 'Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
       </Panel>
 
       {/* create/edit page will be used instead of a modal */}

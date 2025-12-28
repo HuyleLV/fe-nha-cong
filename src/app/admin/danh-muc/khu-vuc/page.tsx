@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { locationService } from "@/services/locationService";
 import { LocationLevel } from "@/type/location";
 import Spinner from "@/components/spinner";
+import ConfirmModal from "@/components/ConfirmModal";
 
 type District = { id: string; name: string };
 type Area = { id: string; name: string; districtId: string; buildingCount?: number };
@@ -23,6 +24,8 @@ function KhuVucManager() {
 
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetArea, setTargetArea] = useState<Area | null>(null);
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -65,17 +68,10 @@ function KhuVucManager() {
   // create/edit moved to route-based pages (src/app/admin/danh-muc/khu-vuc/[id]/page.tsx)
 
   const remove = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa khu vực này?')) return;
-    setActionLoading(true);
-    try {
-      await locationService.delete(Number(id));
-      setAreas((cur) => cur.filter((it) => it.id !== id));
-      toast.success('Xóa khu vực thành công');
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Lỗi khi xóa');
-    } finally {
-      setActionLoading(false);
-    }
+    // launch confirm modal
+    const found = areas.find(a => a.id === id) ?? null;
+    setTargetArea(found);
+    setConfirmOpen(true);
   };
 
   const districtMap = useMemo(() => { const m: Record<string, string> = {}; districts.forEach((d) => (m[d.id] = d.name)); return m; }, [districts]);
@@ -135,6 +131,28 @@ function KhuVucManager() {
             onPageChange={(p: number) => setPage(p)}
           />
         </div>
+
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa khu vực"
+          message={`Bạn có chắc muốn xóa khu vực '${targetArea?.name ?? ''}'?`}
+          onCancel={() => { setConfirmOpen(false); setTargetArea(null); }}
+          onConfirm={async () => {
+            if (!targetArea) return;
+            setActionLoading(true);
+            try {
+              await locationService.delete(Number(targetArea.id));
+              setAreas((cur) => cur.filter((it) => it.id !== targetArea.id));
+              toast.success('Xóa khu vực thành công');
+            } catch (err: any) {
+              toast.error(err?.message ?? 'Lỗi khi xóa');
+            } finally {
+              setActionLoading(false);
+              setConfirmOpen(false);
+              setTargetArea(null);
+            }
+          }}
+        />
 
         {/* Create/edit moved to route pages. Modal removed. */}
       </Panel>

@@ -11,6 +11,7 @@ import { buildingService } from "@/services/buildingService";
 import { apartmentService } from "@/services/apartmentService";
 import { formatMoneyVND } from "@/utils/format-number";
 import { toast } from "react-toastify";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function Page() {
   const [items, setItems] = useState<Asset[]>([]);
@@ -43,16 +44,13 @@ export default function Page() {
 
   useEffect(() => { load(); }, []);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
+
   const remove = async (id?: number) => {
     if (!id) return;
-    if (!confirm('Bạn có chắc muốn xóa tài sản này không?')) return;
-    try {
-      await assetService.remove(id);
-      toast.success('Đã xóa tài sản');
-      await load();
-    } catch (err: any) {
-      toast.error(err?.message || 'Xóa thất bại');
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   return (
@@ -87,6 +85,25 @@ export default function Page() {
             </tr>
           ))}
         </AdminTable>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá tài sản"
+          message={`Bạn có chắc muốn xóa tài sản #${targetId ?? ''} ?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await assetService.remove(targetId);
+              toast.success('Đã xóa tài sản');
+              await load();
+            } catch (err: any) {
+              toast.error(err?.message || 'Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
       </Panel>
     </div>
   );

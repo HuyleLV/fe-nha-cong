@@ -98,9 +98,9 @@ axiosClient.interceptors.request.use(
     }
 
     // Nếu bạn muốn hỗ trợ cookie-based auth (trong SSR)
-    if (typeof window === "undefined") {
+      // Always send credentials (cookies) so cookie-based auth works in browser and SSR.
+      // The server must allow credentials (Access-Control-Allow-Credentials) for CORS.
       config.withCredentials = true;
-    }
 
     return config;
   },

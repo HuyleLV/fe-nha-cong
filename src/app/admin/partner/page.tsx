@@ -9,6 +9,7 @@ import AdminTable from "@/components/AdminTable";
 import { toast } from "react-toastify";
 import type { PartnerLead, PartnerRole, PartnerStatus } from "@/type/partners";
 import Pagination from "@/components/Pagination";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function PartnerAdminPage() {
   const [partners, setPartners] = useState<PartnerLead[]>([]);
@@ -18,6 +19,9 @@ export default function PartnerAdminPage() {
   const [role, setRole] = useState<PartnerRole | "">("");
   const [status, setStatus] = useState<PartnerStatus | "">("");
   const [q, setQ] = useState<string>("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'cancel'|'delete'|null>(null);
+  const [targetId, setTargetId] = useState<number | null>(null);
   const router = useRouter();
   const limit = 10;
 
@@ -195,32 +199,19 @@ export default function PartnerAdminPage() {
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-amber-500 text-white rounded-md hover:bg-amber-600 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={p.status === 'approved' || p.status === 'cancelled'}
                   onClick={async () => {
-                    const ok = confirm('Huỷ lead này?');
-                    if (!ok) return;
-                    try {
-                      await partnerService.cancel(p.id);
-                      toast.success("Đã huỷ lead");
-                      fetchPartners();
-                    } catch (err: any) {
-                      toast.error(err?.message || "Huỷ thất bại");
-                    }
+                    setTargetId(p.id);
+                    setConfirmAction('cancel');
+                    setConfirmOpen(true);
                   }}
                 >
                   <Ban size={14} />
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 h-8 px-3 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 transition cursor-pointer"
-                  onClick={async () => {
-                    const ok = confirm("Xoá lead này?");
-                    if (!ok) return;
-                    try {
-                      await partnerService.delete(p.id);
-                      toast.success("Đã xoá lead!");
-                      fetchPartners();
-                    } catch (err) {
-                      console.error(err);
-                      toast.error("Xoá thất bại, vui lòng thử lại!");
-                    }
+                  onClick={() => {
+                    setTargetId(p.id);
+                    setConfirmAction('delete');
+                    setConfirmOpen(true);
                   }}
                 >
                   <Trash2 size={14} />
@@ -230,6 +221,32 @@ export default function PartnerAdminPage() {
           </tr>
         ))}
       </AdminTable>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title={confirmAction === 'cancel' ? 'Huỷ lead' : 'Xoá lead'}
+        message={confirmAction === 'cancel' ? 'Huỷ lead này?' : 'Xoá lead này?'}
+        onCancel={() => { setConfirmOpen(false); setConfirmAction(null); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId || !confirmAction) return;
+          try {
+            if (confirmAction === 'cancel') {
+              await partnerService.cancel(targetId);
+              toast.success('Đã huỷ lead');
+            } else {
+              await partnerService.delete(targetId);
+              toast.success('Đã xoá lead!');
+            }
+            fetchPartners();
+          } catch (err: any) {
+            toast.error(err?.message || 'Thao tác thất bại');
+          } finally {
+            setConfirmOpen(false);
+            setConfirmAction(null);
+            setTargetId(null);
+          }
+        }}
+      />
 
       <Pagination
         page={page}

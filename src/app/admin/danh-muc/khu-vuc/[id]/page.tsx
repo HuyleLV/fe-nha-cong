@@ -7,6 +7,7 @@ import { Save, CheckCircle2, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { locationService } from "@/services/locationService";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function Page() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function Page() {
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -105,17 +107,7 @@ export default function Page() {
   const remove = async () => {
     if (isCreate) return;
     if (!id) return;
-    if (!confirm("Bạn có chắc muốn xóa khu vực này?")) return;
-    setActionLoading(true);
-    try {
-      await locationService.delete(Number(id));
-      toast.success("Xóa khu vực thành công");
-      router.push("/admin/danh-muc/khu-vuc");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Lỗi khi xóa");
-    } finally {
-      setActionLoading(false);
-    }
+    setConfirmOpen(true);
   };
 
   return (
@@ -181,5 +173,25 @@ export default function Page() {
         </div>
       </div>
     </div>
+    <ConfirmModal
+      open={confirmOpen}
+      title="Xoá khu vực"
+      message={`Bạn có chắc muốn xóa khu vực "${name || id}"?`}
+      onCancel={() => setConfirmOpen(false)}
+      onConfirm={async () => {
+        if (!id) return;
+        setActionLoading(true);
+        try {
+          await locationService.delete(Number(id));
+          toast.success('Xóa khu vực thành công');
+          router.push('/admin/danh-muc/khu-vuc');
+        } catch (err: any) {
+          toast.error(err?.message ?? 'Lỗi khi xóa');
+        } finally {
+          setActionLoading(false);
+          setConfirmOpen(false);
+        }
+      }}
+    />
   );
 }

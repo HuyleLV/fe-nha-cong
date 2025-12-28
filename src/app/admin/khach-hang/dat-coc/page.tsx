@@ -12,6 +12,7 @@ import { apartmentService } from '@/services/apartmentService';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 import { fNumber } from '@/utils/format-number';
+import ConfirmModal from '@/components/ConfirmModal';
 
 type Row = { id: number; status?: string; buildingId?: number; apartmentId?: number; customerInfo?: string; customerName?: string | null; customerPhone?: string | null; depositDate?: string; rentAmount?: number; depositAmount?: number };
 
@@ -23,6 +24,8 @@ export default function DatCocAdminPage(){
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [total, setTotal] = useState<number>(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetRow, setTargetRow] = useState<Row | null>(null);
 
   const [filter, setFilter] = useState<'all'|'pending'|'signed'|'cancelled'>('all');
 
@@ -64,12 +67,8 @@ export default function DatCocAdminPage(){
   }, []);
 
   const onDelete = async (r: Row) => {
-    if (!confirm(`Xóa đặt cọc #${r.id} ?`)) return;
-    try {
-      await depositService.remove(r.id!);
-      toast.success('Đã xóa');
-      await load();
-    } catch (err) { console.error(err); toast.error('Lỗi khi xóa'); }
+    setTargetRow(r);
+    setConfirmOpen(true);
   };
 
   const updateStatus = async (id: number, status: string) => {
@@ -204,6 +203,21 @@ export default function DatCocAdminPage(){
           ))}
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa đặt cọc"
+          message={`Xóa đặt cọc #${targetRow?.id ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetRow(null); }}
+          onConfirm={async () => {
+            if (!targetRow) return;
+            try {
+              await depositService.remove(targetRow.id!);
+              toast.success('Đã xóa');
+              await load();
+            } catch (err) { console.error(err); toast.error('Lỗi khi xóa'); }
+            finally { setConfirmOpen(false); setTargetRow(null); }
+          }}
+        />
       </Panel>
     </div>
   );

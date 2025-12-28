@@ -6,6 +6,7 @@ import Panel from "../../components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from "@/components/Pagination";
 import Spinner from "@/components/spinner";
+import Modal from "@/components/Modal";
 import { PlusCircle, Edit3, Trash2, CheckCircle, Key, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { apartmentService } from "@/services/apartmentService";
 import { toast } from "react-toastify";
@@ -60,6 +61,8 @@ export default function Page() {
   const [countReserved, setCountReserved] = useState<number | null>(null);
   const [countVacant, setCountVacant] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<'sap_trong'|'o_ngay'|'het_phong'|undefined>(undefined);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title?: string } | null>(null);
 
   const fetch = async (p = page, l = limit) => {
     setLoading(true);
@@ -210,12 +213,35 @@ export default function Page() {
                 <div className="inline-flex items-center gap-2">
                   <button onClick={() => router.push(`/quan-ly-chu-nha/danh-muc/can-ho/${it.id}`)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></button>
                   <button onClick={() => router.push(`/quan-ly-chu-nha/danh-muc/can-ho/${it.id}/calendar`)} className="inline-flex items-center justify-center p-2 rounded-md bg-sky-600 text-white hover:bg-sky-700" title="Xem lịch"><CalendarIcon className="w-4 h-4"/></button>
-                  <button onClick={async () => { try { if (!confirm('Bạn có chắc muốn xóa căn hộ này?')) return; await apartmentService.delete(it.id); toast.success('Xóa thành công'); fetch(page, limit); fetchCounts(); } catch (e: any) { toast.error(e?.message || 'Xóa thất bại'); } }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <button onClick={() => { setDeleteTarget({ id: it.id, title: it.title }); setDeleteModalOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>
             </tr>
           ))}
         </AdminTable>
+
+  <Modal open={deleteModalOpen} title="Xác nhận xóa" maxWidthClass="max-w-md" onClose={() => { setDeleteModalOpen(false); setDeleteTarget(null); }} footer={(
+          <div className="flex justify-end gap-2">
+            <button className="px-3 py-2 rounded-md bg-slate-100" onClick={() => { setDeleteModalOpen(false); setDeleteTarget(null); }}>Hủy</button>
+            <button className="px-3 py-2 rounded-md bg-red-600 text-white" onClick={async () => {
+              if (!deleteTarget) return;
+              try {
+                await apartmentService.delete(deleteTarget.id);
+                toast.success('Xóa thành công');
+                setDeleteModalOpen(false);
+                setDeleteTarget(null);
+                fetch(page, limit);
+                fetchCounts();
+              } catch (e: any) {
+                toast.error(e?.message || 'Xóa thất bại');
+              }
+            }}>Xóa</button>
+          </div>
+        )}>
+          <div>
+            <p>Bạn có chắc muốn xóa căn hộ <strong>{deleteTarget?.title ?? ''}</strong> không? Hành động này không thể hoàn tác.</p>
+          </div>
+        </Modal>
 
         <div className="mt-4">
           <Pagination page={page} totalPages={meta?.pageCount ?? 1} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(meta?.pageCount ?? 1, p + 1))} onPageChange={(p) => setPage(p)} />

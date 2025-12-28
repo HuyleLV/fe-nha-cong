@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Edit3, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
+import ConfirmModal from '@/components/ConfirmModal';
 
 type CustomerRow = {
   id: number;
@@ -27,6 +28,8 @@ export default function AdminCuDanPage(){
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(20);
   const [total, setTotal] = useState<number>(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetRow, setTargetRow] = useState<CustomerRow | null>(null);
 
   const load = async (p = page) => {
     setLoading(true);
@@ -58,15 +61,8 @@ export default function AdminCuDanPage(){
   useEffect(() => { load(1); }, []);
 
   const onDelete = async (r: CustomerRow) => {
-    if (!confirm(`Xóa khách hàng "${r.name}" ?`)) return;
-    try {
-      await userService.deleteAdminUser(r.id);
-      toast.success('Đã xóa');
-      await load();
-    } catch (err) {
-      console.error(err);
-      toast.error('Lỗi khi xóa');
-    }
+    setTargetRow(r);
+    setConfirmOpen(true);
   };
 
   return (
@@ -115,6 +111,22 @@ export default function AdminCuDanPage(){
           )}
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
+
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá cư dân"
+          message={`Xoá cư dân "${targetRow?.name ?? ''}" ?`}
+          onCancel={() => { setConfirmOpen(false); setTargetRow(null); }}
+          onConfirm={async () => {
+            if (!targetRow) return;
+            try {
+              await userService.deleteAdminUser(targetRow.id);
+              toast.success('Đã xóa');
+              await load();
+            } catch (err) { console.error(err); toast.error('Lỗi khi xóa'); }
+            finally { setConfirmOpen(false); setTargetRow(null); }
+          }}
+        />
 
       </Panel>
     </div>

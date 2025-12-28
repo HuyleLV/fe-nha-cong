@@ -19,6 +19,7 @@ import { formatMoneyVND } from "@/utils/format-number";
 import LocationLookup from "../../../components/locationLookup";
 import type { Location } from "@/type/location";
 import { tApartmentStatus } from "../../../i18n";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
@@ -44,6 +45,7 @@ function BuildingAdminDetailInner() {
   const [loading, setLoading] = useState<boolean>(isEdit);
   const [detail, setDetail] = useState<Building | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Apartments pagination/state
   const aPage = Number(sp.get("aPage") || 1);
@@ -124,8 +126,8 @@ function BuildingAdminDetailInner() {
   });
   setSelectedLocation(b.locationId ? { id: b.locationId, name: null, slug: null, level: "District", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as unknown as Location : null);
       } catch (e: any) {
-        toast.error(e?.message || "Không tải được tòa nhà");
-        router.replace("/admin/building");
+  toast.error(e?.message || "Không tải được tòa nhà");
+  router.replace("/admin/danh-muc/toa-nha");
         return;
       } finally {
         setLoading(false);
@@ -164,7 +166,7 @@ function BuildingAdminDetailInner() {
       if (isEdit) await buildingService.update(Number(id), payload);
       else await buildingService.create(payload);
       toast.success(isEdit ? "Cập nhật tòa nhà thành công" : "Tạo tòa nhà thành công");
-      if (!isEdit) router.replace("/admin/building");
+  if (!isEdit) router.replace("/admin/danh-muc/toa-nha");
     } catch (e: any) {
       toast.error(e?.message || "Lưu tòa nhà thất bại");
     }
@@ -174,21 +176,14 @@ function BuildingAdminDetailInner() {
 
   const onDelete = async () => {
     if (!isEdit) return;
-    if (!confirm("Xoá tòa nhà này?")) return;
-    try {
-      await buildingService.remove(Number(id));
-      toast.success("Đã xoá tòa nhà");
-      router.replace("/admin/building");
-    } catch (e: any) {
-      toast.error(e?.message || "Không xoá được");
-    }
+    setConfirmOpen(true);
   };
 
   const setParam = (key: string, val: string | number | undefined) => {
     const params = new URLSearchParams(sp.toString());
     if (val === undefined || val === "") params.delete(key);
     else params.set(key, String(val));
-    router.replace(`/admin/building/${id}?${params.toString()}`);
+  router.replace(`/admin/danh-muc/toa-nha/${id}?${params.toString()}`);
   };
 
   if (isEdit && loading) {
@@ -381,7 +376,24 @@ function BuildingAdminDetailInner() {
         }} />
       )}
 
-      {/* Lịch đặt phòng đã được chuyển sang trang riêng: /admin/building/[id]/calendar */}
+  {/* Lịch đặt phòng đã được chuyển sang trang riêng: /admin/danh-muc/toa-nha/[id]/calendar */}
+    <ConfirmModal
+      open={confirmOpen}
+      title="Xóa tòa nhà"
+      message={`Bạn có chắc muốn xóa tòa nhà '${form.name || detail?.name || ''}'?`}
+      onCancel={() => setConfirmOpen(false)}
+      onConfirm={async () => {
+        try {
+          await buildingService.remove(Number(id));
+          toast.success("Đã xoá tòa nhà");
+          router.replace("/admin/danh-muc/toa-nha");
+        } catch (e: any) {
+          toast.error(e?.message || "Không xoá được");
+        } finally {
+          setConfirmOpen(false);
+        }
+      }}
+    />
     </div>
   );
 }

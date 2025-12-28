@@ -10,6 +10,7 @@ import { PlusCircle, Edit3, Trash2, CheckCircle, Key, Clock, Calendar as Calenda
 import { apartmentService } from "@/services/apartmentService";
 import { toast } from "react-toastify";
 import { fNumber } from '@/utils/format-number';
+import ConfirmModal from "@/components/ConfirmModal";
 
 type Row = {
   id: number;
@@ -55,6 +56,9 @@ export default function Page() {
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [meta, setMeta] = useState<{ total: number; page: number; limit: number; pageCount: number }>({ total: 0, page: 1, limit: 10, pageCount: 1 });
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetApartment, setTargetApartment] = useState<Row | null>(null);
 
   const [countOccupied, setCountOccupied] = useState<number | null>(null);
   const [countReserved, setCountReserved] = useState<number | null>(null);
@@ -163,11 +167,11 @@ export default function Page() {
           </button>
         </div>
 
-        <AdminTable headers={["Mã","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Trạng thái","Đã duyệt","Hành động"]}>
+        <AdminTable headers={["Mã","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Chủ nhà","Trạng thái","Đã duyệt","Hành động"]}>
           {loading ? (
-            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
           ) : displayed.length === 0 ? (
-            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
           ) : displayed.map((it) => (
             <tr key={it.id} className="text-[14px]">
               <td className="px-4 py-3 text-center">{it.roomCode ?? it.id}</td>
@@ -176,6 +180,19 @@ export default function Page() {
               <td className="px-4 py-3 text-center">{it.rentPrice ? fNumber(Number(String(it.rentPrice))) : '-'} đ</td>
               <td className="px-4 py-3 text-center">{it.depositAmount ?? '-'}</td>
               <td className="px-4 py-3 text-center">{it.areaM2 ?? '-'}</td>
+              <td className="px-4 py-3 text-left">
+                {(() => {
+                  const raw = it.occupancyRaw as any;
+                  const ownerId = raw?.owner?.id ?? raw?.user?.id ?? raw?.ownerId ?? raw?.hostId ?? null;
+                  const ownerName = raw?.owner?.name ?? raw?.user?.name ?? raw?.ownerName ?? raw?.hostName ?? '';
+                  return (
+                    <div className="text-sm text-slate-800">
+                      <div className="font-medium">{ownerName || '-'}</div>
+                      {ownerId ? <div className="text-xs text-slate-500">ID: {ownerId}</div> : null}
+                    </div>
+                  );
+                })()}
+              </td>
               <td className="px-4 py-3 text-center">
                 {(() => {
                   const k = roomStatusKey(it.occupancyRaw);
@@ -201,7 +218,7 @@ export default function Page() {
                 <div className="inline-flex items-center gap-2">
                   <button onClick={() => router.push(`/admin/danh-muc/can-ho/${it.id}`)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></button>
                   <button onClick={() => router.push(`/admin/danh-muc/can-ho/${it.id}/calendar`)} className="inline-flex items-center justify-center p-2 rounded-md bg-sky-600 text-white hover:bg-sky-700" title="Xem lịch"><CalendarIcon className="w-4 h-4"/></button>
-                  <button onClick={async () => { try { if (!confirm('Bạn có chắc muốn xóa căn hộ này?')) return; await apartmentService.delete(it.id); toast.success('Xóa thành công'); fetch(page, limit); fetchCounts(); } catch (e: any) { toast.error(e?.message || 'Xóa thất bại'); } }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <button onClick={() => { setTargetApartment(it); setConfirmOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>
             </tr>
@@ -213,6 +230,26 @@ export default function Page() {
         </div>
 
       </Panel>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xóa căn hộ"
+          message={`Bạn có chắc muốn xóa căn hộ '${targetApartment?.title ?? targetApartment?.id ?? ''}'?`}
+          onCancel={() => { setConfirmOpen(false); setTargetApartment(null); }}
+          onConfirm={async () => {
+            if (!targetApartment) return;
+            try {
+              await apartmentService.delete(targetApartment.id);
+              toast.success('Xóa thành công');
+              fetch(page, limit);
+              fetchCounts();
+            } catch (e: any) {
+              toast.error(e?.message || 'Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetApartment(null);
+            }
+          }}
+        />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { Blog, BlogStatus } from "@/type/blog";
 import Pagination from "@/components/Pagination";
 import { toSlug } from "@/utils/formatSlug";
 import AdminTable from "@/components/AdminTable";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -18,6 +19,8 @@ export default function BlogPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const limit = 6;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil((total || 0) / limit)), [total]);
 
@@ -127,19 +130,7 @@ export default function BlogPage() {
                   <button title="Sửa" className="flex items-center gap-1 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer" onClick={() => router.push(`/admin/blog/${b.id}`)}>
                     <Edit size={15} />
                   </button>
-                  <button title="Xóa" className="flex items-center gap-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer" onClick={async () => {
-                    const ok = confirm("Bạn có chắc chắn muốn xoá bài viết này?");
-                    if (!ok) return;
-                    try {
-                      await blogService.delete(b.id);
-                      toast.success("Xoá bài viết thành công!");
-                      fetchBlogs(1);
-                      setPage(1);
-                    } catch (err) {
-                      console.error(err);
-                      toast.error("Xoá thất bại, vui lòng thử lại!");
-                    }
-                  }}>
+                  <button title="Xóa" className="flex items-center gap-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition cursor-pointer" onClick={() => { setTargetId(b.id); setConfirmOpen(true); }}>
                     <Trash2 size={15} />
                   </button>
                 </div>
@@ -148,6 +139,28 @@ export default function BlogPage() {
           );
         })}
       </AdminTable>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Xoá bài viết"
+        message={`Bạn có chắc chắn muốn xoá bài viết #${targetId ?? ''}?`}
+        onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+        onConfirm={async () => {
+          if (!targetId) return;
+          try {
+            await blogService.delete(targetId);
+            toast.success('Xoá bài viết thành công!');
+            fetchBlogs(1);
+            setPage(1);
+          } catch (err) {
+            console.error(err);
+            toast.error('Xoá thất bại, vui lòng thử lại!');
+          } finally {
+            setConfirmOpen(false);
+            setTargetId(null);
+          }
+        }}
+      />
 
       <Pagination
         page={page}

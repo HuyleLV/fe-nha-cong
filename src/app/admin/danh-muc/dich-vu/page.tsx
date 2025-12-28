@@ -10,6 +10,7 @@ import { PlusCircle, Edit3, Trash2 } from "lucide-react";
 import { serviceService } from "@/services/serviceService";
 import { buildingService } from "@/services/buildingService";
 import { ServiceItem } from "@/type/service";
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function Page() {
   const [items, setItems] = useState<ServiceItem[]>([]);
@@ -47,15 +48,13 @@ export default function Page() {
 
   useEffect(() => { load(); }, []);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [targetId, setTargetId] = useState<number | null>(null);
+
   const remove = async (id?: number) => {
     if (!id) return;
-    if (!confirm('Bạn có chắc muốn xóa dịch vụ này không?')) return;
-    try {
-      await serviceService.remove(id);
-      await load();
-    } catch (err: any) {
-      alert(err?.message || 'Xóa thất bại');
-    }
+    setTargetId(id);
+    setConfirmOpen(true);
   };
 
   const tFee = (ft?: string | null) => {
@@ -138,6 +137,24 @@ export default function Page() {
             </tr>
           ))}
         </AdminTable>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Xoá dịch vụ"
+          message={`Bạn có chắc muốn xóa dịch vụ #${targetId ?? ''}?`}
+          onCancel={() => { setConfirmOpen(false); setTargetId(null); }}
+          onConfirm={async () => {
+            if (!targetId) return;
+            try {
+              await serviceService.remove(targetId);
+              await load();
+            } catch (err: any) {
+              alert(err?.message || 'Xóa thất bại');
+            } finally {
+              setConfirmOpen(false);
+              setTargetId(null);
+            }
+          }}
+        />
         <Pagination
           page={page}
           limit={limit}
