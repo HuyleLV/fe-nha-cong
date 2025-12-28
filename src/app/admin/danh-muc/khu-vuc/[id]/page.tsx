@@ -111,6 +111,7 @@ export default function Page() {
   };
 
   return (
+    <>
     <div className="max-w-7xl mx-auto">
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -172,8 +173,8 @@ export default function Page() {
           </div>
         </div>
       </div>
-    </div>
-    <ConfirmModal
+  </div>
+  <ConfirmModal
       open={confirmOpen}
       title="Xoá khu vực"
       message={`Bạn có chắc muốn xóa khu vực "${name || id}"?`}
@@ -193,5 +194,6 @@ export default function Page() {
         }
       }}
     />
+    </>
   );
 }
