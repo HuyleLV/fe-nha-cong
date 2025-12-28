@@ -442,7 +442,7 @@ export default function ApartmentFormPage() {
         if (v) await apartmentService.updateVideo(created.id, v);
         toast.success("Tạo căn hộ thành công!");
       }
-      router.push("/admin/apartment");
+  router.push("/admin/danh-muc/can-ho");
     } catch (err: any) {
       toast.error(err?.message || "Có lỗi xảy ra, vui lòng thử lại!");
     }

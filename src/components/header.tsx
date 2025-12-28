@@ -30,6 +30,8 @@ import { User } from "@/type/user";
 import { toast } from "react-toastify";
 import { asImageSrc } from "@/utils/imageUrl";
   import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
+  import { useMessagesSocket } from "@/hooks/useMessagesSocket";
+  import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const router = useRouter();
@@ -208,6 +210,9 @@ export default function Header() {
 
   // Notifications socket
   const { unread, items, markAllRead } = useNotificationsSocket(auth?.id || undefined);
+  const pathname = usePathname();
+  const isChatOpen = typeof pathname === 'string' && pathname.startsWith('/chat');
+  const { unread: unreadMsgs, last: lastMsg, markAllRead: markAllMsgsRead } = useMessagesSocket(auth?.id || undefined, isChatOpen);
 
   return (
     <>
@@ -281,9 +286,15 @@ export default function Header() {
             <Link
               href="/chat"
               aria-label="Chat"
-              className="p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
+              onClick={() => { try { markAllMsgsRead(); } catch {} }}
+              className="relative p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
             >
               <MessageSquare className="text-white w-5 h-5" />
+              {unreadMsgs > 0 && (
+                <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                  {unreadMsgs > 9 ? '9+' : unreadMsgs}
+                </span>
+              )}
             </Link>
 
             <button
