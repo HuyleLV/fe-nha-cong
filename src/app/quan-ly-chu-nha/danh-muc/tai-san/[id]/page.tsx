@@ -21,7 +21,6 @@ type Form = {
   value?: string;
   quantity?: number;
   status?: string;
-  warrantyPeriod?: string;
   purchaseDate?: string;
   manufacturerWarrantyDate?: string;
   ownerWarrantyMonths?: number | '';
@@ -67,7 +66,7 @@ export default function AssetFormPage() {
   const router = useRouter();
 
   const { register, handleSubmit, reset, control, formState: { isSubmitting, errors, dirtyFields } } = useForm<Form>({
-    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', warrantyPeriod: '', purchaseDate: '', manufacturerWarrantyDate: '', ownerWarrantyMonths: '', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
+    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', purchaseDate: '', manufacturerWarrantyDate: '', ownerWarrantyMonths: '', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
   });
 
   const [loading, setLoading] = useState<boolean>(isEdit);
@@ -102,7 +101,6 @@ export default function AssetFormPage() {
           value: a.value ? strip(a.value) : '',
           quantity: a.quantity ?? 1,
           status: a.status || 'available',
-          warrantyPeriod: a.warrantyPeriod || '',
           purchaseDate: (a as any).purchaseDate ? String((a as any).purchaseDate).split('T')[0] : '',
           manufacturerWarrantyDate: (a as any).manufacturerWarrantyDate ? String((a as any).manufacturerWarrantyDate).split('T')[0] : '',
           ownerWarrantyMonths: (a as any).ownerWarrantyMonths ?? '',
@@ -344,10 +342,7 @@ export default function AssetFormPage() {
                 )} />
               </div>
 
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Thời hạn bảo hành (hiển thị)</label>
-                <input className={inputCls} {...register('warrantyPeriod')} />
-              </div>
+              {/* warrantyPeriod removed — field intentionally hidden from the UI */}
             </div>
           </Section>
         </div>

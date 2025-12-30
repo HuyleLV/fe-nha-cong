@@ -21,7 +21,6 @@ type Form = {
   value?: string;
   quantity?: number;
   status?: string;
-  warrantyPeriod?: string;
   buildingId?: number | null;
   apartmentId?: number | null;
   bedId?: number | null;
@@ -48,7 +47,7 @@ export default function AdminAssetFormPage() {
   const router = useRouter();
 
   const { register, handleSubmit, reset, control, formState: { isSubmitting, errors, dirtyFields } } = useForm<Form>({
-    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', warrantyPeriod: '', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
+    defaultValues: { name: "", brand: "", color: "", modelOrYear: "", origin: "", value: "", quantity: 1, status: 'available', buildingId: undefined, apartmentId: undefined, bedId: undefined, notes: '', images: '' },
   });
 
   const [loading, setLoading] = useState<boolean>(isEdit);
@@ -83,7 +82,7 @@ export default function AdminAssetFormPage() {
           value: a.value ? strip(a.value) : '',
           quantity: a.quantity ?? 1,
           status: a.status || 'available',
-          warrantyPeriod: a.warrantyPeriod || '',
+          // warrantyPeriod removed from form
           buildingId: (a as any).buildingId ?? undefined,
           apartmentId: (a as any).apartmentId ?? undefined,
           bedId: (a as any).bedId ?? undefined,
@@ -243,7 +242,7 @@ export default function AdminAssetFormPage() {
                   render={({ field }) => (
                     <select className={inputCls} value={field.value === undefined || field.value === null ? "" : String(field.value)} onChange={async (e) => { const v = e.target.value; const parsed = v === "" ? undefined : Number(v); field.onChange(parsed); await onBuildingChange(parsed); }}>
                       <option value="">-- Chọn tòa nhà (tuỳ chọn) --</option>
-                      {buildings.map(b => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `Tòa nhà #${b.id}`}</option>))}
+                      {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
                     </select>
                   )}
                 />
@@ -257,7 +256,7 @@ export default function AdminAssetFormPage() {
                   render={({ field }) => (
                     <select className={inputCls} value={field.value === undefined || field.value === null ? "" : String(field.value)} onChange={async (e) => { const v = e.target.value; const parsed = v === "" ? undefined : Number(v); field.onChange(parsed); await onApartmentChange(parsed); }}>
                       <option value="">-- Chọn phòng (tuỳ chọn) --</option>
-                      {apartments.map(a => (<option key={a.id} value={String(a.id)}>{a.title || a.roomCode || `Căn hộ #${a.id}`}</option>))}
+                      {apartments.map(a => (<option key={a.id} value={String(a.id)}>{`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).title ?? a.id)}`}</option>))}
                     </select>
                   )}
                 />
@@ -289,10 +288,7 @@ export default function AdminAssetFormPage() {
                 )} />
               </div>
 
-              <div>
-                <label className="block text-sm text-slate-600 mb-1">Thời hạn bảo hành</label>
-                <input className={inputCls} {...register('warrantyPeriod')} />
-              </div>
+              {/* warrantyPeriod removed — not shown in admin form */}
             </div>
           </Section>
         </div>

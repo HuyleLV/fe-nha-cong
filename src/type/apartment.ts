@@ -39,8 +39,6 @@ export type Apartment = {
   /** numeric string */
   rentPrice: string;
   currency: string;
-  /** Ưu đãi theo phần trăm (0-100). Null/undefined nếu không có ưu đãi */
-  discountPercent?: number | null;
   discountAmount?: string | null; // số tiền giảm trực tiếp (VND) numeric string
   /** Hoa hồng cho CTV (%) */
   commissionPercent?: number | null;
@@ -145,7 +143,6 @@ export type ApartmentForm = {
   currency?: string;              // default "VND" ở BE
   status?: ApartmentStatus;       // default "draft" ở BE
   roomStatus?: ApartmentRoomStatus;
-  discountPercent?: number | null; // Ưu đãi (%), 0-100
   discountAmount?: string | null; // Ưu đãi cố định VND
   commissionPercent?: number | null; // Hoa hồng CTV (%)
   commissionAmount?: string | null; // Hoa hồng CTV (VND)
@@ -254,7 +251,7 @@ export type ApartmentQuery = {
 
   // Ưu đãi
   hasDiscount?: boolean;
-  minDiscount?: number;
+  // minDiscount removed; use discountAmount filters on backend
 
   sort?: "newest" | "price_asc" | "price_desc" | "area_desc" | "discount_desc";
 

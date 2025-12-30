@@ -214,7 +214,7 @@ export default function ServiceRequestEditPage() {
                     }}
                   >
                     <option value="">— Chọn tòa nhà —</option>
-                    {buildings.map((b: any) => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `#${b.id}`}</option>))}
+                    {buildings.map((b: any) => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
                   </select>
                 );
               })()}
@@ -240,7 +240,7 @@ export default function ServiceRequestEditPage() {
                     disabled={!watch('buildingId') || apartmentsLoading}
                   >
                     <option value="">— Chọn căn hộ —</option>
-                    {apartmentsLoading ? (<option>Đang tải...</option>) : apartments.map((a:any) => (<option key={a.id} value={String(a.id)}>{a.name ?? a.title ?? a.code ?? `#${a.id}`}</option>))}
+                    {apartmentsLoading ? (<option>Đang tải...</option>) : apartments.map((a:any) => (<option key={a.id} value={String(a.id)}>{`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).name ?? (a as any).title ?? a.id)}`}</option>))}
                   </select>
                 );
               })()}

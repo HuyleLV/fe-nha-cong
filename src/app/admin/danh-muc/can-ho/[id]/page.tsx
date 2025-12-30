@@ -97,7 +97,6 @@ export default function ApartmentFormPage() {
       status: "draft" as ApartmentStatus,
     depositAmount: "",
   roomStatus: 'o_ngay',
-  discountPercent: 0,
   discountAmount: "",
   commissionPercent: 0,
       coverImageUrl: "",
@@ -254,7 +253,6 @@ export default function ApartmentFormPage() {
           currency: ap.currency,
           status: ap.status,
           roomStatus: (ap as any).roomStatus ?? 'o_ngay',
-          discountPercent: (ap as any).discountPercent ?? 0,
           discountAmount: stripTrailingZerosDecimal((ap as any).discountAmount ?? ""),
           commissionPercent: (ap as any).commissionPercent ?? 0,
           coverImageUrl: ap.coverImageUrl || "",
@@ -405,7 +403,6 @@ export default function ApartmentFormPage() {
       if ((payload as any)[k] == null) delete (payload as any)[k];
     }
     // Normalize discount: admin should input absolute discount amount (VND)
-    delete (payload as any).discountPercent;
     if ((values as any).discountAmount != null && String((values as any).discountAmount).trim() !== "") {
       const amt = parseFloat(String((values as any).discountAmount).replace(/,/g, '.'));
       if (Number.isFinite(amt) && amt >= 0) {
@@ -669,7 +666,7 @@ export default function ApartmentFormPage() {
                 >
                   <option value="">Không thuộc tòa</option>
                   {buildings.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
+                    <option key={b.id} value={b.id}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>
                   ))}
                 </select>
               </div>

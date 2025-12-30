@@ -80,6 +80,16 @@ export const apartmentService = {
     }
   },
 
+  /** GET /api/apartments/discounted → { items: Apartment[], meta } */
+  async getDiscounted(params?: { page?: number; limit?: number; locationSlug?: string }): Promise<{ items: Apartment[]; meta: any }> {
+    try {
+      const payload = await axiosClient.get<any, any>(apiUrl('/api/apartments/discounted'), { params: cleanParams(params) });
+      return { items: payload?.items ?? [], meta: payload?.meta ?? { total: 0, page: 1, limit: params?.limit ?? 10, pageCount: 1 } };
+    } catch (err: any) {
+      throw new Error(err?.message || 'Không thể tải danh sách ưu đãi');
+    }
+  },
+
   /** GET /api/apartments/available */
   async getAvailable(params?: any): Promise<{ items: Apartment[]; meta: any }> {
     try {

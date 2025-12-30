@@ -176,7 +176,7 @@ export default function VehicleEditPage(){
               <label className="block text-sm text-slate-600 mb-1">Tòa nhà <span className="text-red-600">*</span></label>
               <select className={inputCls} {...register('buildingId', { required: 'Vui lòng chọn tòa nhà' })}>
                 <option value="">-- Chọn tòa nhà --</option>
-                {buildings.map(b => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `Tòa #${b.id}`}</option>))}
+                {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
               </select>
               {errors.buildingId && <div className="text-sm text-red-600 mt-1">{(errors.buildingId as any).message}</div>}
             </div>
@@ -185,7 +185,7 @@ export default function VehicleEditPage(){
               <label className="block text-sm text-slate-600 mb-1">Căn hộ <span className="text-red-600">*</span></label>
               <select className={inputCls} {...register('apartmentId', { required: 'Vui lòng chọn căn hộ' })}>
                 <option value="">-- Chọn căn hộ --</option>
-                {apartments.map(a => (<option key={a.id} value={String(a.id)}>{a.title || `Căn #${a.id}`}</option>))}
+                {apartments.map(a => (<option key={a.id} value={String(a.id)}>{`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).title ?? a.id)}`}</option>))}
               </select>
               {errors.apartmentId && <div className="text-sm text-red-600 mt-1">{(errors.apartmentId as any).message}</div>}
             </div>

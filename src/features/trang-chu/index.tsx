@@ -79,20 +79,17 @@ export default function TrangChu() {
 
         // Load discounted apartments (highest discount first)
         try {
-          const discRes = await apartmentService.getAll({
-            status: 'published',
-            hasDiscount: true,
-            sort: 'discount_desc',
-            page: 1,
-            limit: 12,
-          });
-          const discountedItems = (discRes.items || []).map((a) => {
+          const discRes = await apartmentService.getDiscounted({ page: 1, limit: 10 });
+          let discountedItems = (discRes.items || []).map((a) => {
             const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
             const districtName = secFound?.district?.name || a.location?.name || "";
             const cityName = rawCity?.name || "";
             const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
             return { ...a, addressPath } as Apartment;
           });
+
+          // Backend returns discounted apartments already filtered and ordered by `discount_desc`.
+          // Use the API result directly (do not slice here) so the server controls pagination/limits.
           setDiscounted(discountedItems);
         } catch (e) {
           // im lặng nếu lỗi phần ưu đãi

@@ -502,7 +502,7 @@ export default function InvoiceEditPage() {
                   <option value="">-- Chọn căn hộ --</option>
                   {apartments.map((a) => (
                     <option key={a.id} value={String(a.id)}>
-                      {a.title || a.code || a.id}
+                      {`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).title ?? a.id)}`}
                     </option>
                   ))}
                 </select>

@@ -504,7 +504,7 @@ export default function InvoiceEditPage() {
                   <option value="">-- Chọn tòa nhà --</option>
                   {buildings.map((b) => (
                     <option key={b.id} value={String(b.id)}>
-                      {b.name || b.title || b.id}
+                      {`${b.id}-${String(b.name ?? b.title ?? b.id)}`}
                     </option>
                   ))}
                 </select>
@@ -541,7 +541,7 @@ export default function InvoiceEditPage() {
                   <option value="">-- Chọn căn hộ --</option>
                   {apartments.map((a) => (
                     <option key={a.id} value={String(a.id)}>
-                      {a.title || a.code || a.id}
+                      {`${a.id}-${String(a.roomCode ?? a.code ?? a.title ?? a.id)}`}
                     </option>
                   ))}
                 </select>

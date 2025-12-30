@@ -129,7 +129,7 @@ export default function FloorMapPage() {
           await loadApartmentsForBuilding(parsed);
         }}>
           <option value="">-- Tất cả / Không thuộc tòa --</option>
-          {buildings.map(b => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `Tòa nhà #${b.id}`}</option>))}
+          {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
         </select>
       </div>
 

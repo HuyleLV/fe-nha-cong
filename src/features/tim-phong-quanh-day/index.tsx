@@ -22,7 +22,7 @@ const toVnd = (n?: number | string) => {
   const v = typeof n === "string" ? Number(n) : n ?? 0;
   return (Number.isFinite(v) ? v : 0).toLocaleString("vi-VN");
 };
-const LIMIT = 10;
+const LIMIT = 16;
 
 // ================ Root Page =================
 export default function TimPhongQuanhDayPage() {

@@ -81,8 +81,8 @@ export default function DistrictListingSection({
     return items.filter((x) => x.district === active).map((x) => x.apt);
   }, [items, active, showAll]);
 
-  // Chỉ hiển thị tối đa 10 item, chia thành 2 hàng x 5 item
-  const displayed = useMemo(() => filtered.slice(0, 10), [filtered]);
+  // Use the API result directly. The backend controls how many items are returned.
+  const displayed = useMemo(() => filtered, [filtered]);
 
   const showHeaderTabs = !onlyDistrict && showTabs;
 

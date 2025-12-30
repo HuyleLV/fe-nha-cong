@@ -140,14 +140,14 @@ export default function AdminThuChiEditPage() {
               <label className="block text-sm">Tòa nhà<span className="text-red-500 ml-1">*</span></label>
               <select value={String(form.buildingId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, buildingId: v, apartmentId:'', contractId:'', items: [] })); if (v) { const a = await apartmentService.getAll({ page:1, limit:1000, buildingId: v }); setApartments((a as any)?.items ?? (a as any)?.data ?? a ?? []); } }} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="">-- Chọn tòa nhà --</option>
-                {buildings.map(b=> <option key={b.id} value={String(b.id)}>{b.name}</option>)}
+                {buildings.map(b=> <option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm">Căn hộ<span className="text-red-500 ml-1">*</span></label>
               <select value={String(form.apartmentId ?? '')} onChange={async (e)=>{ const v = Number(e.target.value) || ''; setForm((s:any)=>({...s, apartmentId: v, contractId:'', items: [] })); if (v) { const c = await contractService.list({ page:1, limit:200, apartmentId: v }); setContracts((c as any)?.items ?? (c as any)?.data ?? c ?? []); } }} className="mt-1 h-10 w-full border border-slate-300/80 rounded px-3">
                 <option value="">-- Chọn căn hộ --</option>
-                {apartments.map(a=> <option key={a.id} value={String(a.id)}>{a.title || a.code}</option>)}
+                {apartments.map(a=> <option key={a.id} value={String(a.id)}>{`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).title ?? a.id)}`}</option>)}
               </select>
             </div>
             <div>

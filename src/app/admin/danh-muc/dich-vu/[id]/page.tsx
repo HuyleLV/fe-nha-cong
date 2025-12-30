@@ -197,7 +197,7 @@ export default function AdminServiceEditPage() {
                       <option value="">Đang tải…</option>
                     ) : (
                       <>
-                        {buildings.map(b => (<option key={b.id} value={String(b.id)}>{b.name || b.title || `Tòa #${b.id}`}</option>))}
+                        {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
                       </>
                     )}
                   </select>

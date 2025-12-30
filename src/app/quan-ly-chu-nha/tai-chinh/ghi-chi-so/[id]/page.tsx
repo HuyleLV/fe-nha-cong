@@ -223,7 +223,7 @@ export default function GhiChiSoEditPage() {
               <label className="block text-sm text-slate-600 mb-1">Tòa nhà</label>
               <select className="w-full rounded-md border border-slate-300/80 p-2" value={buildingId ?? ''} onChange={(e) => setBuildingId(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">-- Chọn tòa nhà --</option>
-                {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                {buildings.map(b => <option key={b.id} value={b.id}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>)}
               </select>
             </div>
 
@@ -231,7 +231,7 @@ export default function GhiChiSoEditPage() {
               <label className="block text-sm text-slate-600 mb-1">Căn hộ</label>
               <select className="w-full rounded-md border border-slate-300/80 p-2" value={apartmentId ?? ''} onChange={(e) => setApartmentId(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">-- Chọn căn hộ --</option>
-                {apartments.map(a => <option key={a.id} value={a.id}>{a.title || a.roomCode || `#${a.id}`}</option>)}
+                {apartments.map(a => <option key={a.id} value={a.id}>{`${a.id}-${String((a as any).roomCode ?? (a as any).code ?? (a as any).title ?? a.id)}`}</option>)}
               </select>
             </div>
 

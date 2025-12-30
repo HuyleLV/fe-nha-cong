@@ -102,7 +102,6 @@ export default function HostApartmentFormPage() {
       status: "draft" as ApartmentStatus,
   roomStatus: 'o_ngay',
   depositAmount: "",
-  discountPercent: 0,
   discountAmount: "",
   discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
   commissionAmount: "",
@@ -279,16 +278,10 @@ export default function HostApartmentFormPage() {
           currency: ap.currency,
           status: ap.status,
           roomStatus: (ap as any).roomStatus ?? (ap as any).room_status ?? 'o_ngay',
-          discountPercent: (ap as any).discountPercent ?? 0,
           discountAmount: (ap as any).discountAmount ?? "",
           discountInput: (() => {
-            const pct = (ap as any).discountPercent;
             const amtStr = (ap as any).discountAmount;
-            const price = parseFloat(String(ap.rentPrice).replace(/,/g,''));
-            const pctVal = typeof pct === 'number' && pct > 0 ? Math.round(price * pct / 100) : 0;
             const amtVal = amtStr ? parseFloat(String(amtStr).replace(/,/g,'')) : 0;
-            if (pctVal === 0 && amtVal === 0) return "";
-            if (pctVal >= amtVal && pctVal > 0 && pct) return `${pct}%`;
             if (amtVal > 0) return String(Math.round(amtVal));
             return "";
           })(),
@@ -433,7 +426,7 @@ export default function HostApartmentFormPage() {
       amenitiesNote: values.amenitiesNote?.trim() || undefined,
     };
 
-    // Clean up fields that should not be sent as null to satisfy BE DTO (@IsOptional + @IsInt)
+  // Clean up fields that should not be sent as null to satisfy BE DTO (@IsOptional + @IsInt)
     // - If buildingId is null/NaN, drop it so BE treats as undefined
     if ((payload as any).buildingId == null || Number.isNaN((payload as any).buildingId)) {
       delete (payload as any).buildingId;
@@ -453,37 +446,23 @@ export default function HostApartmentFormPage() {
       if ((payload as any)[k] == null) delete (payload as any)[k];
     }
     // Normalize discount: if NaN, remove; allow 0 to clear
-    // Phân tích ô discountInput: host chỉ cần nhập số tiền, admin vẫn có thể nhập % hoặc số tiền
+    // Phân tích ô discountInput: host/admin có thể nhập số tiền hoặc phần trăm, nhưng FE will
+    // always convert to absolute VND and send `discountAmount` to the backend.
     const rawDiscount: string = (values as any).discountInput?.trim() || "";
-    delete (payload as any).discountPercent;
     delete (payload as any).discountAmount;
     if (rawDiscount) {
       const price = parseFloat(String(values.rentPrice || payload.rentPrice || "0").replace(/,/g, '.')) || 0;
-      if (userRole === 'host') {
-        // For hosts: prefer numeric amount. If percent provided, convert it to amount using rentPrice.
-        if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
-          const amt = parseFloat(rawDiscount.replace(/,/g, '.'));
-          if (Number.isFinite(amt) && amt >= 0) (payload as any).discountAmount = String(Math.round(amt));
-        } else if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
-          const pct = parseFloat(rawDiscount.replace('%', ''));
-          if (Number.isFinite(pct) && pct >= 0 && price > 0) {
-            const amt = Math.round(price * pct / 100);
-            (payload as any).discountAmount = String(amt);
-          }
+      // Normalize both host and admin input: if user types '15%' convert to VND using rentPrice.
+      if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
+        const pct = parseFloat(rawDiscount.replace('%',''));
+        if (Number.isFinite(pct) && pct >= 0 && price > 0) {
+          const amt = Math.round(price * pct / 100);
+          (payload as any).discountAmount = String(amt);
         }
-      } else {
-        // For admins/others: allow percent or absolute amount
-        if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
-          const num = parseFloat(rawDiscount.replace('%',''));
-          if (Number.isFinite(num) && num >= 0) {
-            (payload as any).discountPercent = Math.min(100, Math.round(num));
-          }
-        } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
-          const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
-          if (Number.isFinite(amt) && amt >= 0) {
-            // store as integer-string (VND doesn't use decimals) to avoid trailing .00
-            (payload as any).discountAmount = String(Math.round(amt)); // chuẩn hoá
-          }
+      } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
+        const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
+        if (Number.isFinite(amt) && amt >= 0) {
+          (payload as any).discountAmount = String(Math.round(amt));
         }
       }
     }
@@ -836,7 +815,7 @@ export default function HostApartmentFormPage() {
                 >
                   <option value="">Không thuộc tòa</option>
                   {buildings.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
+                    <option key={b.id} value={b.id}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>
                   ))}
                 </select>
               </div>

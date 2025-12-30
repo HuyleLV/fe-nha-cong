@@ -8,7 +8,6 @@ export type Asset = {
   value?: string; // numeric string
   quantity?: number;
   status?: string;
-  warrantyPeriod?: string | null;
   buildingId?: number | null;
   apartmentId?: number | null;
   bedId?: number | null;

@@ -62,10 +62,10 @@ export default function Page() {
         <Link href="/quan-ly-chu-nha/danh-muc/tai-san/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md" title="Thêm tài sản"><PlusCircle className="w-5 h-5"/></Link>
       )}>
 
-        <AdminTable headers={["Mã","Tên","Thương hiệu","Màu","Model/Năm","Xuất xứ","Giá trị","Số lượng","Tình trạng","Bảo hành","Tòa nhà","Phòng","Hành động"]} loading={loading}>
-          {items.length === 0 ? (
-            <tr><td colSpan={13} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có tài sản'}</td></tr>
-          ) : items.map((it, idx) => (
+        <AdminTable headers={["Mã","Tên","Thương hiệu","Màu","Model/Năm","Xuất xứ","Giá trị","Số lượng","Tình trạng","Tòa nhà","Phòng","Hành động"]} loading={loading}>
+                {items.length === 0 ? (
+                  <tr><td colSpan={12} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có tài sản'}</td></tr>
+                ) : items.map((it, idx) => (
             <tr key={it.id} className="border-b">
               <td className="py-3 text-sm text-slate-700">{items.length - idx}</td>
               <td className="py-3 text-sm text-slate-700">{it.name}</td>
@@ -76,7 +76,7 @@ export default function Page() {
               <td className="py-3 text-sm text-slate-700">{it.value ? formatMoneyVND(Number(String(it.value).replace(/,/g,''))) : '-'}</td>
               <td className="py-3 text-sm text-slate-700">{it.quantity ?? '-'}</td>
               <td className="py-3 text-sm text-slate-700">{(it.status === 'available' ? 'Sẵn sàng' : it.status === 'in_use' ? 'Đang sử dụng' : it.status === 'maintenance' ? 'Bảo trì' : it.status === 'retired' ? 'Thanh lý' : it.status)}</td>
-              <td className="py-3 text-sm text-slate-700">{it.warrantyPeriod ?? '-'}</td>
+                    {/* warrantyPeriod removed from list */}
               <td className="py-3 text-sm text-slate-700">{it.buildingId ? buildingsMap[it.buildingId] ?? it.buildingId : '-'}</td>
               <td className="py-3 text-sm text-slate-700">{it.apartmentId ? apartmentsMap[it.apartmentId] ?? it.apartmentId : '-'}</td>
               <td className="py-3 text-sm text-slate-700 text-center">

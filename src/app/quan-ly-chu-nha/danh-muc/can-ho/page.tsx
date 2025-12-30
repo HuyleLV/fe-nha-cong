@@ -166,14 +166,15 @@ export default function Page() {
           </button>
         </div>
 
-        <AdminTable headers={["Mã","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Trạng thái","Đã duyệt","Hành động"]}>
+        <AdminTable headers={["Mã","Mã phòng","Tên căn hộ","Loại căn hộ","Giá thuê","Đặt cọc","Diện tích","Trạng thái","Đã duyệt","Hành động"]}>
           {loading ? (
-            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-sm text-slate-500">Đang tải danh sách căn hộ...</td></tr>
           ) : displayed.length === 0 ? (
-            <tr><td colSpan={9} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-sm text-slate-500">Không có căn hộ</td></tr>
           ) : displayed.map((it) => (
             <tr key={it.id} className="text-[14px]">
-              <td className="px-4 py-3 text-center">{it.roomCode ?? it.id}</td>
+              <td className="px-4 py-3 text-center">{String(it.id)}</td>
+              <td className="px-4 py-3 text-center text-slate-600">{it.roomCode ?? String(it.id)}</td>
               <td className="px-4 py-3 font-medium text-left">{it.title}</td>
               <td className="px-4 py-3 text-center">{it.bedrooms ? `${it.bedrooms} PN` : 'Studio'}</td>
               <td className="px-4 py-3 text-center">{it.rentPrice ? fNumber(Number(String(it.rentPrice))) : '-'} đ</td>
