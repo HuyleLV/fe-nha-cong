@@ -24,7 +24,7 @@ export default function FloatingChatButtons() {
             title="Chat Facebook Messenger"
             className="inline-block hover:scale-105 transition-transform"
           >
-            <img src={phone.src} alt="Messenger" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
+            <img loading="lazy" src={phone.src} alt="Messenger" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
             <span className="sr-only">Messenger</span>
           </a>
         </div>
@@ -43,7 +43,7 @@ export default function FloatingChatButtons() {
             title="Chat Zalo"
             className="inline-block hover:scale-105 transition-transform"
           >
-            <img src={zalo.src} alt="Zalo" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
+            <img loading="lazy" src={zalo.src} alt="Zalo" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
             <span className="sr-only">Zalo</span>
           </a>
         </div>
@@ -62,7 +62,7 @@ export default function FloatingChatButtons() {
             title="Chat Facebook Messenger"
             className="inline-block hover:scale-105 transition-transform"
           >
-            <img src={message.src} alt="Messenger" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
+            <img loading="lazy" src={message.src} alt="Messenger" className="h-11 w-11 md:h-12 md:w-12 select-none drop-shadow-sm" />
             <span className="sr-only">Messenger</span>
           </a>
         </div>

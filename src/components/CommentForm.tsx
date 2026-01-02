@@ -125,7 +125,7 @@ export default function CommentForm({ targetType, targetId }: { targetType: stri
         <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-emerald-50">
           {me?.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={me.avatarUrl} alt={me.name || 'avatar'} className="h-full w-full object-cover" />
+            <img loading="lazy" src={me.avatarUrl} alt={me.name || 'avatar'} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-emerald-700">{(me?.name || 'U').split(' ').map((s: string) => s[0]).slice(0,2).join('').toUpperCase()}</div>
           )}

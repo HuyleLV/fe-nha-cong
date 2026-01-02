@@ -35,7 +35,7 @@ const rooms = [
               key={room.id}
               className="bg-white border border-green-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition"
             >
-              <img src={room.img} alt={room.title} className="w-full h-48 object-cover" />
+              <img loading="lazy" src={room.img} alt={room.title} className="w-full h-48 object-cover" />
               <div className="p-4">
                 <h3 className="font-bold text-lg text-green-900">{room.title}</h3>
                 <p className="text-red-600 font-semibold mt-1">Từ {room.price}/tháng</p>

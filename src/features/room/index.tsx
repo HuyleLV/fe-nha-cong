@@ -255,9 +255,9 @@ function Gallery({ images }: { images: string[] }) {
           {bigSrc ? (
             isVideo(big) ? (
               <video src={bigSrc} controls className="h-full w-full object-contain bg-black" />
-            ) : (
+              ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={bigSrc} alt="" className="h-full w-full object-cover transition-all duration-300 hover:scale-[1.01]" onClick={() => setOpen(true)} />
+              <img loading="lazy" src={bigSrc} alt="" className="h-full w-full object-cover transition-all duration-300 hover:scale-[1.01]" onClick={() => setOpen(true)} />
             )
           ) : (
             <div className="grid h-full w-full place-items-center text-sm text-emerald-800/70">Chưa có ảnh</div>
@@ -277,9 +277,9 @@ function Gallery({ images }: { images: string[] }) {
                 <button key={i} onClick={() => setActive(i)} className={clsx("relative aspect-[4/3] overflow-hidden rounded-xl border", i === active ? "border-emerald-600 ring-2 ring-emerald-600/50" : "border-emerald-100")}>
                   {isVideo(src) ? (
                     <div className="h-full w-full bg-black grid place-items-center text-[10px] text-white/80">Video</div>
-                  ) : (
+                    ) : (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s} alt="" className="h-full w-full object-cover" />
+                    <img loading="lazy" src={s} alt="" className="h-full w-full object-cover" />
                   )}
                 </button>
               );
@@ -296,7 +296,7 @@ function Gallery({ images }: { images: string[] }) {
           <div className="flex h-full items-center justify-center p-4">
             <div className="relative w-full max-w-5xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={bigSrc} alt="" width={1600} height={900} className="h-auto w-full rounded-2xl object-contain" />
+              <img loading="lazy" src={bigSrc} alt="" width={1600} height={900} className="h-auto w-full rounded-2xl object-contain" />
             </div>
           </div>
         </div>
@@ -1139,7 +1139,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                       <div className="h-12 w-12 overflow-hidden rounded-lg bg-emerald-50 ring-1 ring-emerald-200">
                         {avatarSrc ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                          <img loading="lazy" src={avatarSrc} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <div className="grid h-full w-full place-items-center text-[10px] text-emerald-700">Ảnh</div>
                         )}
@@ -1581,7 +1581,7 @@ export default function RoomPage({ slug }: { slug: string }) {
                                 <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-emerald-50">
                                   {r.coverImageUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={asImageSrc(r.coverImageUrl as string) as string} alt={r.title} className="h-full w-full object-cover" />
+                                    <img loading="lazy" src={asImageSrc(r.coverImageUrl as string) as string} alt={r.title} className="h-full w-full object-cover" />
                                   ) : (
                                     <div className="flex h-full w-full items-center justify-center text-sm text-emerald-700">Ảnh</div>
                                   )}

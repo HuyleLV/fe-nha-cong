@@ -168,7 +168,7 @@ export default function UploadPicker({
                       }}
                       className="relative rounded-lg overflow-hidden border border-slate-200 bg-white"
                     >
-                      <img src={src} alt={`img-${i}`} className={`w-full h-28 object-cover cursor-pointer`} onClick={() => { setPreviewIndex(i); setPreviewOpen(true); }} />
+                      <img loading="lazy" src={src} alt={`img-${i}`} className={`w-full h-28 object-cover cursor-pointer`} onClick={() => { setPreviewIndex(i); setPreviewOpen(true); }} />
                   <div className="absolute top-1 right-1 flex gap-1">
                     <button type="button" title="Lên" onClick={() => { if (i <= 0) return; const arr = getCurrentValues(); const tmp = arr[i-1]; arr[i-1] = arr[i]; arr[i] = tmp; onChange(arr); }} className="bg-white/90 p-1 rounded shadow text-xs">↑</button>
                     <button type="button" title="Xuống" onClick={() => { if (i >= currentValues.length -1) return; const arr = getCurrentValues(); const tmp = arr[i+1]; arr[i+1] = arr[i]; arr[i] = tmp; onChange(arr); }} className="bg-white/90 p-1 rounded shadow text-xs">↓</button>
@@ -208,6 +208,7 @@ export default function UploadPicker({
             <div className={`relative w-full ${aspectClass} overflow-hidden rounded-lg border border-slate-200`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                loading="lazy"
                 src={displayUrls[0] || ''}
                 alt="preview"
                 className="w-full h-full object-cover"
@@ -287,7 +288,7 @@ export default function UploadPicker({
           onClick={() => setPreviewOpen(false)}
         >
           <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
-            <img src={displayUrls[previewIndex]} alt={`full-${previewIndex}`} className="w-full h-auto rounded-lg" />
+            <img loading="lazy" src={displayUrls[previewIndex]} alt={`full-${previewIndex}`} className="w-full h-auto rounded-lg" />
             <button
               type="button"
               onClick={() => setPreviewOpen(false)}

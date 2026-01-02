@@ -6,6 +6,8 @@ const axiosClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // client-side request timeout (ms) to avoid long-hanging requests
+  timeout: 10000,
 });
 
 // ====== Helper lấy token theo endpoint ======

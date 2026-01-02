@@ -21,7 +21,7 @@ export default function InvoiceTemplateHoaDonHoanTien({ invoice }: Props) {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottom: '2px solid #e6e6e6', paddingBottom: 12 }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <img src={company.logo} alt="logo" style={{ width: 80, height: 80, objectFit: 'contain' }} />
+            <img loading="lazy" src={company.logo} alt="logo" style={{ width: 80, height: 80, objectFit: 'contain' }} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>{company.name}</div>
               <div style={{ fontSize: 12, color: '#374151' }}>MST: {company.taxCode}</div>

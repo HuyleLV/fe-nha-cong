@@ -67,7 +67,7 @@ export default function CommentList({ targetType, targetId }: { targetType: stri
           <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-emerald-50">
             {c.user?.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={c.user.avatarUrl} alt={c.user?.name || "avatar"} className="h-full w-full object-cover" />
+              <img loading="lazy" src={c.user.avatarUrl} alt={c.user?.name || "avatar"} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-emerald-700">{(c.user?.name || 'U').split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase()}</div>
             )}

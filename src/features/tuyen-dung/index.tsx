@@ -59,7 +59,7 @@ export default function JobsFeatureIndex() {
 				{/* Mobile cover image */}
 				<div className="relative -mx-2 mb-4 lg:hidden">
 					{/* eslint-disable-next-line @next/next/no-img-element */}
-					<img src={coverImg.src} alt="Tuyển dụng" className="h-48 w-full rounded-xl object-cover" />
+					<img loading="lazy" src={coverImg.src} alt="Tuyển dụng" className="h-48 w-full rounded-xl object-cover" />
 				</div>
 				<div className="relative flex flex-col lg:flex-row lg:items-center gap-6">
 					<div className="flex-1 space-y-3">

@@ -13,7 +13,7 @@ export default function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <div className="flex items-center gap-2 font-semibold">
-              <img src={logo.src} alt="Nhà Cộng" className="object-contain" />
+              <img loading="lazy" src={logo.src} alt="Nhà Cộng" className="object-contain" />
             </div>
             <p className="mt-3 max-w-xs text-base leading-relaxed text-emerald-700">
               Địa chỉ: <span className="font-semibold text-emerald-900">số 27 liền kề 7, KĐT Văn Khê, La Khê, Hà Đông, Hà Nội</span>
@@ -30,7 +30,7 @@ export default function Footer() {
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="Facebook"
               >
-                <img src={facebook.src} alt="Facebook" className="h-6 w-6" />
+                <img loading="lazy" src={facebook.src} alt="Facebook" className="h-6 w-6" />
               </a>
               <a
                 href="https://zalo.me/2661388511949942518"
@@ -40,7 +40,7 @@ export default function Footer() {
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="Zalo"
               >
-                <img src={zalo.src} alt="Zalo" className="h-6 w-6" />
+                <img loading="lazy" src={zalo.src} alt="Zalo" className="h-6 w-6" />
               </a>
               <a
                 href="https://www.tiktok.com/@nhacongolacong1?_r=1&_t=ZS-916loNG8MSI"
@@ -50,7 +50,7 @@ export default function Footer() {
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-600 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
                 title="TikTok"
               >
-                <img src={tiktok.src} alt="TikTok" className="h-6 w-6" />
+                <img loading="lazy" src={tiktok.src} alt="TikTok" className="h-6 w-6" />
               </a>
             </div>
           </div>
