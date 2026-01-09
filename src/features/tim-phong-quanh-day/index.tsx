@@ -445,17 +445,21 @@ export default function TimPhongQuanhDayPage() {
 
         {/* Results */}
         <main className="md:col-span-3">
-          <SearchBar
-            defaultValue={query}
-            defaultGuests={guests ? Number(guests) : undefined}
-            defaultBeds={bedrooms ? Number(bedrooms) : undefined}
-            onSearch={(q: string, opts) => {
-              setQuery(q);
-              if (opts?.guests !== undefined) setGuests(String(opts.guests));
-              if (opts?.beds !== undefined) setBedrooms(String(opts.beds));
-              setPage(1);
-            }}
-          />
+          <div className="mb-4">
+            <SearchBar
+              className=""
+              segmented
+              defaultValue={query}
+              defaultGuests={guests ? Number(guests) : undefined}
+              defaultBeds={bedrooms ? Number(bedrooms) : undefined}
+              onSearch={(q: string, opts) => {
+                setQuery(q);
+                if (opts?.guests !== undefined) setGuests(String(opts.guests));
+                if (opts?.beds !== undefined) setBedrooms(String(opts.beds));
+                setPage(1);
+              }}
+            />
+          </div>
 
           <Toolbar sort={sort} setSort={setSort} view={view} setView={setView} count={total} />
 

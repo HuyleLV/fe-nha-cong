@@ -7,7 +7,7 @@ import { Search, User, Bed } from "lucide-react";
 import clsx from "clsx";
 import type { Route } from "next";
 import { toSlug } from "@/utils/formatSlug";
-import { fNumber } from '@/utils/format-number';
+import { fNumber, formatMoneyVND } from '@/utils/format-number';
 
 type Mode = 'phong' | 'nha' | 'mat-bang';
 
@@ -21,6 +21,8 @@ type Props = {
   mode?: Mode; // điều khiển các lựa chọn hiển thị trong ô search
   onSearch?: (q: string, opts?: { guests?: number; beds?: number; occupants?: number; type?: string; priceMin?: number; priceMax?: number; areaMin?: number; areaMax?: number; mode?: Mode; locationSlug?: string; locationName?: string }) => void;      // mở rộng
   onOpenLocation?: () => void;         // ✅ thêm
+  segmented?: boolean; // render 3 equal segments like Airbnb
+  compact?: boolean; // reduce internal padding / font-size for compact header search
 };
 
 export default function SearchBar({
@@ -33,6 +35,8 @@ export default function SearchBar({
   defaultBeds,
   defaultOccupants,
   mode,
+  segmented,
+  compact,
 }: Props) {
   const [q, setQ] = useState(defaultValue);
   const [guests, setGuests] = useState<string>(defaultGuests !== undefined ? String(defaultGuests) : "1");
@@ -40,9 +44,9 @@ export default function SearchBar({
   const [occupants, setOccupants] = useState<string>(defaultOccupants !== undefined ? String(defaultOccupants) : "1");
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement | null>(null);
-  const locationRef = useRef<HTMLDivElement | null>(null);
-  const priceRef = useRef<HTMLDivElement | null>(null);
-  const roomsRef = useRef<HTMLDivElement | null>(null);
+  const locationRef = useRef<any>(null);
+  const priceRef = useRef<HTMLElement | null>(null);
+  const roomsRef = useRef<any>(null);
   const [pricePos, setPricePos] = useState<{ top: number; left: number; width?: number } | null>(null);
   const [roomsPos, setRoomsPos] = useState<{ top: number; left: number; width?: number } | null>(null);
   const [locationPos, setLocationPos] = useState<{ top: number; left: number; width?: number } | null>(null);
@@ -65,10 +69,21 @@ export default function SearchBar({
   const [areaMax, setAreaMax] = useState<number | undefined>(undefined);
   const [locationName, setLocationName] = useState<string | undefined>(undefined);
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
+  // date range removed from search (replaced by price range)
   const router = useRouter();
   const PRICE_SLIDER_MAX = 10000000;
   const PRICE_SLIDER_STEP = 500000;
-  const formatVND = (v?: number) => (typeof v === 'number' ? fNumber(v) : '');
+  // display helper: format VND with thousands separators; if value looks like it was
+  // provided in 'thousands' (e.g. 2000 instead of 2_000_000) multiply by 1000.
+  // This is a small heuristic to handle inconsistent value sources.
+  const formatVND = (v?: number) => {
+    if (typeof v !== 'number') return '';
+    let val = v;
+    // if value is suspiciously small for a monthly price, scale it
+    if (val > 0 && val < 10000) val = val * 1000;
+    // use formatMoneyVND for consistent Vietnamese formatting without symbol
+    return formatMoneyVND(val, false);
+  };
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -112,6 +127,8 @@ export default function SearchBar({
         const inPane = pricePaneRef.current && pricePaneRef.current.contains(t);
         if (!inTrigger && !inPane) setPricePickerOpen(false);
       }
+
+      // date picker removed for segmented mode; keep no-op
 
       if (roomsPickerOpen) {
         const inTrigger = roomsRef.current && roomsRef.current.contains(t);
@@ -209,6 +226,8 @@ export default function SearchBar({
     return;
   }, [roomsPickerOpen]);
 
+  // (date popover removed for segmented mode; price popover is used instead)
+
   // sync when parent updates defaults (e.g., URL params changed)
   useEffect(() => {
     setQ(defaultValue);
@@ -259,63 +278,54 @@ export default function SearchBar({
 
   return (
     <form onSubmit={submit} className={clsx("w-full", className)}>
-      <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 shadow-sm">
+      <div className={clsx("flex items-center gap-2 rounded-full border border-gray-200 bg-white shadow-sm", compact ? 'px-2 py-1 text-sm' : 'px-3 py-2')}>
         <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50]">
           <Search className="h-5 w-5 text-white" />
         </div>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={placeholder}
-          className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
-        />
-        {/* Three horizontal filter options: Khu vực | Khoảng giá | Phòng/Ngủ & Số người */}
-        <div className="hidden sm:flex items-center gap-2">
-          {/* Khu vực */}
-          <div className="relative" ref={locationRef}>
-            <button type="button" onClick={() => setLocationPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
-              <span className="text-slate-700">{locationName ? `Khu vực: ${locationName}` : 'Khu vực'}</span>
+        {segmented ? (
+          // Airbnb-style segmented inputs: 3 equal parts
+          <div ref={pickerRef} className="flex flex-1 items-center divide-x divide-slate-200 rounded-full overflow-hidden">
+            <button type="button" ref={locationRef} onClick={() => { setLocationPickerOpen(v => { const nv = !v; if (nv) { setPricePickerOpen(false); setRoomsPickerOpen(false); setAllPickerOpen(false); } return nv; }); }} className="flex-1 text-left px-4 py-2 text-sm">
+              <div className="text-xs text-slate-500">Địa điểm</div>
+              <div className="text-sm text-slate-800">{locationName ?? 'Tìm kiếm điểm đến'}</div>
             </button>
-              {locationPickerOpen && typeof document !== 'undefined' && (
-                createPortal(
-                <div
-                  ref={(el) => { locationPaneRef.current = el; }}
-                  style={{
-                    position: 'fixed',
-                    top: locationPos ? `${locationPos.top}px` : undefined,
-                    left: locationPos ? `${locationPos.left}px` : undefined,
-                    width: locationPos?.width ? `${locationPos.width}px` : '320px',
-                    maxWidth: '92vw'
-                  }}
-                  className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
-                >
-                    <div className="text-xs text-slate-500 mb-2">Khu vực</div>
-                    <input
-                      type="text"
-                      placeholder="Nhập tên quận (VD: Cầu Giấy)"
-                      className="w-full rounded-lg border px-3 py-2 text-sm"
-                      value={locationName ?? ''}
-                      onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
-                    />
-                    <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
-                    <div className="flex flex-wrap gap-2">
-                      {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
-                        <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
-                      ))}
-                    </div>
-                  </div>,
-                  document.body
-                )
-              )}
-          </div>
 
-          {/* Khoảng giá */}
-          <div className="relative" ref={priceRef}>
-            <button type="button" onClick={() => setPricePickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
-              <span className="text-slate-700">{(priceMin != null || priceMax != null) ? `Giá: ${formatVND(priceMin) || ''}${priceMin && priceMax ? '–' : ''}${formatVND(priceMax) || ''}` : 'Khoảng giá'}</span>
+            <button type="button" ref={(el) => { priceRef.current = el; }} onClick={() => { setPricePickerOpen(v => { const nv = !v; if (nv) { setLocationPickerOpen(false); setRoomsPickerOpen(false); setAllPickerOpen(false); } return nv; }); }} className="flex-1 text-left px-4 py-2 text-sm">
+              <div className="text-xs text-slate-500">Khoảng giá</div>
+              <div className="text-sm text-slate-800">{(priceMin != null || priceMax != null) ? `Giá: ${formatVND(priceMin) || ''}${priceMin && priceMax ? '–' : ''}${formatVND(priceMax) || ''}` : 'Khoảng giá'}</div>
             </button>
-            {pricePickerOpen && typeof document !== 'undefined' && (
-                createPortal(
+
+            {locationPickerOpen && typeof document !== 'undefined' && locationRef?.current && createPortal(
+              <div
+                ref={(el) => { locationPaneRef.current = el; }}
+                style={{
+                  position: 'fixed',
+                  top: `${locationRef.current.getBoundingClientRect().bottom + 8}px`,
+                  left: `${Math.max(8, Math.min(window.innerWidth - 340, locationRef.current.getBoundingClientRect().left))}px`,
+                  width: '320px',
+                  maxWidth: '92vw'
+                }}
+                className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
+              >
+                <div className="text-xs text-slate-500 mb-2">Khu vực</div>
+                <input
+                  type="text"
+                  placeholder="Nhập tên quận (VD: Cầu Giấy)"
+                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                  value={locationName ?? ''}
+                  onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
+                />
+                <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
+                <div className="flex flex-wrap gap-2">
+                  {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
+                    <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
+                  ))}
+                </div>
+              </div>,
+              document.body
+            )}
+            {pricePickerOpen && typeof document !== 'undefined' && priceRef?.current && (
+              createPortal(
                 <div
                   ref={(el) => { pricePaneRef.current = el; }}
                   style={{
@@ -338,7 +348,6 @@ export default function SearchBar({
                       <div>Max: <span className="font-medium text-slate-700">{formatVND(priceMax) || formatVND(PRICE_SLIDER_MAX)}</span></div>
                     </div>
 
-                    {/* Combined dual-handle slider: two overlapping ranges with a colored track */}
                     <div className="relative w-full h-8 flex items-center combined-range">
                       {(() => {
                         const minVal = priceMin ?? 0;
@@ -380,18 +389,14 @@ export default function SearchBar({
                                 className="absolute inset-0 w-full appearance-none bg-transparent h-8"
                                 style={{ zIndex: 40 }}
                               />
-                              {/* invisible spacer to keep height */}
                               <div className="h-2" />
                             </div>
                           </div>
                         );
                       })()}
                       <style>{`
-                        /* Wrapper height and centering */
                         .combined-range { height:36px; }
                         .combined-range .slider-track { height:8px; border-radius:9999px; display:block; }
-
-                        /* Make range inputs overlay the track and center thumbs vertically */
                         .combined-range input[type=range] { -webkit-appearance:none; appearance:none; position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:24px; background:transparent; margin:0; padding:0; }
                         .combined-range input[type=range]::-webkit-slider-runnable-track { height:8px; background:transparent; border-radius:9999px; }
                         .combined-range input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid #006633; box-shadow:0 1px 2px rgba(0,0,0,0.15); transform:translateY(-50%); }
@@ -413,64 +418,269 @@ export default function SearchBar({
                 document.body
               )
             )}
-          </div>
+            
 
-          {/* Phòng/Ngủ & Số người */}
-          <div className="relative" ref={roomsRef}>
-            <button type="button" onClick={() => setRoomsPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
-              <span className="text-slate-700">Phòng/Ngủ & Người</span>
+            <button type="button" ref={roomsRef} onClick={() => { setRoomsPickerOpen(v => { const nv = !v; if (nv) { setLocationPickerOpen(false); setPricePickerOpen(false); setAllPickerOpen(false); } return nv; }); }} className="flex-1 text-left px-4 py-2 text-sm">
+              <div className="text-xs text-slate-500">Khách</div>
+              <div className="text-sm text-slate-800">{guests ? `${guests} khách` : 'Thêm khách'}</div>
             </button>
-            {roomsPickerOpen && typeof document !== 'undefined' && (
-                createPortal(
-                <div
-                  ref={(el) => { roomsPaneRef.current = el; }}
-                  style={{
-                    position: 'fixed',
-                    top: roomsPos ? `${roomsPos.top}px` : undefined,
-                    left: roomsPos ? `${roomsPos.left}px` : undefined,
-                    width: roomsPos?.width ? `${roomsPos.width}px` : '360px',
-                    maxWidth: '92vw'
-                  }}
-                  className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
-                >
-                  <div className="text-sm font-medium text-slate-700 mb-3">Phòng & Số người</div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-slate-600 w-36">Phòng khách</div>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setGuests((g) => String(Math.max(1, Number(g || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
-                        <input type="number" min={1} max={12} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={guests} onChange={(e)=> setGuests(e.target.value)} />
-                        <button type="button" onClick={() => setGuests((g) => String(Math.min(12, Number(g || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-slate-600 w-36">Phòng ngủ</div>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setBeds((b) => String(Math.max(1, Number(b || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
-                        <input type="number" min={1} max={6} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={beds} onChange={(e)=> setBeds(e.target.value)} />
-                        <button type="button" onClick={() => setBeds((b) => String(Math.min(6, Number(b || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-slate-600 w-36">Số người ở</div>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => setOccupants((o) => String(Math.max(1, Number(o || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
-                        <input type="number" min={1} max={20} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
-                        <button type="button" onClick={() => setOccupants((o) => String(Math.min(20, Number(o || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
-                      </div>
+            {roomsPickerOpen && typeof document !== 'undefined' && roomsRef?.current && createPortal(
+              <div
+                ref={(el) => { roomsPaneRef.current = el; }}
+                style={{
+                  position: 'fixed',
+                  top: roomsPos ? `${roomsPos.top}px` : undefined,
+                  left: roomsPos ? `${roomsPos.left}px` : undefined,
+                  width: roomsPos?.width ? `${roomsPos.width}px` : '360px',
+                  maxWidth: '92vw'
+                }}
+                className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
+              >
+                <div className="text-sm font-medium text-slate-700 mb-3">Tuỳ chọn</div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">Số lượng người</div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setGuests((g) => String(Math.max(1, Number(g || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                      <input type="number" min={1} max={20} className="w-12 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={guests} onChange={(e)=> setGuests(e.target.value)} />
+                      <button type="button" onClick={() => setGuests((g) => String(Math.min(20, Number(g || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2 mt-3">
-                    <button type="button" onClick={() => setRoomsPickerOpen(false)} className="text-xs px-2 py-1 rounded-full border border-emerald-200 text-emerald-700">Đóng</button>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">Số phòng ngủ</div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setBeds((b) => String(Math.max(0, Number(b || 0) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                      <input type="number" min={0} max={10} className="w-12 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={beds} onChange={(e)=> setBeds(e.target.value)} />
+                      <button type="button" onClick={() => setBeds((b) => String(Math.min(10, Number(b || 0) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                    </div>
                   </div>
-                </div>,
-                document.body
-              )
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">Số phòng WC</div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setOccupants((o) => String(Math.max(0, Number(o || 0) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                      <input type="number" min={0} max={10} className="w-12 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
+                      <button type="button" onClick={() => setOccupants((o) => String(Math.min(10, Number(o || 0) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>,
+              document.body
             )}
           </div>
-        </div>
+        ) : (
+          <>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={placeholder}
+              className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
+            />
+            {/* Three horizontal filter options: Khu vực | Khoảng giá | Phòng/Ngủ & Số người */}
+            <div className="hidden sm:flex items-center gap-2">
+              {/* Khu vực */}
+              <div className="relative" ref={locationRef}>
+                <button type="button" onClick={() => setLocationPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+                  <span className="text-slate-700">{locationName ? `Khu vực: ${locationName}` : 'Khu vực'}</span>
+                </button>
+                {locationPickerOpen && typeof document !== 'undefined' && (
+                  createPortal(
+                    <div
+                      ref={(el) => { locationPaneRef.current = el; }}
+                      style={{
+                        position: 'fixed',
+                        top: locationPos ? `${locationPos.top}px` : undefined,
+                        left: locationPos ? `${locationPos.left}px` : undefined,
+                        width: locationPos?.width ? `${locationPos.width}px` : '320px',
+                        maxWidth: '92vw'
+                      }}
+                      className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
+                    >
+                      <div className="text-xs text-slate-500 mb-2">Khu vực</div>
+                      <input
+                        type="text"
+                        placeholder="Nhập tên quận (VD: Cầu Giấy)"
+                        className="w-full rounded-lg border px-3 py-2 text-sm"
+                        value={locationName ?? ''}
+                        onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
+                      />
+                      <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
+                      <div className="flex flex-wrap gap-2">
+                        {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
+                          <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
+                        ))}
+                      </div>
+                    </div>,
+                    document.body
+                  )
+                )}
+              </div>
+
+              {/* Khoảng giá */}
+              <div className="relative" ref={(el) => { priceRef.current = el; }}>
+                <button type="button" onClick={() => setPricePickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+                  <span className="text-slate-700">{(priceMin != null || priceMax != null) ? `Giá: ${formatVND(priceMin) || ''}${priceMin && priceMax ? '–' : ''}${formatVND(priceMax) || ''}` : 'Khoảng giá'}</span>
+                </button>
+                {pricePickerOpen && typeof document !== 'undefined' && (
+                  createPortal(
+                    <div
+                      ref={(el) => { pricePaneRef.current = el; }}
+                      style={{
+                        position: 'fixed',
+                        top: pricePos ? `${pricePos.top}px` : undefined,
+                        left: pricePos ? `${pricePos.left}px` : undefined,
+                        width: pricePos?.width ? `${pricePos.width}px` : '360px',
+                        maxWidth: '96vw'
+                      }}
+                      className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-semibold text-slate-800">Khoảng giá</div>
+                        <div className="text-xs text-slate-400">VND / tháng</div>
+                      </div>
+
+                      <div className="mb-3 flex flex-col gap-3">
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          <div>Min: <span className="font-medium text-slate-700">{formatVND(priceMin) || '0'}</span></div>
+                          <div>Max: <span className="font-medium text-slate-700">{formatVND(priceMax) || formatVND(PRICE_SLIDER_MAX)}</span></div>
+                        </div>
+
+                        {/* Combined dual-handle slider: two overlapping ranges with a colored track */}
+                        <div className="relative w-full h-8 flex items-center combined-range">
+                          {(() => {
+                            const minVal = priceMin ?? 0;
+                            const maxVal = priceMax ?? PRICE_SLIDER_MAX;
+                            const minPct = Math.round((minVal / PRICE_SLIDER_MAX) * 100);
+                            const maxPct = Math.round((maxVal / PRICE_SLIDER_MAX) * 100);
+                            const trackStyle = { background: `linear-gradient(to right, #eefaf2 0% ${minPct}%, #b7f3c9 ${minPct}% ${maxPct}%, #eefaf2 ${maxPct}% 100%)` };
+                            return (
+                              <div className="w-full px-2 slider-track" style={trackStyle}>
+                                <div className="relative">
+                                  <input
+                                    aria-label="Min price"
+                                    type="range"
+                                    min={0}
+                                    max={PRICE_SLIDER_MAX}
+                                    step={PRICE_SLIDER_STEP}
+                                    value={minVal}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      setPriceMin(val === 0 ? undefined : val);
+                                      if (priceMax != null && val > priceMax) setPriceMax(val);
+                                    }}
+                                    className="absolute inset-0 w-full appearance-none bg-transparent h-8"
+                                    style={{ zIndex: 30 }}
+                                  />
+
+                                  <input
+                                    aria-label="Max price"
+                                    type="range"
+                                    min={0}
+                                    max={PRICE_SLIDER_MAX}
+                                    step={PRICE_SLIDER_STEP}
+                                    value={maxVal}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      setPriceMax(val === PRICE_SLIDER_MAX ? undefined : val);
+                                      if (priceMin != null && val < priceMin) setPriceMin(val);
+                                    }}
+                                    className="absolute inset-0 w-full appearance-none bg-transparent h-8"
+                                    style={{ zIndex: 40 }}
+                                  />
+                                  {/* invisible spacer to keep height */}
+                                  <div className="h-2" />
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <style>{`
+                            /* Wrapper height and centering */
+                            .combined-range { height:36px; }
+                            .combined-range .slider-track { height:8px; border-radius:9999px; display:block; }
+
+                            /* Make range inputs overlay the track and center thumbs vertically */
+                            .combined-range input[type=range] { -webkit-appearance:none; appearance:none; position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:24px; background:transparent; margin:0; padding:0; }
+                            .combined-range input[type=range]::-webkit-slider-runnable-track { height:8px; background:transparent; border-radius:9999px; }
+                            .combined-range input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid #006633; box-shadow:0 1px 2px rgba(0,0,0,0.15); transform:translateY(-50%); }
+                            .combined-range input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid #006633; box-shadow:0 1px 2px rgba(0,0,0,0.15); transform:translateY(-50%); }
+                          `}</style>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-3 gap-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => { setPriceMin(undefined); setPriceMax(2000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">Dưới 2 triệu</button>
+                          <button type="button" onClick={() => { setPriceMin(2000000); setPriceMax(4000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">2 - 4 triệu</button>
+                          <button type="button" onClick={() => { setPriceMin(4000000); setPriceMax(6000000); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">4 - 6 triệu</button>
+                          <button type="button" onClick={() => { setPriceMin(6000000); setPriceMax(undefined); }} className="text-xs px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-50">Trên 6 triệu</button>
+                        </div>
+                        <button type="button" onClick={() => setPricePickerOpen(false)} className="text-xs px-2 py-1 rounded-full border border-slate-200 text-slate-600">Đóng</button>
+                      </div>
+                    </div>,
+                    document.body
+                  )
+                )}
+              </div>
+
+              {/* Phòng/Ngủ & Số người */}
+              <div className="relative" ref={roomsRef}>
+                <button type="button" onClick={() => setRoomsPickerOpen(v => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium" style={{ borderColor: '#e6f4ea', background: 'white' }}>
+                  <span className="text-slate-700">Phòng/Ngủ & Người</span>
+                </button>
+                {roomsPickerOpen && typeof document !== 'undefined' && (
+                  createPortal(
+                    <div
+                      ref={(el) => { roomsPaneRef.current = el; }}
+                      style={{
+                        position: 'fixed',
+                        top: roomsPos ? `${roomsPos.top}px` : undefined,
+                        left: roomsPos ? `${roomsPos.left}px` : undefined,
+                        width: roomsPos?.width ? `${roomsPos.width}px` : '360px',
+                        maxWidth: '92vw'
+                      }}
+                      className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[300px]"
+                    >
+                      <div className="text-sm font-medium text-slate-700 mb-3">Phòng & Số người</div>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-slate-600 w-36">Phòng khách</div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setGuests((g) => String(Math.max(1, Number(g || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                            <input type="number" min={1} max={12} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={guests} onChange={(e)=> setGuests(e.target.value)} />
+                            <button type="button" onClick={() => setGuests((g) => String(Math.min(12, Number(g || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-slate-600 w-36">Phòng ngủ</div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setBeds((b) => String(Math.max(1, Number(b || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                            <input type="number" min={1} max={6} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={beds} onChange={(e)=> setBeds(e.target.value)} />
+                            <button type="button" onClick={() => setBeds((b) => String(Math.min(6, Number(b || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-slate-600 w-36">Số người ở</div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setOccupants((o) => String(Math.max(1, Number(o || 1) - 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>−</button>
+                            <input type="number" min={1} max={20} className="w-10 h-8 rounded border border-slate-200 px-0 text-sm text-center" value={occupants} onChange={(e)=> setOccupants(e.target.value)} />
+                            <button type="button" onClick={() => setOccupants((o) => String(Math.min(20, Number(o || 1) + 1)))} className="w-8 h-8 rounded-md border flex items-center justify-center text-lg" style={{ borderColor: '#e6f4ea', color: '#006633' }}>+</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-2 mt-3">
+                        <button type="button" onClick={() => setRoomsPickerOpen(false)} className="text-xs px-2 py-1 rounded-full border border-emerald-200 text-emerald-700">Đóng</button>
+                      </div>
+                    </div>,
+                    document.body
+                  )
+                )}
+              </div>
+            </div>
+          </>
+  )}
         <button
           type="submit"
           className="inline-flex items-center rounded-full bg-emerald-600 text-white px-5 py-2 text-sm font-semibold hover:bg-emerald-700 cursor-pointer"

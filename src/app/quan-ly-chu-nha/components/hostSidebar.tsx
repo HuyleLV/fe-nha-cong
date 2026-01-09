@@ -94,6 +94,20 @@ export default function HostSidebar() {
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/bo-tra", label: "Báo cáo bỏ trả", icon: FileText },
       ],
     },
+    {
+      href: "/quan-ly-chu-nha/bao-cao-tai-chinh",
+      label: "Báo cáo tài chính",
+      icon: BarChart2,
+      children: [
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/so-quy-theo-ngay", label: "Sổ quỹ theo ngày", icon: FileText },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/dong-tien", label: "Dòng tiền", icon: DollarSign },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/phan-bo-loi-nhuan", label: "Phân bổ lợi nhuận", icon: BarChart2 },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/khach-no-tien", label: "Khách nợ tiền", icon: FileText },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/lich-thanh-toan", label: "Lịch thanh toán", icon: CalendarDays },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/tien-thua", label: "Tiền thừa", icon: DollarSign },
+        { href: "/quan-ly-chu-nha/bao-cao-tai-chinh/danh-sach-tien-coc", label: "Danh sách tiền cọc", icon: FileText },
+      ],
+    },
     { href: "/quan-ly-chu-nha/cai-dat-chung", label: "Cài đặt chung", icon: FileText },
     {
       href: "/quan-ly-chu-nha/danh-muc-khac",

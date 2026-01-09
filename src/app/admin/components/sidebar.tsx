@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle, Video } from "lucide-react";
 import { Me } from "@/type/user";
 
 export default function Sidebar() {
@@ -50,6 +50,7 @@ export default function Sidebar() {
     { href: "/admin/moderation", label: "Kiểm duyệt", icon: CalendarDays },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
     { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
+  { href: "/admin/short-review", label: "Quản lý Short Review", icon: Video },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
 

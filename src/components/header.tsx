@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import SearchBar from "@/components/searchBar";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -169,6 +170,25 @@ export default function Header() {
     { label: "TÌM THỢ", href: "/" },
   ];
 
+  // When the homepage hero search is scrolled out of view, show a compact SearchBar in header
+  const [showCompactSearch, setShowCompactSearch] = useState(false);
+
+  useEffect(() => {
+    const anchor = typeof document !== "undefined" ? document.getElementById("hero-search-anchor") : null;
+    if (!anchor) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          setShowCompactSearch(!e.isIntersecting);
+        });
+      },
+      { root: null, threshold: 0 }
+    );
+    obs.observe(anchor);
+    return () => obs.disconnect();
+  }, []);
+
   const AvatarButtonContent = () => {
     const url = auth?.avatarUrl?.trim();
     if (!auth || !url || avatarBroken) {
@@ -193,7 +213,6 @@ export default function Header() {
     setAvatarBroken(false);
     window.dispatchEvent(new CustomEvent("auth:logout"));
     toast.success("Đăng xuất thành công!");
-    // Always go to login page after logout
     try {
       router.replace("/dang-nhap");
     } catch {}
@@ -218,23 +237,38 @@ export default function Header() {
     <>
       {/* Header */}
       <header className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#006633] to-[#4CAF50] text-white shadow-md">
-        <div className="max-w-screen-2xl mx-auto flex items-center justify-between px-4 py-2">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between px-4 h-20">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center">
             <Image src={logo} alt="Logo" className="h-10 w-auto" priority />
           </Link>
 
-          {/* Nav desktop */}
-          <nav className="hidden md:flex items-center gap-6 text-base font-semibold bg-white text-green-800 py-2 px-6 rounded-full shadow">
-            {mainMenus.map((m) => (
-              <Link
-                key={m.label}
-                href={m.href}
-                className="px-4 py-1 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] transition"
-              >
-                {m.label}
-              </Link>
-            ))}
+          {/* Nav desktop: show compact SearchBar when homepage hero search is scrolled out */}
+          <nav
+            className={
+              `hidden md:flex items-center gap-6 text-base font-semibold ` +
+              (showCompactSearch
+                ? `text-white`
+                : `bg-white rounded-full shadow text-slate-700`)
+            }
+          >
+            {!showCompactSearch ? (
+              mainMenus.map((m) => (
+                <Link
+                  key={m.label}
+                  href={m.href}
+                  className={`px-6 py-2 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] transition ${showCompactSearch ? '' : ''}`}
+                >
+                  {m.label}
+                </Link>
+              ))
+            ) : (
+              <div className="px-2">
+                <div className="w-[720px] max-w-[80vw]">
+                  <SearchBar segmented compact className="!p-0" />
+                </div>
+              </div>
+            )}
           </nav>
 
           {/* Actions */}

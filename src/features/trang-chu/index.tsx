@@ -19,6 +19,7 @@ import { useDevice } from "@/hooks/useDevice";
 import { apartmentService, ApiSectionHome, HomeSectionsResponse } from "@/services/apartmentService";
 import img1 from "@/assets/img-03.png"
 import PromoSection from "@/components/PromoSection";
+import ShortReviewInline from "@/features/short-review/inline";
 
 const PARTNERS: PartnerLogo[] = [
   { label: "20AGAIN" }, { label: "LIIN" }, { label: "FPT" },
@@ -28,7 +29,6 @@ const PARTNERS: PartnerLogo[] = [
 export default function TrangChu() {
   const { isMobile } = useDevice();
   const router = useRouter();
-  const [mode, setMode] = useState<'phong'|'nha'|'mat-bang'|undefined>('phong');
 
   const [city, setCity] = useState<HomeSectionsResponse["city"] | null>(null);
   const [sections, setSections] = useState<ApiSectionHome[]>([]);
@@ -197,34 +197,13 @@ export default function TrangChu() {
 
         {/* Overlay search card (Agoda-style) */}
         <div className="absolute left-0 right-0 flex justify-center px-4 md:px-6 top-full -translate-y-1/2 z-20">
-          <div className="pointer-events-auto w-full max-w-5xl">
+          <div id="hero-search-anchor" className="pointer-events-auto w-full max-w-5xl">
             <div className="rounded-2xl bg-white/95 backdrop-blur shadow-xl ring-1 ring-black/5 p-3 md:p-4">
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-                <button
-                  type="button"
-                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='phong' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
-                  onClick={() => setMode('phong')}
-                >
-                  Thuê phòng
-                </button>
-                <button
-                  type="button"
-                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='nha' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
-                  onClick={() => setMode('nha')}
-                >
-                  Thuê nhà
-                </button>
-                <button
-                  type="button"
-                  className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium shadow-sm ${mode==='mat-bang' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}`}
-                  onClick={() => setMode('mat-bang')}
-                >
-                  Thuê mặt bằng
-                </button>
               </div>
               <SearchBar
                 className="mt-3"
-                mode={mode}
+                segmented
                 onOpenLocation={() => console.log('open location picker')}
                 onSearch={(q, opts) => {
                   const params = new URLSearchParams();
@@ -354,6 +333,9 @@ export default function TrangChu() {
           />
         )}
       </div>
+
+      {/* Short review inline (limit 5) immediately below upcoming vacant section */}
+      <ShortReviewInline limit={5} />
 
       <PromoSection />
 
