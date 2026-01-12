@@ -17,9 +17,11 @@ import FaqCarousel, { FaqItem } from "@/components/faqCarousel";
 import { Apartment } from "@/type/apartment";
 import { useDevice } from "@/hooks/useDevice";
 import { apartmentService, ApiSectionHome, HomeSectionsResponse } from "@/services/apartmentService";
-import img1 from "@/assets/img-03.png"
+import nhanthongbao from "@/assets/nhan-thong-bao.png"
 import PromoSection from "@/components/PromoSection";
 import ShortReviewInline from "@/features/short-review/inline";
+import { newsService } from "@/services/newsService";
+import Link from "next/link";
 
 const PARTNERS: PartnerLogo[] = [
   { label: "20AGAIN" }, { label: "LIIN" }, { label: "FPT" },
@@ -37,8 +39,23 @@ export default function TrangChu() {
   const [upcomingVacant, setUpcomingVacant] = useState<Apartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [newsItems, setNewsItems] = useState<any[]>([]);
+  const [loadingNews, setLoadingNews] = useState(false);
 
   useEffect(() => {
+    // load top news for homepage
+    (async () => {
+      try {
+        setLoadingNews(true);
+        const { items } = await newsService.getAll({ page: 1, limit: 4 });
+        setNewsItems(items || []);
+      } catch (e) {
+        // ignore
+      } finally {
+        setLoadingNews(false);
+      }
+    })();
+
   const controller = new AbortController();
 
     (async () => {
@@ -293,6 +310,96 @@ export default function TrangChu() {
 
       {/* ===== FAQ ===== */}
       <FaqCarousel />
+
+      {/* ===== Top Nhà Tiếp thị (static sample avatars) ===== */}
+      <section className="max-w-screen-2xl mx-auto px-4 md:px-0 py-4">
+        <div className="bg-white rounded-xl p-5">
+          <div className="flex items-center mb-6">
+            <h3 className="text-xl font-bold">Top Nhà Tiếp thị</h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 items-start justify-items-center">
+            {[
+              { name: 'Nguyễn Văn A' },
+              { name: 'Lê Thị B' },
+              { name: 'Trần Văn C' },
+              { name: 'Phạm Thị D' },
+              { name: 'Hoàng Văn E' },
+            ].map((p, idx) => (
+              <div key={idx} className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-emerald-400 to-sky-500 flex items-center justify-center text-white font-bold text-xl sm:text-2xl">
+                  {p.name.split(' ').slice(-1)[0][0]}
+                </div>
+                <div className="text-sm mt-3 text-slate-800">{p.name}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Tin tức và sự kiện (4 items) ===== */}
+      <section className="max-w-screen-2xl mx-auto px-4 md:px-0 py-4">
+        <div className="bg-white rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Tin tức &amp; Sự kiện</h3>
+            <Link href="/news" className="text-sm text-slate-500 hover:underline">Xem thêm</Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {loadingNews && <div className="col-span-full py-6 text-center text-slate-500">Đang tải...</div>}
+            {!loadingNews && newsItems.length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-500">Chưa có tin tức.</div>
+            )}
+            {!loadingNews && newsItems.map((it: any) => (
+              <div key={it.id} className="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white">
+                <div className="h-36 bg-slate-100 flex items-center justify-center text-slate-400">
+                  {it.coverImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={it.coverImageUrl} alt={it.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">No image</div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <div className="font-semibold text-slate-800 line-clamp-2">{it.title}</div>
+                  <div className="text-sm text-slate-500 mt-2">{it.excerpt || ''}</div>
+                  <div className="mt-3">
+                    <Link href={`/news/${it.slug}`} className="text-sm text-sky-600 font-medium">Đọc thêm →</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* ===== Nhận thông báo từ chúng tôi (subscribe) ===== */}
+      <section className="max-w-screen-2xl mx-auto px-4 md:px-0 py-4">
+        <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 items-center">
+            <div className="p-6 md:p-10">
+              <h3 className="text-2xl font-bold mb-2">Nhận thông báo từ chúng tôi</h3>
+              <p className="text-slate-600 mb-4">Đọc và chia sẻ quan điểm mới về bất kì chủ đề nào. Bất cứ ai cũng có thể tham gia. Nhận nhiều ưu đãi hơn.</p>
+
+              <ul className="text-sm text-slate-700 mb-4 space-y-1">
+                <li>• Thêm ưu đãi</li>
+                <li>• Nhận thông tin cập nhật mới nhất</li>
+              </ul>
+
+              <form className="flex flex-col sm:flex-row gap-3 sm:gap-4" onSubmit={(e) => { e.preventDefault(); /* no-op for now */ }}>
+                <label htmlFor="subscribe-email" className="sr-only">Nhập email</label>
+                <input id="subscribe-email" type="email" placeholder="Nhập email" className="w-full sm:flex-1 rounded-md border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                <button type="submit" className="rounded-md bg-emerald-600 text-white px-4 py-3 font-medium hover:bg-emerald-700">Đăng ký</button>
+              </form>
+            </div>
+
+            <div className="p-2 flex items-center justify-center bg-emerald-50">
+              <div className="w-100 h-100 sm:w-100 sm:h-100 bg-cover bg-center rounded-lg overflow-hidden">
+                <img src={nhanthongbao.src} alt="Nhận thông báo" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ===== Bản đồ ===== */}
       <section className="py-10">

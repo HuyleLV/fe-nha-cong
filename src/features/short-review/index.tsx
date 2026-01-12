@@ -92,7 +92,7 @@ export default function ShortReviewFeature() {
     <div className="container mx-auto px-4 py-6 bg-white">
       <div className="mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-3">
-          VIDEO REVIEW
+          Short Video - Trải Nghiệm Phòng
         </h2>
         <p className="text-sm text-slate-600">Khám phá những video ngắn review căn hộ theo khu vực. Video sẽ được gắn vào chi tiết căn hộ.</p>
       </div>

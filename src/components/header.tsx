@@ -37,6 +37,7 @@ import { asImageSrc } from "@/utils/imageUrl";
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const [openUser, setOpenUser] = useState(false);
   const [openNavMobile, setOpenNavMobile] = useState(false);
   const [openNavDesktop, setOpenNavDesktop] = useState(false);
@@ -173,8 +174,9 @@ export default function Header() {
 
   // When the homepage hero search is scrolled out of view, show a compact SearchBar in header
   const [showCompactSearch, setShowCompactSearch] = useState(false);
-
   useEffect(() => {
+    // only run the intersection observer on the homepage where the anchor exists
+    if (typeof pathname === "string" && pathname !== "/") return;
     const anchor = typeof document !== "undefined" ? document.getElementById("hero-search-anchor") : null;
     if (!anchor) return;
 
@@ -189,6 +191,13 @@ export default function Header() {
     obs.observe(anchor);
     return () => obs.disconnect();
   }, []);
+
+  // Ensure on non-home pages we show the default (menu links) — not the compact search
+  useEffect(() => {
+    if (typeof pathname === "string" && pathname !== "/") {
+      setShowCompactSearch(false);
+    }
+  }, [pathname]);
 
   const AvatarButtonContent = () => {
     const url = auth?.avatarUrl?.trim();
@@ -230,7 +239,6 @@ export default function Header() {
 
   // Notifications socket
   const { unread, items, markAllRead } = useNotificationsSocket(auth?.id || undefined);
-  const pathname = usePathname();
   const isChatOpen = typeof pathname === 'string' && pathname.startsWith('/chat');
   const { unread: unreadMsgs, last: lastMsg, markAllRead: markAllMsgsRead } = useMessagesSocket(auth?.id || undefined, isChatOpen);
   const isCtv = (auth as any)?.role === 'ctv' || (auth as any)?.isCtv || (auth as any)?.isCTV;

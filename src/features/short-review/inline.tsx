@@ -66,7 +66,7 @@ export default function ShortReviewInline({ limit = 5 }: { limit?: number }) {
     <section className="max-w-screen-2xl mx-auto px-4 py-4 sm:px-6 md:px-8 md:py-6 bg-white rounded-xl mt-5">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-2xl md:text-2xl font-bold">Video review</h2>
+          <h2 className="text-2xl md:text-2xl font-bold">Short Video - Trải Nghiệm Phòng</h2>
           <div className="text-sm text-slate-500">Những video ngắn review phòng</div>
         </div>
         <div>

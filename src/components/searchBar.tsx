@@ -239,7 +239,6 @@ export default function SearchBar({
       }
       const rect = locationRef.current.getBoundingClientRect();
       const maxWidth = Math.min(320, Math.floor(window.innerWidth * 0.92));
-      // prefer aligning right edge of trigger with right edge of popover, but keep inside viewport
       let left = rect.right - maxWidth;
       if (left < 8) left = 8;
       if (left + maxWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - maxWidth - 8);
@@ -286,7 +285,6 @@ export default function SearchBar({
     return;
   }, [pricePickerOpen]);
 
-  // compute rooms popover position and keep it updated on resize/scroll
   useEffect(() => {
     function updatePos() {
       if (!roomsRef.current) {
@@ -314,9 +312,6 @@ export default function SearchBar({
     return;
   }, [roomsPickerOpen]);
 
-  // (date popover removed for segmented mode; price popover is used instead)
-
-  // sync when parent updates defaults (e.g., URL params changed)
   useEffect(() => {
     setQ(defaultValue);
   }, [defaultValue]);
@@ -350,7 +345,7 @@ export default function SearchBar({
       setAreaMax(undefined);
       // keep location; user chooses per session
     } else if (mode === 'nha') {
-      setSelectedType(undefined); // chờ user chọn trong danh sách
+      setSelectedType(undefined); 
       setPriceMin(undefined);
       setPriceMax(undefined);
       setAreaMin(undefined);

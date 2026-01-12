@@ -300,21 +300,22 @@ export default function TimPhongQuanhDayPage() {
       <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 py-8 px-4">
         {/* Sidebar removed — replaced by filter button + modal to save space */}
 
-  {/* Results */}
-  <main className="md:col-span-4">
-          <div className="mb-4 flex items-center gap-3">
-            {/* Filter button placed to the left of the search bar */}
+        {/* Results */}
+        <main className="md:col-span-4">
+          <div className="mb-4 flex items-center gap-3 justify-center">
+            {/* Filter button + label placed to the left of the search bar */}
             <button
               type="button"
               onClick={() => setShowFilter(true)}
               aria-label="Bộ lọc"
-              className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-green-200 bg-white text-green-700 hover:bg-green-50"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-white text-green-700 hover:bg-green-50"
             >
               <FilterX className="w-5 h-5" />
+              <span className="text-sm font-medium">Bộ lọc</span>
             </button>
 
             <SearchBar
-              className="flex-1"
+              className="w-full max-w-3xl"
               segmented
               defaultValue={query}
               defaultGuests={guests ? Number(guests) : undefined}
