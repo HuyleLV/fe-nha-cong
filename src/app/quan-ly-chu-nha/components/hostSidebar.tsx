@@ -54,18 +54,9 @@ export default function HostSidebar() {
       ],
     },
     {
-      href: "/quan-ly-chu-nha/cu-dan",
-      label: "Cư dân",
+      href: "/quan-ly-cu-dan",
+      label: "Cư dân (Quản lý riêng)",
       icon: Users,
-      children: [
-        { href: "/quan-ly-chu-nha/cu-dan/danh-sach", label: "Danh sách cư dân", icon: Users },
-        { href: "/quan-ly-chu-nha/cu-dan/yeu-cau-dich-vu", label: "Yêu cầu dịch vụ", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/cu-dan/yeu-cau-bao-hanh", label: "Yêu cầu bảo hành", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/cu-dan/bao-sua-chua", label: "Báo sửa chữa", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/cu-dan/bao-chay-no", label: "Báo cháy nổ", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/cu-dan/khieu-nai", label: "Khiếu nại", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/cu-dan/phuong-tien", label: "Phương tiện", icon: CalendarDays },
-      ],
     },
     {
       href: "/quan-ly-chu-nha/tai-chinh",

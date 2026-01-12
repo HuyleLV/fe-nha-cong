@@ -8,6 +8,9 @@ import clsx from "clsx";
 import type { Route } from "next";
 import { toSlug } from "@/utils/formatSlug";
 import { fNumber, formatMoneyVND } from '@/utils/format-number';
+import { toast } from 'react-toastify';
+import { locationService } from '@/services/locationService';
+import type { Location } from '@/type/location';
 
 type Mode = 'phong' | 'nha' | 'mat-bang';
 
@@ -69,21 +72,104 @@ export default function SearchBar({
   const [areaMax, setAreaMax] = useState<number | undefined>(undefined);
   const [locationName, setLocationName] = useState<string | undefined>(undefined);
   const [locationSlug, setLocationSlug] = useState<string | undefined>(undefined);
-  // date range removed from search (replaced by price range)
+  const [province, setProvince] = useState<number | undefined>(undefined);
+  const [city, setCity] = useState<number | undefined>(undefined);
+  const [district, setDistrict] = useState<number | undefined>(undefined);
+  const [nearby, setNearby] = useState<{ lat: number; lng: number } | null>(null);
+
+  const [provincesList, setProvincesList] = useState<Location[]>([]);
+  const [citiesList, setCitiesList] = useState<Location[]>([]);
+  const [districtsList, setDistrictsList] = useState<Location[]>([]);
   const router = useRouter();
   const PRICE_SLIDER_MAX = 10000000;
   const PRICE_SLIDER_STEP = 500000;
-  // display helper: format VND with thousands separators; if value looks like it was
-  // provided in 'thousands' (e.g. 2000 instead of 2_000_000) multiply by 1000.
-  // This is a small heuristic to handle inconsistent value sources.
   const formatVND = (v?: number) => {
     if (typeof v !== 'number') return '';
     let val = v;
-    // if value is suspiciously small for a monthly price, scale it
     if (val > 0 && val < 10000) val = val * 1000;
-    // use formatMoneyVND for consistent Vietnamese formatting without symbol
     return formatMoneyVND(val, false);
   };
+
+    const handleNearbyClick = () => {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        toast.error('Trình duyệt không hỗ trợ định vị');
+        return;
+      }
+
+      toast.info('Đang lấy vị trí của bạn...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setNearby({ lat, lng });
+          setLocationName('Lân cận');
+          setLocationSlug(`nearby:${lat.toFixed(6)}:${lng.toFixed(6)}`);
+          setProvince(undefined);
+          setCity(undefined);
+          setDistrict(undefined);
+          setLocationPickerOpen(false);
+          toast.success('Đã lấy vị trí. Hiển thị kết quả lân cận.');
+        },
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) toast.error('Vui lòng cho phép quyền vị trí để sử dụng tính năng Lân cận');
+          else toast.error('Không thể lấy vị trí. Vui lòng thử lại.');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    };
+
+    // Fetch provinces when opening the location picker (lazy)
+    useEffect(() => {
+      let cancelled = false;
+      async function loadProvinces() {
+        try {
+          const { items } = await locationService.getAll({ page: 1, limit: 200, level: 'Province' as any });
+          if (!cancelled) setProvincesList(items || []);
+        } catch (err) {
+          // silent - keep fallback empty
+        }
+      }
+      if (locationPickerOpen && provincesList.length === 0) loadProvinces();
+      return () => { cancelled = true; };
+    }, [locationPickerOpen]);
+
+    // When province changes, load cities
+    useEffect(() => {
+      let cancelled = false;
+      async function loadCities() {
+        if (!province) {
+          setCitiesList([]);
+          return;
+        }
+        try {
+          const { items } = await locationService.getAll({ page: 1, limit: 500, level: 'City' as any, parentId: province });
+          if (!cancelled) setCitiesList(items || []);
+        } catch (err) {
+          setCitiesList([]);
+        }
+      }
+      loadCities();
+      return () => { cancelled = true; };
+    }, [province]);
+
+    // When city changes, load districts
+    useEffect(() => {
+      let cancelled = false;
+      async function loadDistricts() {
+        if (!city) {
+          setDistrictsList([]);
+          return;
+        }
+        try {
+          const { items } = await locationService.getAll({ page: 1, limit: 1000, level: 'District' as any, parentId: city });
+          if (!cancelled) setDistrictsList(items || []);
+        } catch (err) {
+          setDistrictsList([]);
+        }
+      }
+      loadDistricts();
+      return () => { cancelled = true; };
+    }, [city]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,7 +189,10 @@ export default function SearchBar({
       if (priceMax !== undefined) qs.set("maxPrice", String(priceMax));
       if (areaMin !== undefined) qs.set("minArea", String(areaMin));
       if (areaMax !== undefined) qs.set("maxArea", String(areaMax));
-      if (locationSlug) qs.set("locationSlug", locationSlug);
+      if (nearby) {
+        qs.set('nearbyLat', String(nearby.lat));
+        qs.set('nearbyLng', String(nearby.lng));
+      } else if (locationSlug) qs.set("locationSlug", locationSlug);
       router.push(`/search?${qs.toString()}` as Route);
     }
   }
@@ -170,7 +259,6 @@ export default function SearchBar({
     return;
   }, [locationPickerOpen]);
 
-  // compute price popover position and keep it updated on resize/scroll
   useEffect(() => {
     function updatePos() {
       if (!priceRef.current) {
@@ -307,19 +395,63 @@ export default function SearchBar({
                 }}
                 className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
               >
-                <div className="text-xs text-slate-500 mb-2">Khu vực</div>
-                <input
-                  type="text"
-                  placeholder="Nhập tên quận (VD: Cầu Giấy)"
-                  className="w-full rounded-lg border px-3 py-2 text-sm"
-                  value={locationName ?? ''}
-                  onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
-                />
-                <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
-                <div className="flex flex-wrap gap-2">
-                  {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
-                    <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
-                  ))}
+                <div className="flex items-start justify-between">
+                  <div className="text-xs text-slate-500 mb-2">Khu vực</div>
+                  <button type="button" onClick={() => setLocationPickerOpen(false)} className="text-slate-400 hover:text-slate-600 ml-2">✕</button>
+                </div>
+
+                <div className="mb-3">
+                  <button type="button" onClick={handleNearbyClick} className="w-full text-left px-3 py-2 rounded-md border border-emerald-200 hover:bg-emerald-50 text-emerald-800">Lân cận (Tìm xung quanh bạn)</button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs text-slate-400 mb-2">Tỉnh / TP</div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {provincesList.length === 0 ? (
+                        <div className="text-sm text-slate-400">Đang tải...</div>
+                      ) : provincesList.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => { setProvince(p.id); setCity(undefined); setDistrict(undefined); }}
+                          className={clsx("px-3 py-1 rounded-full border text-sm whitespace-nowrap", province === p.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-800 border-emerald-200')}
+                        >{p.name}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs text-slate-400 mb-2">Thành phố / Huyện</div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {citiesList.length === 0 ? (
+                        <div className="text-sm text-slate-400">Chọn tỉnh trước</div>
+                      ) : citiesList.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setCity(c.id); setDistrict(undefined); }}
+                          className={clsx("px-3 py-1 rounded-full border text-sm whitespace-nowrap", city === c.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-800 border-emerald-200')}
+                        >{c.name}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs text-slate-400 mb-2">Quận / Phường</div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {districtsList.length === 0 ? (
+                        <div className="text-sm text-slate-400">Chọn thành phố trước</div>
+                      ) : districtsList.map(d => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => { setLocationName(d.name || undefined); setLocationSlug(d.slug || undefined); setProvince(undefined); setCity(undefined); setDistrict(d.id); setLocationPickerOpen(false); }}
+                          className="px-3 py-1 rounded-full border bg-white text-emerald-800 border-emerald-200 text-sm whitespace-nowrap"
+                        >{d.name}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>,
               document.body
@@ -497,19 +629,63 @@ export default function SearchBar({
                       }}
                       className="bg-white rounded-2xl shadow-lg p-4 z-[100000] border border-emerald-100 min-w-[280px]"
                     >
-                      <div className="text-xs text-slate-500 mb-2">Khu vực</div>
-                      <input
-                        type="text"
-                        placeholder="Nhập tên quận (VD: Cầu Giấy)"
-                        className="w-full rounded-lg border px-3 py-2 text-sm"
-                        value={locationName ?? ''}
-                        onChange={(e)=> { setLocationName(e.target.value); setLocationSlug(e.target.value ? toSlug(e.target.value) : undefined); }}
-                      />
-                      <div className="text-xs text-slate-500 mt-2 mb-1">Gợi ý</div>
-                      <div className="flex flex-wrap gap-2">
-                        {["Ba Đình","Cầu Giấy","Đống Đa","Hai Bà Trưng","Hoàn Kiếm","Thanh Xuân","Nam Từ Liêm","Bắc Từ Liêm","Hà Đông"].map(n => (
-                          <button key={n} type="button" onClick={()=> { setLocationName(n); setLocationSlug(toSlug(n)); }} className="px-2 py-1 text-xs rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800">{n}</button>
-                        ))}
+                      <div className="flex items-start justify-between">
+                        <div className="text-xs text-slate-500 mb-2">Khu vực</div>
+                        <button type="button" onClick={() => setLocationPickerOpen(false)} className="text-slate-400 hover:text-slate-600 ml-2">✕</button>
+                      </div>
+
+                      <div className="mb-3">
+                        <button type="button" onClick={handleNearbyClick} className="w-full text-left px-3 py-2 rounded-md border border-emerald-200 hover:bg-emerald-50 text-emerald-800">Lân cận (Tìm xung quanh bạn)</button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-xs text-slate-400 mb-2">Tỉnh / TP</div>
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {provincesList.length === 0 ? (
+                              <div className="text-sm text-slate-400">Đang tải...</div>
+                            ) : provincesList.map(p => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => { setProvince(p.id); setCity(undefined); setDistrict(undefined); }}
+                                className={clsx("px-3 py-1 rounded-full border text-sm whitespace-nowrap", province === p.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-800 border-emerald-200')}
+                              >{p.name}</button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-xs text-slate-400 mb-2">Thành phố / Huyện</div>
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {citiesList.length === 0 ? (
+                              <div className="text-sm text-slate-400">Chọn tỉnh trước</div>
+                            ) : citiesList.map(c => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => { setCity(c.id); setDistrict(undefined); }}
+                                className={clsx("px-3 py-1 rounded-full border text-sm whitespace-nowrap", city === c.id ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-800 border-emerald-200')}
+                              >{c.name}</button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-xs text-slate-400 mb-2">Quận / Phường</div>
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {districtsList.length === 0 ? (
+                              <div className="text-sm text-slate-400">Chọn thành phố trước</div>
+                            ) : districtsList.map(d => (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => { setLocationName(d.name || undefined); setLocationSlug(d.slug || undefined); setProvince(undefined); setCity(undefined); setDistrict(d.id); setLocationPickerOpen(false); }}
+                                className="px-3 py-1 rounded-full border bg-white text-emerald-800 border-emerald-200 text-sm whitespace-nowrap"
+                              >{d.name}</button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>,
                     document.body

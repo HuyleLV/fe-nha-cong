@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   MapPinned, ChevronDown, ChevronRight, Flame,
-  FilterX, Map as MapIcon, List, RotateCcw
+  FilterX, Map as MapIcon, List, RotateCcw, X
 } from "lucide-react";
 import SearchBar from "@/components/searchBar";
 import { Apartment, ApartmentStatus } from "@/type/apartment";
@@ -29,6 +29,8 @@ export default function TimPhongQuanhDayPage() {
   // View / sort
   const [view, setView] = useState<"list" | "map">("list");
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "area_desc">("newest");
+  // modal state for mobile filter popup
+  const [showFilter, setShowFilter] = useState(false);
 
   // search
   const [query, setQuery] = useState("");
@@ -192,6 +194,16 @@ export default function TimPhongQuanhDayPage() {
     return () => { cancelled = true; };
   }, [locationSlug]);
 
+  // close modal on Escape
+  useEffect(() => {
+    if (!showFilter) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowFilter(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showFilter]);
+
   // Call API via service + paginate meta (debounce 300ms)
   useEffect(() => {
     let cancelled = false;
@@ -286,168 +298,23 @@ export default function TimPhongQuanhDayPage() {
 
       {/* Layout */}
       <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 py-8 px-4">
-        {/* Sidebar */}
-        <aside className="md:col-span-1">
-          <div className="sticky top-4 bg-white rounded-2xl border border-emerald-200 shadow-sm p-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-green-900 font-bold">Bộ lọc</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={clearAll}
-                  className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
-                >
-                  <RotateCcw className="w-4 h-4" /> Xoá
-                </button>
-                <button
-                  onClick={() => setPage(1)}
-                  className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
-                >
-                  <FilterX className="w-4 h-4" /> Áp dụng
-                </button>
-              </div>
-            </div>
+        {/* Sidebar removed — replaced by filter button + modal to save space */}
 
+  {/* Results */}
+  <main className="md:col-span-4">
+          <div className="mb-4 flex items-center gap-3">
+            {/* Filter button placed to the left of the search bar */}
+            <button
+              type="button"
+              onClick={() => setShowFilter(true)}
+              aria-label="Bộ lọc"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-green-200 bg-white text-green-700 hover:bg-green-50"
+            >
+              <FilterX className="w-5 h-5" />
+            </button>
 
-            {/* Khu vực */}
-            <Accordion title="Khu vực">
-              <LocationLookup
-                value={selectedLocation}
-                onChange={async (loc: any) => {
-                  // loc có thể là object Location từ dropdown hoặc null khi clear
-                  const slug = loc?.slug || (loc?.name ? toSlug(loc.name) : undefined);
-                  setSelectedLocation(loc ?? null);
-                  setLocationSlug(slug);
-                  setPage(1);
-                }}
-                placeholder="Chọn khu vực"
-                levels={["District"] as any}
-                limit={100}
-              />
-              {locationSlug && (
-                <div className="text-xs text-slate-600 mt-2">
-                  Đang lọc theo: <span className="font-medium text-green-700">{selectedLocation?.name || locationSlug}</span>
-                </div>
-              )}
-            </Accordion>
-
-            {/* Giá (DualRange) */}
-            <Accordion title="Giá (VND/tháng)">
-              {/* Preset nhanh */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {[
-                  { label: "< 3tr", v: [0, 3_000_000] },
-                  { label: "3–5tr", v: [3_000_000, 5_000_000] },
-                  { label: "5–8tr", v: [5_000_000, 8_000_000] },
-                  { label: "8–12tr", v: [8_000_000, 12_000_000] },
-                ].map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => { setMinPrice(String(p.v[0])); setMaxPrice(String(p.v[1])); setPage(1); }}
-                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <DualRange
-                min={0}
-                max={12_000_000}
-                step={50_000}
-                valueMin={Number(minPrice || 0)}
-                valueMax={Number(maxPrice || 12_000_000)}
-                onChange={(minV, maxV) => {
-                  setMinPrice(String(minV));
-                  setMaxPrice(String(maxV));
-                  setPage(1);
-                }}
-                format={(v) => `${toVnd(v)} đ`}
-              />
-            </Accordion>
-
-            {/* Diện tích (DualRange) */}
-            <Accordion title="Diện tích (m²)">
-              {/* Preset nhanh */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                {[
-                  { label: "<20", v: [0, 20] },
-                  { label: "20–30", v: [20, 30] },
-                  { label: "30–40", v: [30, 40] },
-                  { label: "≥40", v: [40, 100] },
-                ].map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => { setMinArea(String(p.v[0])); setMaxArea(String(p.v[1])); setPage(1); }}
-                    className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <DualRange
-                min={0}
-                max={100}
-                step={1}
-                valueMin={Number(minArea || 0)}
-                valueMax={Number(maxArea || 100)}
-                onChange={(minV, maxV) => {
-                  setMinArea(String(minV));
-                  setMaxArea(String(maxV));
-                  setPage(1);
-                }}
-                format={(v) => `${v} m²`}
-              />
-            </Accordion>
-
-            {/* Phòng ngủ / WC */}
-            <Accordion title="Số phòng">
-              <div className="flex flex-col gap-3">
-                <VerticalCounter label="Phòng ngủ" value={bedrooms} onChange={setBedrooms} max={5} />
-                <VerticalCounter label="WC" value={bathrooms} onChange={setBathrooms} max={5} />
-                <VerticalCounter label="Phòng khách" value={livingRooms} onChange={setLivingRooms} max={5} />
-              </div>
-            </Accordion>
-
-            {/* Tiện nghi */}
-            <Accordion title="Tiện nghi (Nâng cao)">
-                <div className="grid grid-cols-2 gap-2">
-                  <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>Vệ sinh khép kín</ToggleChip>
-                  <ToggleChip active={hasSharedBathroom} onToggle={() => { setHasSharedBathroom(!hasSharedBathroom); setPage(1); }}>Vệ sinh chung</ToggleChip>
-
-                  <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
-                  <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
-
-                  <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
-                  <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
-
-                  <ToggleChip active={hasWashingMachineShared} onToggle={() => { setHasWashingMachineShared(!hasWashingMachineShared); setPage(1); }}>Máy giặt (chung)</ToggleChip>
-                  <ToggleChip active={hasWashingMachinePrivate} onToggle={() => { setHasWashingMachinePrivate(!hasWashingMachinePrivate); setPage(1); }}>Máy giặt (riêng)</ToggleChip>
-
-                  <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
-                  <ToggleChip active={hasDesk} onToggle={() => { setHasDesk(!hasDesk); setPage(1); }}>Bàn làm việc</ToggleChip>
-
-                  <ToggleChip active={hasKitchenTable} onToggle={() => { setHasKitchenTable(!hasKitchenTable); setPage(1); }}>Bàn bếp</ToggleChip>
-                  <ToggleChip active={hasKitchenCabinet} onToggle={() => { setHasKitchenCabinet(!hasKitchenCabinet); setPage(1); }}>Tủ bếp</ToggleChip>
-
-                  <ToggleChip active={hasRangeHood} onToggle={() => { setHasRangeHood(!hasRangeHood); setPage(1); }}>Hút mùi</ToggleChip>
-                  <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>Tủ lạnh</ToggleChip>
-
-                  <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
-                  <ToggleChip active={hasElevator} onToggle={() => { setHasElevator(!hasElevator); setPage(1); }}>Thang máy</ToggleChip>
-                  <ToggleChip active={allowPet} onToggle={() => { setAllowPet(!allowPet); setPage(1); }}>Cho nuôi pet</ToggleChip>
-                  <ToggleChip active={allowElectricVehicle} onToggle={() => { setAllowElectricVehicle(!allowElectricVehicle); setPage(1); }}>Xe điện (sạc/gửi)</ToggleChip>
-                </div>
-            </Accordion>
-          </div>
-        </aside>
-
-        {/* Results */}
-        <main className="md:col-span-3">
-          <div className="mb-4">
             <SearchBar
-              className=""
+              className="flex-1"
               segmented
               defaultValue={query}
               defaultGuests={guests ? Number(guests) : undefined}
@@ -459,13 +326,183 @@ export default function TimPhongQuanhDayPage() {
                 setPage(1);
               }}
             />
+
+            {/* Filter modal: show current filter UI in a popup */}
+            {showFilter && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+                <div className="absolute inset-0 bg-black/30" onClick={() => setShowFilter(false)} />
+                <div className="relative w-full max-w-2xl mx-auto h-[calc(100vh-4rem)]">
+                  <div className="bg-white rounded-2xl border border-emerald-200 shadow-lg flex flex-col h-full overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setShowFilter(false)}
+                          aria-label="Đóng bộ lọc"
+                          className="p-2 rounded-md text-slate-600 hover:bg-slate-100"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                        <h2 className="text-green-900 font-bold text-lg">Bộ lọc</h2>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => { clearAll(); }}
+                          className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
+                        >
+                          <RotateCcw className="w-4 h-4" /> Xoá
+                        </button>
+                        <button
+                          onClick={() => { setPage(1); setShowFilter(false); }}
+                          className="text-sm inline-flex items-center gap-1 text-white bg-green-600 px-3 py-1.5 rounded-md"
+                        >
+                          <FilterX className="w-4 h-4" /> Áp dụng
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 overflow-auto flex-1 space-y-4">
+                      {/* Khu vực */}
+                      <Accordion title="Khu vực">
+                        <LocationLookup
+                          value={selectedLocation}
+                          onChange={async (loc: any) => {
+                            const slug = loc?.slug || (loc?.name ? toSlug(loc.name) : undefined);
+                            setSelectedLocation(loc ?? null);
+                            setLocationSlug(slug);
+                            setPage(1);
+                          }}
+                          placeholder="Chọn khu vực"
+                          levels={["District"] as any}
+                          limit={100}
+                        />
+                        {locationSlug && (
+                          <div className="text-xs text-slate-600 mt-2">
+                            Đang lọc theo: <span className="font-medium text-green-700">{selectedLocation?.name || locationSlug}</span>
+                          </div>
+                        )}
+                      </Accordion>
+
+                      {/* Giá (DualRange) */}
+                      <Accordion title="Giá (VND/tháng)">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {[
+                            { label: "< 3tr", v: [0, 3_000_000] },
+                            { label: "3–5tr", v: [3_000_000, 5_000_000] },
+                            { label: "5–8tr", v: [5_000_000, 8_000_000] },
+                            { label: "8–12tr", v: [8_000_000, 12_000_000] },
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              onClick={() => { setMinPrice(String(p.v[0])); setMaxPrice(String(p.v[1])); setPage(1); }}
+                              className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <DualRange
+                          min={0}
+                          max={12_000_000}
+                          step={50_000}
+                          valueMin={Number(minPrice || 0)}
+                          valueMax={Number(maxPrice || 12_000_000)}
+                          onChange={(minV, maxV) => {
+                            setMinPrice(String(minV));
+                            setMaxPrice(String(maxV));
+                            setPage(1);
+                          }}
+                          format={(v) => `${toVnd(v)} đ`}
+                        />
+                      </Accordion>
+
+                      {/* Diện tích (DualRange) */}
+                      <Accordion title="Diện tích (m²)">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {[
+                            { label: "<20", v: [0, 20] },
+                            { label: "20–30", v: [20, 30] },
+                            { label: "30–40", v: [30, 40] },
+                            { label: "≥40", v: [40, 100] },
+                          ].map((p) => (
+                            <button
+                              key={p.label}
+                              onClick={() => { setMinArea(String(p.v[0])); setMaxArea(String(p.v[1])); setPage(1); }}
+                              className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <DualRange
+                          min={0}
+                          max={100}
+                          step={1}
+                          valueMin={Number(minArea || 0)}
+                          valueMax={Number(maxArea || 100)}
+                          onChange={(minV, maxV) => {
+                            setMinArea(String(minV));
+                            setMaxArea(String(maxV));
+                            setPage(1);
+                          }}
+                          format={(v) => `${v} m²`}
+                        />
+                      </Accordion>
+
+                      {/* Phòng ngủ / WC */}
+                      <Accordion title="Số phòng">
+                        <div className="flex flex-col gap-3">
+                          <VerticalCounter label="Phòng ngủ" value={bedrooms} onChange={setBedrooms} max={5} />
+                          <VerticalCounter label="WC" value={bathrooms} onChange={setBathrooms} max={5} />
+                          <VerticalCounter label="Phòng khách" value={livingRooms} onChange={setLivingRooms} max={5} />
+                        </div>
+                      </Accordion>
+
+                      {/* Tiện nghi */}
+                      <Accordion title="Tiện nghi (Nâng cao)">
+                        <div className="grid grid-cols-2 gap-2">
+                          <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>Vệ sinh khép kín</ToggleChip>
+                          <ToggleChip active={hasSharedBathroom} onToggle={() => { setHasSharedBathroom(!hasSharedBathroom); setPage(1); }}>Vệ sinh chung</ToggleChip>
+
+                          <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
+                          <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
+
+                          <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
+                          <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
+
+                          <ToggleChip active={hasWashingMachineShared} onToggle={() => { setHasWashingMachineShared(!hasWashingMachineShared); setPage(1); }}>Máy giặt (chung)</ToggleChip>
+                          <ToggleChip active={hasWashingMachinePrivate} onToggle={() => { setHasWashingMachinePrivate(!hasWashingMachinePrivate); setPage(1); }}>Máy giặt (riêng)</ToggleChip>
+
+                          <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
+                          <ToggleChip active={hasDesk} onToggle={() => { setHasDesk(!hasDesk); setPage(1); }}>Bàn làm việc</ToggleChip>
+
+                          <ToggleChip active={hasKitchenTable} onToggle={() => { setHasKitchenTable(!hasKitchenTable); setPage(1); }}>Bàn bếp</ToggleChip>
+                          <ToggleChip active={hasKitchenCabinet} onToggle={() => { setHasKitchenCabinet(!hasKitchenCabinet); setPage(1); }}>Tủ bếp</ToggleChip>
+
+                          <ToggleChip active={hasRangeHood} onToggle={() => { setHasRangeHood(!hasRangeHood); setPage(1); }}>Hút mùi</ToggleChip>
+                          <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>Tủ lạnh</ToggleChip>
+
+                          <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
+                          <ToggleChip active={hasElevator} onToggle={() => { setHasElevator(!hasElevator); setPage(1); }}>Thang máy</ToggleChip>
+                          <ToggleChip active={allowPet} onToggle={() => { setAllowPet(!allowPet); setPage(1); }}>Cho nuôi pet</ToggleChip>
+                          <ToggleChip active={allowElectricVehicle} onToggle={() => { setAllowElectricVehicle(!allowElectricVehicle); setPage(1); }}>Xe điện (sạc/gửi)</ToggleChip>
+                        </div>
+                      </Accordion>
+                    </div>
+
+                    {/* footer removed — actions are available in the header */}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <Toolbar sort={sort} setSort={setSort} view={view} setView={setView} count={total} />
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
-              {Array.from({ length: 6 }).map((_, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
+              {Array.from({ length: 12 }).map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
@@ -473,7 +510,7 @@ export default function TimPhongQuanhDayPage() {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
           ) : view === "list" ? (
             results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-4 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
                 {results.map((r) => (
                   <RoomCardItem key={r.id} item={r as any} />
                 ))}

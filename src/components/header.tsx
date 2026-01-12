@@ -9,7 +9,7 @@ import MyImage from "@/components/myImage";
 import logo from "../assets/logo-trang.png";
 import {
   Heart,
-    Bell,
+  Bell,
   UserRound,
   Menu,
   X,
@@ -26,6 +26,7 @@ import {
   Map,
   MessageSquare,
   FileSearch,
+  Users,
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
@@ -232,6 +233,7 @@ export default function Header() {
   const pathname = usePathname();
   const isChatOpen = typeof pathname === 'string' && pathname.startsWith('/chat');
   const { unread: unreadMsgs, last: lastMsg, markAllRead: markAllMsgsRead } = useMessagesSocket(auth?.id || undefined, isChatOpen);
+  const isCtv = (auth as any)?.role === 'ctv' || (auth as any)?.isCtv || (auth as any)?.isCTV;
 
   return (
     <>
@@ -401,6 +403,25 @@ export default function Header() {
                       <UserIcon className="w-4 h-4 mr-3" /> Tài khoản của tôi
                     </Link>
 
+
+                    <Link
+                      href="/quan-ly-cu-dan"
+                      className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                      onClick={() => setOpenUser(false)}
+                    >
+                      <UserPlus className="w-4 h-4 mr-3" /> Quản lý cư dân
+                    </Link>
+
+                    {isCtv && (
+                      <Link
+                        href="/quan-ly-cu-dan/ctv/danh-sach"
+                        className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+                        onClick={() => setOpenUser(false)}
+                      >
+                        <Users className="w-4 h-4 mr-3" /> Quản lý CTV
+                      </Link>
+                    )}
+
                     {auth?.role === 'host' && (
                       <Link
                         href="/quan-ly-chu-nha"
@@ -532,6 +553,20 @@ export default function Header() {
                 </div>
               </div>
 
+              <Link href="/tai-khoan-cua-toi" onClick={() => setOpenNavMobile(false)} className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <UserIcon className="w-4 h-4 mr-3" /> Tài khoản của tôi
+              </Link>
+
+              <Link href="/quan-ly-cu-dan" onClick={() => setOpenNavMobile(false)} className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                <UserPlus className="w-4 h-4 mr-3" /> Quản lý cư dân
+              </Link>
+
+              {isCtv && (
+                <Link href="/quan-ly-cu-dan/ctv/danh-sach" onClick={() => setOpenNavMobile(false)} className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
+                  <Users className="w-4 h-4 mr-3" /> Quản lý CTV
+                </Link>
+              )}
+
               {auth?.role === 'host' && (
                 <Link
                   href="/quan-ly-chu-nha"
@@ -541,13 +576,8 @@ export default function Header() {
                   <Building2 className="w-4 h-4 mr-3" /> Quản lý chủ nhà
                 </Link>
               )}
-              <button
-                onClick={() => {
-                  setOpenNavMobile(false);
-                  handleLogout();
-                }}
-                className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-rose-50 hover:text-rose-700"
-              >
+
+              <button onClick={() => { setOpenNavMobile(false); handleLogout(); }} className="mt-2 w-full text-left flex items-center rounded-xl px-4 py-3 hover:bg-rose-50 hover:text-rose-700">
                 <LogOut className="w-4 h-4 mr-3" /> Đăng xuất
               </button>
             </>

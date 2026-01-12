@@ -204,6 +204,7 @@ export default function Sidebar() {
           if (isModeration) {
             const subLinks = [
               { href: "/admin/moderation/apartment", label: "Căn hộ", Icon: House },
+              { href: "/admin/moderation/ctv-requests", label: "CTV", Icon: Users },
             ];
             const groupActive = pathname.startsWith("/admin/moderation");
 

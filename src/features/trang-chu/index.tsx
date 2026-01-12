@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Slide } from "react-slideshow-image";
-import "react-slideshow-image/dist/styles.css";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
+// dynamically load the heavy carousel (client-only) to reduce initial bundle
+const HeroCarousel = dynamic(() => import("@/components/HeroCarousel"), { ssr: false });
 import SearchBar from "@/components/searchBar";
 import { useRouter } from "next/navigation";
 import DistrictListingSection from "@/components/DistrictListingSection";
@@ -65,49 +65,57 @@ export default function TrangChu() {
         setCity(rawCity);
         setSections(patchedSections);
 
-        // Load popular apartments (most interested)
-        const topRaw = await apartmentService.getMostInterested({ limit: 5, signal: controller.signal });
-        // Enrich popular items with district/city so DistrictListingSection can derive a "district" label
-        const top: Apartment[] = (topRaw || []).map((a) => {
-          const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
-          const districtName = secFound?.district?.name || a.location?.name || "";
-          const cityName = rawCity?.name || "";
-          const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
-          return { ...a, addressPath } as Apartment;
-        });
-        setPopular(top);
+        // Mark page as ready once core content (sections) is available so the hero + search show quickly
+        setLoading(false);
 
-        // Load discounted apartments (highest discount first)
-        try {
-          const discRes = await apartmentService.getDiscounted({ page: 1, limit: 10 });
-          let discountedItems = (discRes.items || []).map((a) => {
-            const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
-            const districtName = secFound?.district?.name || a.location?.name || "";
-            const cityName = rawCity?.name || "";
-            const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
-            return { ...a, addressPath } as Apartment;
-          });
+        // Load other less-critical lists in parallel to avoid blocking the UI
+        (async () => {
+          try {
+            const [topRes, discRes, upRes] = await Promise.allSettled([
+              apartmentService.getMostInterested({ limit: 5, signal: controller.signal }),
+              apartmentService.getDiscounted({ page: 1, limit: 10 }),
+              apartmentService.getUpcomingVacant({ status: 'sap_trong', limit: 10 }),
+            ]);
 
-          // Backend returns discounted apartments already filtered and ordered by `discount_desc`.
-          // Use the API result directly (do not slice here) so the server controls pagination/limits.
-          setDiscounted(discountedItems);
-        } catch (e) {
-          // im lặng nếu lỗi phần ưu đãi
-        }
-        // Load upcoming vacant apartments (public, approved) - limit 10
-        try {
-          const upRes = await apartmentService.getUpcomingVacant({ status: 'sap_trong', limit: 10 });
-          const upItems: Apartment[] = (upRes.items || []).map((a) => {
-            const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
-            const districtName = secFound?.district?.name || a.location?.name || "";
-            const cityName = rawCity?.name || "";
-            const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
-            return { ...a, addressPath } as Apartment;
-          });
-          setUpcomingVacant(upItems);
-        } catch (e) {
-          // ignore if fails
-        }
+            if (topRes.status === 'fulfilled') {
+              const topRaw = topRes.value || [];
+              const top: Apartment[] = (topRaw || []).map((a) => {
+                const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
+                const districtName = secFound?.district?.name || a.location?.name || "";
+                const cityName = rawCity?.name || "";
+                const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
+                return { ...a, addressPath } as Apartment;
+              });
+              setPopular(top);
+            }
+
+            if (discRes.status === 'fulfilled') {
+              const disc = discRes.value;
+              const discountedItems = (disc.items || []).map((a: Apartment) => {
+                const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
+                const districtName = secFound?.district?.name || a.location?.name || "";
+                const cityName = rawCity?.name || "";
+                const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
+                return { ...a, addressPath } as Apartment;
+              });
+              setDiscounted(discountedItems);
+            }
+
+            if (upRes.status === 'fulfilled') {
+              const up = upRes.value;
+              const upItems: Apartment[] = (up.items || []).map((a: Apartment) => {
+                const secFound = patchedSections.find((sec) => sec.apartments?.some((x) => x.id === a.id));
+                const districtName = secFound?.district?.name || a.location?.name || "";
+                const cityName = rawCity?.name || "";
+                const addressPath = a.addressPath || [districtName, cityName].filter(Boolean).join(", ");
+                return { ...a, addressPath } as Apartment;
+              });
+              setUpcomingVacant(upItems);
+            }
+          } catch (e) {
+            // ignore errors for these non-blocking requests
+          }
+        })();
       } catch (e: any) {
         if (e?.name !== "CanceledError" && e?.message !== "canceled") {
           setErr(e?.message || "Không tải được dữ liệu");
@@ -137,63 +145,7 @@ export default function TrangChu() {
   return (
     <div className="w-full bg-emerald-50/30">
       <div className="w-full relative pt-2">
-        <Slide
-          autoplay
-          indicators
-          arrows
-          infinite
-          prevArrow={
-            <button
-              aria-label="Slide trước"
-              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          }
-          nextArrow={
-            <button
-              aria-label="Slide tiếp"
-              className="inline-flex items-center justify-center rounded-full bg-white/80 text-emerald-700 shadow ring-1 ring-emerald-200 hover:bg-white focus:outline-none"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          }
-          duration={3500}
-          transitionDuration={600}
-          pauseOnHover
-        >
-          {(() => {
-            const images = [banner4.src, banner1.src, banner2.src, banner3.src];
-            const chunkSize = isMobile ? 1 : 1;
-            const slidesArr: string[][] = [];
-            for (let i = 0; i < images.length; i += chunkSize) {
-              slidesArr.push(images.slice(i, i + chunkSize));
-            }
-            // If last slide has fewer items and we're on desktop, pad it by repeating from start
-            if (!isMobile && slidesArr.length) {
-              const last = slidesArr[slidesArr.length - 1];
-              if (last.length < chunkSize) {
-                let idx = 0;
-                while (last.length < chunkSize) {
-                  last.push(images[idx % images.length]);
-                  idx++;
-                }
-              }
-            }
-
-            return slidesArr.map((group, sidx) => (
-              <div key={sidx} className="w-full">
-                <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
-                  {group.map((src, idx) => (
-                    <div key={idx} className={`w-full ${isMobile ? ("h-60") : ("h-60 md:w-1/1")} mx-2 rounded bg-center bg-cover overflow-hidden`} style={{ backgroundImage: `url(${src})` }}>
-                      <div className="h-full w-full bg-black/8" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ));
-          })()}
-        </Slide>
+        <HeroCarousel images={[banner4.src, banner1.src, banner2.src, banner3.src]} isMobile={isMobile} />
 
         {/* Overlay search card (Agoda-style) */}
         <div className="absolute left-0 right-0 flex justify-center px-4 md:px-6 top-full -translate-y-1/2 z-20">
