@@ -27,7 +27,14 @@ export default function CuDanSidebar() {
     return name.slice(0, 2).toUpperCase();
   }, [info?.name]);
 
-  const menu = [
+  type MenuItem = {
+    href: string;
+    label: string;
+    icon: any;
+    children?: Array<{ href: string; label: string }>; // optional nested items
+  };
+
+  const menu: MenuItem[] = [
   { href: "/quan-ly-cu-dan", label: "Tổng quan", icon: LayoutDashboard },
     { href: "/quan-ly-cu-dan/phong-da-xem", label: "Lịch sử xem phòng", icon: FileText },
     { href: "/quan-ly-cu-dan/lich-su-thue", label: "Lịch sử thuê phòng", icon: CalendarDays },
@@ -40,10 +47,6 @@ export default function CuDanSidebar() {
       href: "/quan-ly-cu-dan/yeu-cau",
       label: "Trang yêu cầu",
       icon: FileText,
-      children: [
-        { href: "/quan-ly-cu-dan/yeu-cau/bao-chay", label: "Báo cháy" },
-        { href: "/quan-ly-cu-dan/yeu-cau/bao-sua-chua", label: "Báo sửa chữa" },
-      ],
     },
   ];
 
@@ -102,16 +105,6 @@ export default function CuDanSidebar() {
                   <m.icon className="w-4.5 h-4.5" />
                   <span className="truncate">{m.label}</span>
                 </Link>
-
-                {active && (
-                  <div className="mt-1 space-y-1 pl-10">
-                    {m.children.map((ch) => (
-                      <Link key={ch.href} href={ch.href} className={`group relative flex items-center gap-3 py-2 rounded-md text-sm ${pathname?.startsWith(ch.href) ? "bg-emerald-50 text-emerald-700" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"}`}>
-                        <span className="truncate">{ch.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           }

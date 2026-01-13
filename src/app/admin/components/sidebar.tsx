@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle, Video } from "lucide-react";
+import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle, Video, Bell } from "lucide-react";
 import { Me } from "@/type/user";
+import { useServiceRequestsSocket } from '@/hooks/useServiceRequestsSocket';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -44,6 +45,9 @@ export default function Sidebar() {
     return name.slice(0, 2).toUpperCase();
   }, [info?.name]);
 
+  // Realtime unread counter for admin service requests
+  const { unread: unreadReqs, markAllRead: markReqsRead } = useServiceRequestsSocket({ isAdmin: true, userId: info?.id || undefined });
+
   const menuItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
@@ -54,6 +58,7 @@ export default function Sidebar() {
   { href: "/admin/short-review", label: "Quản lý Short Review", icon: Video },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
+    { href: "/admin/yeu-cau", label: "Quản lý Yêu cầu", icon: Bell },
 
     // Replace Building & Apartment with operational groups similar to host's 'Vận hành'
     {
@@ -307,7 +312,14 @@ export default function Sidebar() {
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
                   )}
                   <Icon className="w-4.5 h-4.5" />
-                  <span className="truncate">{label}</span>
+                  <span className="truncate flex items-center gap-2">
+                    {label}
+                    {href === '/admin/yeu-cau' && unreadReqs > 0 && (
+                      <span className="text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                        {unreadReqs > 9 ? '9+' : unreadReqs}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               </div>
             );

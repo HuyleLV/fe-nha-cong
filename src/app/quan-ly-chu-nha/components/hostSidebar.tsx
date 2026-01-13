@@ -54,11 +54,6 @@ export default function HostSidebar() {
       ],
     },
     {
-      href: "/quan-ly-cu-dan",
-      label: "Cư dân (Quản lý riêng)",
-      icon: Users,
-    },
-    {
       href: "/quan-ly-chu-nha/tai-chinh",
       label: "Tài chính",
       icon: BarChart2,
@@ -77,9 +72,9 @@ export default function HostSidebar() {
       children: [
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-trong", label: "Căn hộ trống", icon: Home },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-sap-trong", label: "Căn hộ sắp trống", icon: CalendarDays },
-        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/phong-gia-han", label: "Phòng gia hạn", icon: Users },
-        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day-cu", label: "Tỷ lệ lấp đầy (cũ)", icon: BarChart2 },
-        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day-moi", label: "Tỷ lệ lấp đầy (Mới)", icon: BarChart2 },
+  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-gia-han", label: "Căn hộ gia hạn", icon: Users },
+  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-nhan-coc", label: "Căn hộ nhận cọc", icon: Home },
+  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day", label: "Tỷ lệ lấp đầy", icon: BarChart2 },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/khuyen-mai", label: "Báo cáo khuyến mãi", icon: DollarSign },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/cho-thue", label: "Báo cáo cho thuê", icon: FileText },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/bo-tra", label: "Báo cáo bỏ trả", icon: FileText },

@@ -307,7 +307,12 @@ export default function Header() {
                 <div ref={bellMenuRef} className="absolute right-0 top-12 w-100 bg-white text-slate-700 rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2 bg-emerald-50">
                     <div className="text-sm font-semibold">Thông báo</div>
-                    <button className="text-xs text-emerald-700" onClick={()=> { markAllRead(); setOpenBell(false);} }>Đánh dấu đã đọc</button>
+                    <div className="flex items-center gap-3">
+                      {(auth && String(auth.role).toLowerCase()==='admin') && (
+                        <Link href="/admin/yeu-cau" className="text-xs text-emerald-700 hover:underline">Quản lý yêu cầu</Link>
+                      )}
+                      <button className="text-xs text-emerald-700" onClick={()=> { markAllRead(); setOpenBell(false);} }>Đánh dấu đã đọc</button>
+                    </div>
                   </div>
                   <div className="max-h-[320px] overflow-auto">
                     {items.length === 0 ? (

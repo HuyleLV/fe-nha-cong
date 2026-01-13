@@ -3,7 +3,7 @@
 import React from 'react';
 import Panel from '@/app/quan-ly-chu-nha/components/Panel';
 
-export default function PhongGiaHanPage(){
+export default function CanHoGiaHanPage(){
   return (
     <div className="p-6">
       <Panel title="Căn hộ gia hạn">
