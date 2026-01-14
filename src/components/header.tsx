@@ -23,10 +23,12 @@ import {
   Phone,
   LogOut,
   User as UserIcon,
+  Eye,
   Map,
   MessageSquare,
   FileSearch,
   Users,
+  FileText,
 } from "lucide-react";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
@@ -535,6 +537,32 @@ export default function Header() {
           ))}
         </nav>
 
+        {/* CTA CTV (ẩn nếu đã là host) */}
+        {(!auth || auth.role !== 'host') && (
+          <div className="px-3">
+            <div className="rounded-2xl border bg-emerald-50/60 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl p-2 bg-emerald-100">
+                  <Building2 className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-emerald-800">Trở thành CTV</div>
+                  <p className="text-sm text-emerald-700/80 mt-1">
+                    Gia nhập đội ngũ CTV – chủ động thời gian, thu nhập không giới hạn.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/tro-thanh-ctv"
+                onClick={() => setOpenNavMobile(false)}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
+              >
+                Bắt đầu ngay <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="mx-3 my-3 h-px bg-slate-200" />
 
         <div className="px-3">
@@ -590,16 +618,94 @@ export default function Header() {
                 </Link>
               )}
 
+              {/* Quick items similar to desktop */}
+              <Link
+                href={auth ? "/phong-quan-tam" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => { setOpenNavMobile(false); router.push("/phong-quan-tam"); });
+                }}
+                className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                <Heart className="w-4 h-4 mr-3" /> Phòng quan tâm
+              </Link>
+              <Link
+                href={auth ? "/phong-da-xem" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => { setOpenNavMobile(false); router.push("/phong-da-xem"); });
+                }}
+                className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                <Eye className="w-4 h-4 mr-3" /> Phòng đã xem
+              </Link>
+              <Link
+                href={auth ? "/phong-quan-tam" : "/dang-nhap"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ensureAuthAnd(() => { setOpenNavMobile(false); router.push("/phong-quan-tam"); });
+                }}
+                className="mt-2 flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+              >
+                <Heart className="w-4 h-4 mr-3" /> Phòng yêu thích
+              </Link>
+
               <button onClick={() => { setOpenNavMobile(false); handleLogout(); }} className="mt-2 w-full text-left flex items-center rounded-xl px-4 py-3 hover:bg-rose-50 hover:text-rose-700">
                 <LogOut className="w-4 h-4 mr-3" /> Đăng xuất
               </button>
             </>
           )}
 
+          {/* Blog & Hỗ trợ - same structure as desktop */}
           <div className="mx-1 my-3 h-px bg-slate-200" />
-
-          <Link href="/help" onClick={() => setOpenNavMobile(false)} className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700">
-            <LifeBuoy className="w-4 h-4 mr-3" /> Trợ giúp
+          <Link
+            href="/tim-phong-quanh-day"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Map className="w-5 h-5 mr-3" /> Tìm phòng quanh đây
+          </Link>
+          <Link
+            href="/blog"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Newspaper className="w-5 h-5 mr-3" /> Blog & Cẩm nang thuê nhà
+          </Link>
+          <Link
+            href="/tin-tuc-va-su-kien"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Newspaper className="w-5 h-5 mr-3" /> Tin tức và sự kiện
+          </Link>
+          <Link
+            href="/tro-thanh-ctv"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <UserPlus className="w-5 h-5 mr-3" /> Trở thành CTV
+          </Link>
+          <Link
+            href="/bang-gia"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <FileText className="w-5 h-5 mr-3" /> Bảng giá
+          </Link>
+          <Link
+            href="/tuyen-dung"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <FileSearch className="w-5 h-5 mr-3" /> Cơ hội nghề nghiệp
+          </Link>
+          <Link
+            href="/ve-chung-toi"
+            onClick={() => setOpenNavMobile(false)}
+            className="flex items-center rounded-xl px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <Phone className="w-5 h-5 mr-3" /> Về chúng tôi
           </Link>
         </div>
       </aside>
@@ -625,7 +731,7 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Khối CTA đối tác (ẩn nếu đã là chủ nhà) */}
+          {/* Khối CTA CTV (ẩn nếu đã là chủ nhà) */}
           {/* Ẩn CTA nếu đã là host */}
           {(!auth || auth.role !== 'host') && (
             <div className="p-5">
@@ -635,14 +741,14 @@ export default function Header() {
                     <Building2 className="w-5 h-5 text-emerald-700" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-emerald-800">Trở thành đối tác</div>
+                    <div className="font-semibold text-emerald-800">Trở thành CTV</div>
                     <p className="text-sm text-emerald-700/80 mt-1">
-                      Đăng tin nhanh, quản lý căn hộ/chỗ ở, theo dõi đơn đặt.
+                      Gia nhập đội ngũ CTV – chủ động thời gian, thu nhập không giới hạn.
                     </p>
                   </div>
                 </div>
                 <Link
-                  href="/hop-tac-cung-chung-toi"
+                  href="/tro-thanh-ctv"
                   onClick={() => setOpenNavDesktop(false)}
                   className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white px-4 py-2 hover:bg-emerald-700"
                 >
@@ -728,6 +834,27 @@ export default function Header() {
               className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
             >
               <Newspaper className="w-5 h-5" /> Blog & Cẩm nang thuê nhà
+            </Link>
+            <Link
+              href="/tin-tuc-va-su-kien"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <Newspaper className="w-5 h-5" /> Tin tức và sự kiện
+            </Link>
+            <Link
+              href="/tro-thanh-ctv"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <UserPlus className="w-5 h-5" /> Trở thành CTV
+            </Link>
+            <Link
+              href="/bang-gia"
+              onClick={() => setOpenNavDesktop(false)}
+              className="flex items-center gap-3 rounded-xl border px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
+            >
+              <FileText className="w-5 h-5" /> Bảng giá
             </Link>
             <Link
               href="/tuyen-dung"

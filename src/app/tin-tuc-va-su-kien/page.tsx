@@ -74,7 +74,7 @@ export default function NewsPage() {
                 <h3 className="text-lg font-semibold">Bài viết nổi bật</h3>
                 <div className="mt-4 space-y-3">
                   {items.slice(0, 4).map((it) => (
-                    <a key={it.id} href={`/news/${it.slug}`} className="block text-slate-800 hover:text-emerald-700">{it.title}</a>
+                    <a key={it.id} href={`/tin-tuc-va-su-kien/${it.slug}`} className="block text-slate-800 hover:text-emerald-700">{it.title}</a>
                   ))}
                 </div>
               </div>

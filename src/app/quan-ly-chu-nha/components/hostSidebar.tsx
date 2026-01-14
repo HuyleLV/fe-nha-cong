@@ -72,9 +72,9 @@ export default function HostSidebar() {
       children: [
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-trong", label: "Căn hộ trống", icon: Home },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-sap-trong", label: "Căn hộ sắp trống", icon: CalendarDays },
-  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-gia-han", label: "Căn hộ gia hạn", icon: Users },
-  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-nhan-coc", label: "Căn hộ nhận cọc", icon: Home },
-  { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day", label: "Tỷ lệ lấp đầy", icon: BarChart2 },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-gia-han", label: "Căn hộ gia hạn", icon: Users },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/can-ho-nhan-coc", label: "Căn hộ nhận cọc", icon: Home },
+        { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/ty-le-lap-day", label: "Tỷ lệ lấp đầy", icon: BarChart2 },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/khuyen-mai", label: "Báo cáo khuyến mãi", icon: DollarSign },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/cho-thue", label: "Báo cáo cho thuê", icon: FileText },
         { href: "/quan-ly-chu-nha/bao-cao-bat-dong-san/bo-tra", label: "Báo cáo bỏ trả", icon: FileText },
@@ -100,7 +100,7 @@ export default function HostSidebar() {
       label: "Danh mục khác",
       icon: FileText,
       children: [
-        { href: "/quan-ly-chu-nha/danh-muc-khac/tai-chinh", label: "Tài chính", icon: DollarSign },
+        { href: "/quan-ly-chu-nha/danh-muc-khac/danh-sach-tai-khoan", label: "Danh sách tài khoản", icon: DollarSign },
         { href: "/quan-ly-chu-nha/danh-muc-khac/tai-san", label: "Tài sản", icon: Home },
         { href: "/quan-ly-chu-nha/danh-muc-khac/quan-ly-hotline", label: "Quản lý hotline", icon: CalendarDays },
         { href: "/quan-ly-chu-nha/danh-muc-khac/zalo-oa", label: "Zalo OA", icon: Users },
@@ -160,7 +160,7 @@ export default function HostSidebar() {
   }, [openMenu]);
 
   return (
-    <aside className="w-64 bg-white text-slate-700 flex flex-col min-h-screen border-r border-slate-200 shadow-sm">
+    <aside className="w-64 bg-white text-slate-700 flex flex-col min-h-screen border-r border-slate-200 shadow-sm pt-5">
       <div className="px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white grid place-items-center">

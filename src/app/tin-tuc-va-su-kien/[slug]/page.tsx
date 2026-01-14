@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { newsService } from "@/services/newsService";
-import { usePathname } from "next/navigation";
 
 export default function NewsDetailPage({ params }: { params: { slug: string } }) {
   const { slug } = params;

@@ -341,7 +341,7 @@ export default function TrangChu() {
         <div className="bg-white rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold">Tin tức &amp; Sự kiện</h3>
-            <Link href="/news" className="text-sm text-slate-500 hover:underline">Xem thêm</Link>
+            <Link href="/tin-tuc-va-su-kien" className="text-sm text-slate-500 hover:underline">Xem thêm</Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -363,7 +363,7 @@ export default function TrangChu() {
                   <div className="font-semibold text-slate-800 line-clamp-2">{it.title}</div>
                   <div className="text-sm text-slate-500 mt-2">{it.excerpt || ''}</div>
                   <div className="mt-3">
-                    <Link href={`/news/${it.slug}`} className="text-sm text-sky-600 font-medium">Đọc thêm →</Link>
+                    <Link href={`/tin-tuc-va-su-kien/${it.slug}`} className="text-sm text-sky-600 font-medium">Đọc thêm →</Link>
                   </div>
                 </div>
               </div>
