@@ -7,10 +7,13 @@ import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { contractService } from '@/services/contractService';
 import { thuChiService } from '@/services/thuChiService';
+import { bankAccountService } from '@/services/bankAccountService';
+import { userService } from '@/services/userService';
 import UploadPicker from '@/components/UploadPicker';
 import AdminTable from '@/components/AdminTable';
 import { CheckCircle2, Save, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { formatMoneyVND } from '@/utils/format-number';
 
 export default function ThuChiEditPage() {
   const params = useParams();
@@ -35,6 +38,8 @@ export default function ThuChiEditPage() {
   const [buildings, setBuildings] = useState<any[]>([]);
   const [apartments, setApartments] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [meId, setMeId] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -42,7 +47,49 @@ export default function ThuChiEditPage() {
       setBuildings((b as any)?.items ?? (b as any)?.data ?? b ?? []);
     })();
     if (!isCreate) fetchOne();
+    (async () => {
+      try {
+        const me = await userService.getMe();
+        if (me && me.id) setMeId(me.id);
+      } catch (err) {}
+    })();
   }, []);
+
+  // load bank accounts for host
+  useEffect(() => {
+    if (!meId) return;
+    (async () => {
+      try {
+        const res = await bankAccountService.hostList({ page:1, limit:200 });
+        const items = res.items ?? [];
+        const list = items as any[];
+        const map: Record<number, number> = {};
+        list.forEach((it) => { if (it && (it.balance !== undefined && it.balance !== null)) map[it.id] = Number(it.balance); });
+        if (Object.keys(map).length === 0) {
+          try {
+            const bals = await bankAccountService.hostBalances();
+            const bm: Record<number, number> = {};
+            (Array.isArray(bals) ? bals : []).forEach((b: any) => { bm[b.id] = Number(b.balance ?? 0); });
+            setBankAccounts(list.map((it: any) => ({ ...it, balance: bm[it.id] ?? 0 })));
+          } catch (err) {
+            console.error('Không thể tải số dư tài khoản', err);
+            setBankAccounts(list);
+          }
+        } else {
+          setBankAccounts(list.map((it: any) => ({ ...it, balance: map[it.id] ?? 0 })));
+        }
+        if (!form.account || String(form.account || '').trim() === '') {
+          const def = items.find((x: any) => x.isDefault);
+          if (def) {
+            const label = `${def.bankName} — ${def.accountNumber}${def.branch ? ' — ' + def.branch : ''} (${def.accountHolder})`;
+            setForm((s:any)=>({...s, account: label}));
+          }
+        }
+      } catch (err) {
+        console.error('Không thể tải tài khoản ngân hàng', err);
+      }
+    })();
+  }, [meId]);
 
   const fetchOne = async () => {
     if (isCreate) return;
@@ -174,7 +221,18 @@ export default function ThuChiEditPage() {
 
             <div>
               <label className="block text-sm">Tài khoản</label>
-              <input value={form.account} onChange={(e)=>setForm((s:any)=>({...s, account: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3" />
+              <select value={form.account} onChange={(e)=>setForm((s:any)=>({...s, account: e.target.value}))} className="mt-1 h-10 w-full border border-slate-200 rounded px-3">
+                <option value="">-- Chọn tài khoản nhận tiền --</option>
+                <option value="Tiền mặt">Tiền mặt</option>
+                {bankAccounts.map((a)=>{
+                  const balRaw = (a as any).balance;
+                  let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
+                  if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic
+                  const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
+                  const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
+                  return <option key={a.id} value={label}>{label}</option>;
+                })}
+              </select>
             </div>
 
             <div>

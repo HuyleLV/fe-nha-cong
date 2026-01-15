@@ -21,7 +21,7 @@ export default function Page() {
   const [bankName, setBankName] = useState("");
   const [branch, setBranch] = useState("");
   const [note, setNote] = useState("");
-  const [isDefault, setIsDefault] = useState(false);
+  const [balance, setBalance] = useState<string | number>('0');
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -40,8 +40,8 @@ export default function Page() {
         setAccountNumber(data.accountNumber || "");
         setBankName(data.bankName || "");
         setBranch(data.branch || "");
-        setNote(data.note || "");
-        setIsDefault(!!data.isDefault);
+  setNote(data.note || "");
+  setBalance(data.balance ?? '0');
       } catch (err: any) {
         toast.error(err?.message ?? "Không thể tải tài khoản");
       } finally {
@@ -63,7 +63,7 @@ export default function Page() {
         bankName: bankName.trim(),
         branch: branch.trim() || undefined,
         note: note.trim() || undefined,
-        isDefault,
+        balance: (typeof balance === 'number' ? String(balance) : (balance || '0')),
       };
       if (isCreate) {
         await bankAccountService.hostCreate(payload);
@@ -129,10 +129,8 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} /> Đặt làm mặc định
-                </label>
-                <p className="text-xs text-slate-500 mt-1">Khi đặt mặc định, các tài khoản khác sẽ bỏ trạng thái mặc định.</p>
+                <label className="block text-sm font-medium text-slate-700">Số dư</label>
+                <input type="number" value={typeof balance === 'number' ? balance : String(balance)} onChange={(e) => setBalance(e.target.value)} className="mt-1 w-full rounded-md border border-slate-300/80 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200" />
               </div>
 
               <div>

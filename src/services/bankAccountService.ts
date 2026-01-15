@@ -10,6 +10,7 @@ export type BankAccount = {
   branch?: string | null;
   note?: string | null;
   isDefault?: boolean;
+  balance?: number | string;
 };
 
 export const bankAccountService = {
@@ -43,4 +44,24 @@ export const bankAccountService = {
   async hostDelete(id: number): Promise<any> {
     return axiosClient.delete(apiUrl(`/api/bank-accounts/host/${id}`));
   },
+
+  async hostBalances(): Promise<{ id: number; balance: number }[]> {
+    const res = await axiosClient.get(apiUrl(`/api/bank-accounts/host/balances`));
+    // Normalize: backend might return array or { data: [...] }
+    const payload: any = res as any;
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (payload.data && Array.isArray(payload.data)) return payload.data;
+    if (payload.items && Array.isArray(payload.items)) return payload.items;
+    return [];
+  },
+  async hostDailyCashbook(params?: { start?: string; end?: string; page?: number; limit?: number }) {
+    const res = await axiosClient.get(apiUrl(`/api/bank-accounts/host/daily-cashbook`), { params });
+    const payload: any = res as any;
+    // normalize possible shapes: array or { items, meta }
+    if (Array.isArray(payload)) return { items: payload, meta: { page: params?.page ?? 1, limit: params?.limit ?? 20, total: payload.length } };
+    if (Array.isArray(payload?.items)) return { items: payload.items, meta: payload.meta ?? { page: params?.page ?? 1, limit: params?.limit ?? 20, total: payload.items.length } };
+    if (Array.isArray(payload?.data)) return { items: payload.data, meta: payload.meta ?? { page: params?.page ?? 1, limit: params?.limit ?? 20, total: payload.data.length } };
+    return { items: [], meta: { page: params?.page ?? 1, limit: params?.limit ?? 20, total: 0 } };
+  }
 };

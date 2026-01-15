@@ -20,16 +20,10 @@ export default function AdminCtvRequestsPage() {
   const load = async () => {
     setLoading(true);
     try {
-      // call backend API (configured by NEXT_PUBLIC_API_URL) instead of Next.js local API route
+      const axiosClient = (await import("@/utils/axiosClient")).default;
       const { apiUrl } = await import("@/utils/apiUrl");
-      const res = await fetch(apiUrl("/api/admin/ctv-requests"), { credentials: "include" });
-      if (!res.ok) {
-        const txt = await res.text();
-        toast.error("Không thể tải danh sách: " + txt);
-        setItems([]);
-        return;
-      }
-      const data = await res.json();
+  const payload: any = await axiosClient.get(apiUrl("/api/admin/ctv-requests"));
+  const data = (payload && payload.data) ? payload.data : payload;
       setItems((data || []).map((d: any, i: number) => ({
         id: d.id ?? i,
         userId: d.userId ?? d.user_id,
@@ -38,9 +32,10 @@ export default function AdminCtvRequestsPage() {
         createdAt: d.createdAt ?? d.created_at ?? d.created,
         status: d.status ?? d.state ?? 'pending',
       })));
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("Lỗi khi tải dữ liệu");
+      const msg = e?.response?.data?.message || e?.message || 'Lỗi khi tải dữ liệu';
+      toast.error(msg);
       setItems([]);
     } finally {
       setLoading(false);
@@ -51,13 +46,9 @@ export default function AdminCtvRequestsPage() {
 
   const handleAction = async (id: any, action: "approve" | "reject") => {
     try {
+      const axiosClient = (await import("@/utils/axiosClient")).default;
       const { apiUrl } = await import("@/utils/apiUrl");
-      const res = await fetch(apiUrl(`/api/admin/ctv-requests/${id}/${action}`), { method: "POST", credentials: "include" });
-      if (!res.ok) {
-        const txt = await res.text();
-        toast.error("Thao tác thất bại: " + txt);
-        return;
-      }
+      await axiosClient.post(apiUrl(`/api/admin/ctv-requests/${id}/${action}`));
       toast.success(action === "approve" ? "Đã duyệt CTV" : "Đã từ chối yêu cầu");
       load();
     } catch (e) {

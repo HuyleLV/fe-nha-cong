@@ -12,6 +12,8 @@ import { PlusCircle, Save, Trash2, CheckCircle2, ChevronRight } from "lucide-rea
 import { contractService } from "@/services/contractService";
 import { userService } from "@/services/userService";
 import { serviceService } from "@/services/serviceService";
+import { bankAccountService } from '@/services/bankAccountService';
+import { formatMoneyVND } from '@/utils/format-number';
 
 // Using shared types from src/type/invoice
 
@@ -34,6 +36,7 @@ export default function InvoiceEditPage() {
     issueDate: "",
     dueDate: "",
     printTemplate: "",
+    account: '',
     note: "",
   items: [] as InvoiceItem[],
   });
@@ -45,6 +48,8 @@ export default function InvoiceEditPage() {
   const [loading, setLoading] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [pickerYear, setPickerYear] = useState<number>(new Date().getFullYear());
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [meId, setMeId] = useState<number | null>(null);
   const monthPickerRef = useRef<HTMLDivElement | null>(null);
   const monthToggleRef = useRef<HTMLButtonElement | null>(null);
 
@@ -77,6 +82,12 @@ export default function InvoiceEditPage() {
       } catch {}
     })();
     setContracts([]);
+    (async () => {
+      try {
+        const me = await userService.getMe();
+        if (me && me.id) setMeId(me.id);
+      } catch (err) {}
+    })();
   }, []);
 
   const loadApartments = async (buildingId?: number) => {
@@ -292,6 +303,7 @@ export default function InvoiceEditPage() {
         issueDate: data.issueDate ? new Date(data.issueDate).toISOString().slice(0, 10) : "",
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString().slice(0, 10) : "",
         printTemplate: data.printTemplate ?? "",
+  account: data.account ?? '',
         note: data.note ?? "",
         items: (data.items ?? []).map((it: any) => ({
           serviceName: it.serviceName ?? "",
@@ -341,6 +353,42 @@ export default function InvoiceEditPage() {
   useEffect(() => {
     if (!isCreate) fetchOne();
   }, [idParam]);
+
+  // load bank accounts for host and balances
+  useEffect(() => {
+    if (!meId) return;
+    (async () => {
+      try {
+        const res = await bankAccountService.hostList({ page:1, limit:200 });
+        const items = res.items ?? [];
+        const list = items as any[];
+        const map: Record<number, number> = {};
+        list.forEach((it) => { if (it && (it.balance !== undefined && it.balance !== null)) map[it.id] = Number(it.balance); });
+        if (Object.keys(map).length === 0) {
+          try {
+            const bals = await bankAccountService.hostBalances();
+            const bm: Record<number, number> = {};
+            (Array.isArray(bals) ? bals : []).forEach((b: any) => { bm[b.id] = Number(b.balance ?? 0); });
+            setBankAccounts(list.map((it: any) => ({ ...it, balance: bm[it.id] ?? 0 })));
+          } catch (err) {
+            console.error('Không thể tải số dư tài khoản', err);
+            setBankAccounts(list);
+          }
+        } else {
+          setBankAccounts(list.map((it: any) => ({ ...it, balance: map[it.id] ?? 0 })));
+        }
+        if (!form.account || String(form.account || '').trim() === '') {
+          const def = items.find((x: any) => x.isDefault);
+          if (def) {
+            const label = `${def.bankName} — ${def.accountNumber}${def.branch ? ' — ' + def.branch : ''} (${def.accountHolder})`;
+            setForm((s:any)=>({...s, account: label}));
+          }
+        }
+      } catch (err) {
+        console.error('Không thể tải tài khoản ngân hàng', err);
+      }
+    })();
+  }, [meId]);
 
   const searchParams = useSearchParams();
   const embedded = searchParams?.get('embedded') === '1';
@@ -710,6 +758,21 @@ export default function InvoiceEditPage() {
                     <option value="hoa-don-hop-dong-moi">Hóa đơn hợp đồng mới</option>
                   </select>
                 </div>
+                    <div>
+                      <label className="block text-sm font-medium">Tài khoản</label>
+                      <select value={String(form.account ?? "")} onChange={(e) => onChange('account', e.target.value)} className={"mt-1 " + inputCls}>
+                        <option value="">-- Chọn tài khoản nhận tiền --</option>
+                        <option value="Tiền mặt">Tiền mặt</option>
+                        {bankAccounts.map((a) => {
+                          const balRaw = (a as any).balance;
+                          let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
+                          if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic
+                          const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
+                          const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
+                          return <option key={a.id} value={label}>{label}</option>;
+                        })}
+                      </select>
+                    </div>
             </div>
           </div>
         </div>

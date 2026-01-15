@@ -429,7 +429,7 @@ export default function Header() {
 
                     {isCtv && (
                       <Link
-                        href="/quan-ly-cu-dan/ctv/danh-sach"
+                        href="/quan-ly-ctv"
                         className="flex items-center px-4 py-3 hover:bg-emerald-50 hover:text-emerald-700"
                         onClick={() => setOpenUser(false)}
                       >

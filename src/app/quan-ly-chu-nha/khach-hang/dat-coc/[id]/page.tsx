@@ -11,9 +11,12 @@ import type { Building } from '@/type/building';
 import type { Apartment } from '@/type/apartment';
 import { toast } from 'react-toastify';
 import { userService } from '@/services/userService';
+import { bankAccountService } from '@/services/bankAccountService';
+type BankAccount = { id: number; accountHolder: string; accountNumber: string; bankName: string; branch?: string | null; note?: string | null; isDefault?: boolean };
 import type { User } from '@/type/user';
 import { Save, CheckCircle2, ChevronRight } from 'lucide-react';
 import Spinner from '@/components/spinner';
+import { formatMoneyVND } from '@/utils/format-number';
 
 type FormData = {
   status?: string;
@@ -55,6 +58,7 @@ export default function DepositEditPage() {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [meId, setMeId] = useState<number | null>(null);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
   // Load buildings for current host (backend should return only host's buildings when called with host token)
   useEffect(() => {
@@ -89,6 +93,45 @@ export default function DepositEditPage() {
         setCustomers((res.data ?? []) as User[]);
       } catch (err) {
         console.error('Không thể tải khách hàng', err);
+      }
+    })();
+  }, [meId]);
+
+  // Load bank accounts for current host and set default account if available
+  useEffect(() => {
+    if (!meId) return;
+    (async () => {
+      try {
+        const res = await bankAccountService.hostList({ page: 1, limit: 200 });
+        const items = res.items ?? [];
+        const list = items as any[];
+        // attach balances from items if provided
+        const map: Record<number, number> = {};
+        list.forEach((it) => { if (it && (it.balance !== undefined && it.balance !== null)) map[it.id] = Number(it.balance); });
+        if (Object.keys(map).length === 0) {
+          try {
+            const bals = await bankAccountService.hostBalances();
+            const bm: Record<number, number> = {};
+            (Array.isArray(bals) ? bals : []).forEach((b: any) => { bm[b.id] = Number(b.balance ?? 0); });
+            setBankAccounts(list.map((it: any) => ({ ...it, balance: bm[it.id] ?? 0 })) as BankAccount[]);
+          } catch (err) {
+            console.error('Không thể tải số dư tài khoản', err);
+            setBankAccounts(list as BankAccount[]);
+          }
+        } else {
+          setBankAccounts(list.map((it: any) => ({ ...it, balance: map[it.id] ?? 0 })) as BankAccount[]);
+        }
+        // if form account empty, set to default account string
+        const current = watch('account');
+        if (!current || current === '') {
+          const def = items.find((x: any) => x.isDefault);
+          if (def) {
+            const label = `${def.bankName} — ${def.accountNumber}${def.branch ? ' — ' + def.branch : ''} (${def.accountHolder})`;
+            setValue('account', label);
+          }
+        }
+      } catch (err) {
+        console.error('Không thể tải tài khoản ngân hàng', err);
       }
     })();
   }, [meId]);
@@ -352,7 +395,19 @@ export default function DepositEditPage() {
 
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Tài khoản</label>
-                  <input className={inputCls} {...register('account')} />
+                  <select className={inputCls} {...register('account')} value={watch('account') ?? ''} onChange={(e) => setValue('account', e.target.value)}>
+                    <option value="">-- Chọn tài khoản nhận tiền --</option>
+                    <option value="Tiền mặt">Tiền mặt</option>
+                    {bankAccounts.map((a) => {
+                      const balRaw = (a as any).balance;
+                      let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
+                      if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic fix
+                      const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
+                      // place balance to the right of branch, keep account holder at end
+                      const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
+                      return <option key={a.id} value={label}>{label}</option>;
+                    })}
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

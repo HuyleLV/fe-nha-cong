@@ -9,6 +9,7 @@ import { contractService } from '@/services/contractService';
 import { buildingService } from '@/services/buildingService';
 import { apartmentService } from '@/services/apartmentService';
 import { userService } from '@/services/userService';
+import { bankAccountService } from '@/services/bankAccountService';
 import { serviceService } from '@/services/serviceService';
 import { toast } from 'react-toastify';
 import { Save, CheckCircle2, ChevronRight, PlusCircle, Eye, XCircle } from 'lucide-react';
@@ -224,6 +225,7 @@ export default function ContractEditPage() {
   const [apartmentsLoading, setApartmentsLoading] = useState<boolean>(false);
   const [customersLoading, setCustomersLoading] = useState<boolean>(false);
   const [servicesLoading, setServicesLoading] = useState<boolean>(false);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
 
   const loadBuildings = async (ownerId?: number | null) => {
     try {
@@ -287,6 +289,45 @@ export default function ContractEditPage() {
     })();
   }, []);
 
+  // load bank accounts for current host (to show account select similar to deposit page)
+  useEffect(() => {
+    if (!meId) return;
+    (async () => {
+      try {
+        const res = await bankAccountService.hostList({ page: 1, limit: 200 });
+        const items = res.items ?? [];
+        const list = items as any[];
+        // attach balances from items if provided
+        const map: Record<number, number> = {};
+        list.forEach((it) => { if (it && (it.balance !== undefined && it.balance !== null)) map[it.id] = Number(it.balance); });
+        if (Object.keys(map).length === 0) {
+          try {
+            const bals = await bankAccountService.hostBalances();
+            const bm: Record<number, number> = {};
+            (Array.isArray(bals) ? bals : []).forEach((b: any) => { bm[b.id] = Number(b.balance ?? 0); });
+            setBankAccounts(list.map((it: any) => ({ ...it, balance: bm[it.id] ?? 0 })));
+          } catch (err) {
+            console.error('Không thể tải số dư tài khoản', err);
+            setBankAccounts(list);
+          }
+        } else {
+          setBankAccounts(list.map((it: any) => ({ ...it, balance: map[it.id] ?? 0 })));
+        }
+        // if form account empty, set to default account string
+        const current = watch('account' as any);
+        if (!current || current === '') {
+          const def = items.find((x: any) => x.isDefault);
+          if (def) {
+            const label = `${def.bankName} — ${def.accountNumber}${def.branch ? ' — ' + def.branch : ''} (${def.accountHolder})`;
+            setValue('account' as any, label as any);
+          }
+        }
+      } catch (err) {
+        console.error('Không thể tải tài khoản ngân hàng', err);
+      }
+    })();
+  }, [meId]);
+
   const onSubmit = async (data: ContractForm) => {
     try {
   const payload: any = {
@@ -313,6 +354,7 @@ export default function ContractEditPage() {
           unit: f?.unit ?? null,
           billingDate: f?.billingDate || null,
         })) || [],
+        account: (data as any).account ?? null,
       };
 
       // Coerce numeric fields to numbers when possible
@@ -489,6 +531,21 @@ export default function ContractEditPage() {
                       if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') e.preventDefault();
                     }}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-600 mb-1">Tài khoản</label>
+                  <select className={inputCls} {...register('account' as any)} value={watch('account' as any) ?? ''} onChange={(e) => setValue('account' as any, e.target.value as any)}>
+                    <option value="">-- Chọn tài khoản nhận tiền --</option>
+                    <option value="Tiền mặt">Tiền mặt</option>
+                    {bankAccounts.map((a) => {
+                      const balRaw = (a as any).balance;
+                      let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
+                      if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic (match deposit page)
+                      const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
+                      const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
+                      return <option key={a.id} value={label}>{label}</option>;
+                    })}
+                  </select>
                 </div>
 
                 <div>
