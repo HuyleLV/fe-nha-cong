@@ -170,10 +170,12 @@ export default function AdminSettingsPage() {
                     )}
                 </section>
 
-                {/* Storage Config (Simplified View) */}
+
+
+                {/* Storage Config */}
                 <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-semibold mb-4 border-b pb-2">Lưu Trữ</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <h2 className="text-lg font-semibold mb-4 border-b pb-2">Lưu Trữ & CDN</h2>
+                    <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Loại Lưu Trữ</label>
                             <select
@@ -185,14 +187,163 @@ export default function AdminSettingsPage() {
                                 <option value="s3">AWS S3</option>
                                 <option value="spaces">DigitalOcean Spaces</option>
                                 <option value="ftp">FTP</option>
+                                <option value="cdn">Custom CDN</option>
                             </select>
                         </div>
+
+                        {/* S3 Settings */}
+                        {settings.storageType === 's3' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-blue-500 pl-4 py-2 bg-blue-50">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Region</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.s3?.region || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 's3', { ...settings.storageConfig?.s3, region: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Bucket</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.s3?.bucket || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 's3', { ...settings.storageConfig?.s3, bucket: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Access Key</label>
+                                    <input
+                                        type="password"
+                                        value={settings.storageConfig?.s3?.accessKeyId || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 's3', { ...settings.storageConfig?.s3, accessKeyId: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Secret Key</label>
+                                    <input
+                                        type="password"
+                                        value={settings.storageConfig?.s3?.secretAccessKey || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 's3', { ...settings.storageConfig?.s3, secretAccessKey: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700">CDN URL (Optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="https://cdn.example.com"
+                                        value={settings.storageConfig?.s3?.cdnUrl || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 's3', { ...settings.storageConfig?.s3, cdnUrl: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Spaces Settings */}
+                        {settings.storageType === 'spaces' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-teal-500 pl-4 py-2 bg-teal-50">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Endpoint</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.spaces?.endpoint || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'spaces', { ...settings.storageConfig?.spaces, endpoint: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Bucket</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.spaces?.bucket || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'spaces', { ...settings.storageConfig?.spaces, bucket: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Key</label>
+                                    <input
+                                        type="password"
+                                        value={settings.storageConfig?.spaces?.key || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'spaces', { ...settings.storageConfig?.spaces, key: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Secret</label>
+                                    <input
+                                        type="password"
+                                        value={settings.storageConfig?.spaces?.secret || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'spaces', { ...settings.storageConfig?.spaces, secret: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700">CDN URL</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.spaces?.cdnUrl || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'spaces', { ...settings.storageConfig?.spaces, cdnUrl: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* FTP Settings */}
+                        {settings.storageType === 'ftp' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-l-4 border-orange-500 pl-4 py-2 bg-orange-50">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Host</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.ftp?.host || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'ftp', { ...settings.storageConfig?.ftp, host: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Port</label>
+                                    <input
+                                        type="number"
+                                        value={settings.storageConfig?.ftp?.port || 21}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'ftp', { ...settings.storageConfig?.ftp, port: parseInt(e.target.value) })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">User</label>
+                                    <input
+                                        type="text"
+                                        value={settings.storageConfig?.ftp?.user || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'ftp', { ...settings.storageConfig?.ftp, user: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                                    <input
+                                        type="password"
+                                        value={settings.storageConfig?.ftp?.password || ''}
+                                        onChange={(e) => handleNestedChange('storageConfig', 'ftp', { ...settings.storageConfig?.ftp, password: e.target.value })}
+                                        className="w-full border rounded mt-1 px-2 py-1"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-2">
+                            <button type="button" className="text-sm text-blue-600 hover:underline">
+                                Test Connection (Coming Soon)
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">
-                        * Cấu hình chi tiết (Access Key, Secret, Bucket...) vui lòng chỉnh sửa trực tiếp trong database hoặc file .env nếu chưa hỗ trợ UI đầy đủ.
-                    </p>
                 </section>
             </form>
-        </div>
+        </div >
     );
 }
