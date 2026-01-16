@@ -24,4 +24,8 @@ export const taskService = {
     const res = await axiosClient.delete<any, any>(apiUrl(`${base}/${encodeURIComponent(String(id))}`));
     return res;
   },
+  async getReports() {
+    const res = await axiosClient.get(apiUrl(`${base}/reports/stats`));
+    return res;
+  },
 };

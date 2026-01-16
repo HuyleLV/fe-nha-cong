@@ -76,7 +76,7 @@ function pickTokenForRequest(pathname: string, method?: string): string | null {
       localStorage.removeItem('tokenUser');
       localStorage.removeItem('auth_user');
     }
-  } catch {}
+  } catch { }
 
   if (isAdminEndpoint || isPotentialAdminWrite || isAdminUI) {
     // Admin endpoint or admin UI → ưu tiên token admin
@@ -100,9 +100,9 @@ axiosClient.interceptors.request.use(
     }
 
     // Nếu bạn muốn hỗ trợ cookie-based auth (trong SSR)
-      // Always send credentials (cookies) so cookie-based auth works in browser and SSR.
-      // The server must allow credentials (Access-Control-Allow-Credentials) for CORS.
-      config.withCredentials = true;
+    // Always send credentials (cookies) so cookie-based auth works in browser and SSR.
+    // The server must allow credentials (Access-Control-Allow-Credentials) for CORS.
+    config.withCredentials = true;
 
     return config;
   },
@@ -131,15 +131,15 @@ axiosClient.interceptors.response.use(
           localStorage.removeItem('auth_user');
           sessionStorage.removeItem('auth_user');
           sessionStorage.removeItem('access_token');
-          try { localStorage.setItem('auth_logout', String(Date.now())); } catch {}
-          try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch {}
-          try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch {}
-        } catch {}
+          try { localStorage.setItem('auth_logout', String(Date.now())); } catch { }
+          try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch { }
+          try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch { }
+        } catch { }
 
         try {
           const { toast } = require('react-toastify');
           toast.info(isExpired ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : 'Token không hợp lệ. Vui lòng đăng nhập lại.');
-        } catch {}
+        } catch { }
 
         // redirect to login (preserve admin path if applicable)
         if (typeof window !== 'undefined') {
@@ -179,12 +179,12 @@ axiosClient.interceptors.response.use(
         localStorage.getItem('tokenAdmin') ||
         document.cookie.includes('auth_user=')
       );
+
       const cfg = error?.config || {};
       const path = resolvePath(cfg.url, cfg.baseURL || axiosClient.defaults.baseURL);
       const isAdminEndpoint = /\/viewings\/admin(\b|\/)/.test(path) || /\b\/admin(\b|\/)/.test(path);
-      const method = String(cfg.method || 'get').toLowerCase();
 
-      // Xoá token (loại bỏ tất cả token liên quan) và thông báo cho các tab khác
+      // Clear tokens
       try {
         localStorage.removeItem('access_token');
         localStorage.removeItem('tokenUser');
@@ -192,33 +192,37 @@ axiosClient.interceptors.response.use(
         localStorage.removeItem('auth_user');
         sessionStorage.removeItem('auth_user');
         sessionStorage.removeItem('access_token');
-        // set a logout flag so other tabs can react
-        try { localStorage.setItem('auth_logout', String(Date.now())); } catch {}
-        // clear common cookies
-        try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch {}
-        try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch {}
-      } catch {}
+        try { localStorage.setItem('auth_logout', String(Date.now())); } catch { }
+        try { document.cookie = 'access_token=; Max-Age=0; Path=/; SameSite=Lax'; } catch { }
+        try { document.cookie = 'auth_user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; } catch { }
+      } catch { }
 
-      // Thông báo + chuyển trang khi token hết hạn (áp dụng cho GET và các method khác)
       if (hadToken) {
         if (!logoutNotified) {
           logoutNotified = true;
           try {
             const { toast } = require('react-toastify');
-            toast.info(jwtExpiredByBody ? 'Phiên đăng nhập đã hết hạn' : 'Token không hợp lệ');
-          } catch {}
+            toast.info(jwtExpiredByBody ? 'Phiên đăng nhập đã hết hạn' : 'Vui lòng đăng nhập lại');
+          } catch { }
           setTimeout(() => { logoutNotified = false; }, 5000);
         }
 
         const atLogin = window.location.pathname.includes('/dang-nhap');
         const loginPath = isAdminEndpoint ? '/dang-nhap?role=admin' : '/dang-nhap';
+
         if (!atLogin) {
           const FLAG = 'auth_logout_inflight';
           const last = Number(sessionStorage.getItem(FLAG) || 0);
           const now = Date.now();
           if (!last || now - last > 1500) {
             sessionStorage.setItem(FLAG, String(now));
-            window.location.href = loginPath;
+
+            // Handle callbackUrl
+            const currentUrl = window.location.pathname + window.location.search;
+            const callbackParam = encodeURIComponent(currentUrl);
+            // Append to existing query params if any
+            const separator = loginPath.includes('?') ? '&' : '?';
+            window.location.href = `${loginPath}${separator}callbackUrl=${callbackParam}`;
           }
         }
       }
