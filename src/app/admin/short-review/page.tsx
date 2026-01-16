@@ -4,6 +4,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ConfirmModal';
 import AdminTable from "@/components/AdminTable";
+import Pagination from '@/components/Pagination';
 import { apartmentService } from "@/services/apartmentService";
 import { buildingService } from '@/services/buildingService';
 import Link from "next/link";
@@ -15,26 +16,21 @@ const isVideoUrl = (u?: string | null) => {
   return s.includes('/static/videos/') || s.endsWith('.mp4') || s.endsWith('.webm') || s.includes('youtube.com') || s.includes('youtu.be') || s.includes('vimeo.com');
 };
 
-const findShortVideo = (a: any) => {
-  if (!a) return null;
-  if (a.shortVideoUrl) return a.shortVideoUrl;
-  if (a.shortVideo) return a.shortVideo;
-  if (Array.isArray(a.shortVideos) && a.shortVideos.length) return a.shortVideos[0];
-  if (a.videoUrl) return a.videoUrl;
-  const imgs = Array.isArray(a.images) ? a.images : [];
-  return imgs.find((u: string) => isVideoUrl(u)) || null;
-};
+// We only accept explicit short review fields stored in DB (short / short_thumb)
 
 export default function AdminShortReviewPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [targetId, setTargetId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
 
-  const fetchItems = async () => {
+  const fetchItems = async (p = 1) => {
     setLoading(true);
     try {
-      const resp = await apartmentService.getAll({ page: 1, limit: 100 });
+      const resp = await apartmentService.getAll({ page: p, limit, shortOnly: true });
       const rawArr = (resp.items || []);
       const arr = rawArr.map((a: any) => ({
         id: a.id,
@@ -45,7 +41,7 @@ export default function AdminShortReviewPage() {
         price: a.rentPrice,
         // prefer explicit thumbnail field if backend provides it
         shortVideoThumb: a.shortVideoThumb ?? a.short_thumb ?? null,
-        shortVideoUrl: a.shortVideoUrl ?? findShortVideo(a) ?? null,
+        shortVideoUrl: a.shortVideoUrl ?? null,
         raw: a,
       })).filter((x: any) => !!x.shortVideoUrl || !!x.shortVideoThumb);
 
@@ -73,6 +69,7 @@ export default function AdminShortReviewPage() {
       } else {
         setItems(arr);
       }
+      setTotal(resp.meta?.total ?? 0);
     } catch (e) {
       console.error(e);
       toast.error('Không tải được danh sách short review');
@@ -81,7 +78,7 @@ export default function AdminShortReviewPage() {
     }
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => { fetchItems(page); }, [page]);
 
   return (
     <div className="mx-auto max-w-screen-2xl p-4">
@@ -144,6 +141,9 @@ export default function AdminShortReviewPage() {
           </tr>
         ))}
       </AdminTable>
+      <div className="mt-4">
+        <Pagination page={page} limit={limit} total={total} onPageChange={(p) => { setPage(p); }} />
+      </div>
       <ConfirmModal
         open={confirmOpen}
         title="Xác nhận xoá"
@@ -157,7 +157,7 @@ export default function AdminShortReviewPage() {
             toast.success('Xoá short review thành công');
             setConfirmOpen(false);
             setTargetId(null);
-            fetchItems();
+            fetchItems(page);
           } catch (e) {
             console.error(e);
             toast.error('Xoá thất bại');
