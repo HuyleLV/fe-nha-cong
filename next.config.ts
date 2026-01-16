@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
 
   // Không fail build vì ESLint/TS
-  eslint: { ignoreDuringBuilds: true },
+  // eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };
 
