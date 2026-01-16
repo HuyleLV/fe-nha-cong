@@ -5,15 +5,17 @@ import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Pagination from '@/components/Pagination';
 import { useRouter } from "next/navigation";
-import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repeat, CheckCircle2, AlertCircle, Eye, X } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, DollarSign, Home, Settings, CreditCard, Repeat, CheckCircle2, AlertCircle, Eye, X, Calculator } from "lucide-react";
 import { formatMoneyVND } from '@/utils/format-number';
 import { toast } from "react-toastify";
 import { invoiceService } from "@/services/invoiceService";
+import GenerateInvoiceModal from "@/components/invoices/GenerateInvoiceModal";
 
 export default function HoaDonPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [meta, setMeta] = useState({ page: 1, limit: 10, totalPages: 1, total: 0 });
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const router = useRouter();
 
   const load = async (page = 1, limit = 10) => {
@@ -35,7 +37,7 @@ export default function HoaDonPage() {
     }
   };
 
-  
+
 
   useEffect(() => {
     load(meta.page, meta.limit);
@@ -161,7 +163,7 @@ export default function HoaDonPage() {
       // ignore
     }
     return () => {
-      try { applyFloatingHide(false); } catch (e) {}
+      try { applyFloatingHide(false); } catch (e) { }
     };
   }, [viewerOpen]);
 
@@ -182,10 +184,10 @@ export default function HoaDonPage() {
       applyFloatingHide(true);
 
       const win = iframeRef.current?.contentWindow;
-      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      const cleanup = () => { try { applyFloatingHide(false); } catch { } };
 
       if (win) {
-        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        try { win.addEventListener?.('afterprint', cleanup); } catch { }
         win.focus();
         win.print();
         // fallback cleanup in case afterprint isn't fired
@@ -198,7 +200,7 @@ export default function HoaDonPage() {
     } catch (e) {
       console.error('Print failed', e);
       toast.error('Không thể in (hãy mở trang chi tiết để in)');
-      try { applyFloatingHide(false); } catch {}
+      try { applyFloatingHide(false); } catch { }
     }
   };
 
@@ -304,9 +306,17 @@ export default function HoaDonPage() {
           <p className="text-sm text-slate-600">Danh sách hóa đơn của bạn.</p>
           <div>
             <button
+              onClick={() => setGenerateModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-md mr-2"
+              title="Tạo từ Hợp đồng"
+            >
+              <Calculator className="w-5 h-5" />
+              <span className="hidden sm:inline">Tạo từ HĐ</span>
+            </button>
+            <button
               onClick={() => router.push("/quan-ly-chu-nha/tai-chinh/hoa-don/create")}
               className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md"
-              title="Thêm mới"
+              title="Thêm mới thủ công"
             >
               <PlusCircle className="w-5 h-5" />
             </button>
@@ -330,48 +340,48 @@ export default function HoaDonPage() {
           {rows.length === 0
             ? null
             : rows.map((r) => (
-                <tr key={r.id} className="border-t">
-                  <td className="px-4 py-3 text-left">{r.id}</td>
-                  <td className="px-4 py-3 text-left">{r.buildingName ?? r.buildingId}</td>
-                  <td className="px-4 py-3 text-left">{r.apartmentTitle ?? r.apartmentId}</td>
-                  <td className="px-4 py-3 text-left">{r.contractId ?? ""}</td>
-                  <td className="px-4 py-3 text-left">{r.period}</td>
-                  <td className="px-4 py-3 text-left">{r.issueDate ? new Date(r.issueDate).toLocaleDateString() : ""}</td>
-                  <td className="px-4 py-3 text-left">{r.dueDate ? new Date(r.dueDate).toLocaleDateString() : ""}</td>
-                  <td className="px-4 py-3 text-left">{printTemplateLabel(r.printTemplate)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        title="Xem"
-                        onClick={() => {
-                          // open modal viewer
-                          (window as any).__openInvoiceViewer?.(r.id);
-                        }}
-                        className="p-2 rounded bg-amber-100 text-amber-800"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        title="Sửa"
-                        onClick={() => router.push(`/quan-ly-chu-nha/tai-chinh/hoa-don/${r.id}`)}
-                        className="p-2 rounded bg-emerald-600 text-white"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        title="Xoá"
-                        onClick={() => onDelete(r.id)}
-                        className="p-2 rounded bg-red-600 text-white"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              <tr key={r.id} className="border-t">
+                <td className="px-4 py-3 text-left">{r.id}</td>
+                <td className="px-4 py-3 text-left">{r.buildingName ?? r.buildingId}</td>
+                <td className="px-4 py-3 text-left">{r.apartmentTitle ?? r.apartmentId}</td>
+                <td className="px-4 py-3 text-left">{r.contractId ?? ""}</td>
+                <td className="px-4 py-3 text-left">{r.period}</td>
+                <td className="px-4 py-3 text-left">{r.issueDate ? new Date(r.issueDate).toLocaleDateString() : ""}</td>
+                <td className="px-4 py-3 text-left">{r.dueDate ? new Date(r.dueDate).toLocaleDateString() : ""}</td>
+                <td className="px-4 py-3 text-left">{printTemplateLabel(r.printTemplate)}</td>
+                <td className="px-4 py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      title="Xem"
+                      onClick={() => {
+                        // open modal viewer
+                        (window as any).__openInvoiceViewer?.(r.id);
+                      }}
+                      className="p-2 rounded bg-amber-100 text-amber-800"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Sửa"
+                      onClick={() => router.push(`/quan-ly-chu-nha/tai-chinh/hoa-don/${r.id}`)}
+                      className="p-2 rounded bg-emerald-600 text-white"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      title="Xoá"
+                      onClick={() => onDelete(r.id)}
+                      className="p-2 rounded bg-red-600 text-white"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
         </AdminTable>
         <div className="mt-4">
-          <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p)=> load(p, meta.limit)} />
+          <Pagination page={meta.page} limit={meta.limit} total={meta.total} onPageChange={(p) => load(p, meta.limit)} />
         </div>
       </Panel>
 
@@ -400,6 +410,17 @@ export default function HoaDonPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Generate Invoice Modal */}
+      {generateModalOpen && (
+        <GenerateInvoiceModal
+          onClose={() => setGenerateModalOpen(false)}
+          onSuccess={() => {
+            load(1, meta.limit);
+            setGenerateModalOpen(false);
+          }}
+        />
       )}
     </div>
   );
