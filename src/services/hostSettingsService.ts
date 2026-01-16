@@ -1,17 +1,27 @@
-import axios from '../utils/axios';
+import axios from 'axios';
 
-const API_URL = '/host/settings';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+const api = axios.create({
+    baseURL: API_URL,
+});
+
+api.interceptors.request.use((config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
 export interface HostSettings {
-    id: number;
-    userId: number;
     profile: {
         displayName?: string;
         phone?: string;
         email?: string;
         address?: string;
         bio?: string;
-    } | null;
+    };
     notifications: {
         email: boolean;
         sms: boolean;
@@ -20,51 +30,40 @@ export interface HostSettings {
         paymentAlerts: boolean;
         contractAlerts: boolean;
         taskAlerts: boolean;
-    } | null;
+    };
     payment: {
         bankName?: string;
         accountNumber?: string;
         accountHolder?: string;
         bankBranch?: string;
-    } | null;
+    };
     storage: {
         preferredType?: 'local' | 's3' | 'spaces';
         customCdnUrl?: string;
-    } | null;
+    };
     preferences: {
         language?: string;
         timezone?: string;
         dateFormat?: string;
         currency?: string;
-    } | null;
+    };
 }
 
-export interface UpdateHostSettingsDto {
-    profile?: any;
-    notifications?: any;
-    payment?: any;
-    storage?: any;
-    preferences?: any;
-}
+export const hostSettingsService = {
+    getSettings: async () => {
+        const response = await api.get('/host/settings');
+        return response.data;
+    },
 
-const getSettings = async (): Promise<HostSettings> => {
-    const response = await axios.get(API_URL);
-    return response.data;
-};
+    updateSettings: async (settings: Partial<HostSettings>) => {
+        const response = await api.patch('/host/settings', settings);
+        return response.data;
+    },
 
-const updateSettings = async (data: UpdateHostSettingsDto): Promise<HostSettings> => {
-    const response = await axios.patch(API_URL, data);
-    return response.data;
-};
-
-const deleteSettings = async (): Promise<void> => {
-    await axios.delete(API_URL);
-};
-
-const hostSettingsService = {
-    getSettings,
-    updateSettings,
-    deleteSettings,
+    resetSettings: async () => {
+        const response = await api.delete('/host/settings');
+        return response.data;
+    }
 };
 
 export default hostSettingsService;

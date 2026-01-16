@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   MapPinned, ChevronDown, ChevronRight, Flame,
@@ -15,6 +15,9 @@ import LocationLookup from "@/app/admin/components/locationLookup";
 import { locationService } from "@/services/locationService";
 import type { Location } from "@/type/location";
 import RoomCardItem from "@/components/roomCardItem";
+import LazyMap from "@/components/map/LazyMap";
+import MapRoomItem from "@/components/map/MapRoomItem";
+import { MapApartment } from "@/services/mapService";
 
 // ================ Helpers =================
 const cx = (...arr: (string | false | undefined)[]) => arr.filter(Boolean).join(" ");
@@ -97,7 +100,7 @@ export default function TimPhongQuanhDayPage() {
     minArea: minArea ? Number(minArea) : undefined,
     maxArea: maxArea ? Number(maxArea) : undefined,
     bedrooms: bedrooms ? Number(bedrooms) : undefined,
-  livingRooms: livingRooms ? Number(livingRooms) : undefined,
+    livingRooms: livingRooms ? Number(livingRooms) : undefined,
     guests: guests ? Number(guests) : undefined,
     bathrooms: bathrooms ? Number(bathrooms) : undefined,
     status,
@@ -117,9 +120,9 @@ export default function TimPhongQuanhDayPage() {
     hasKitchenCabinet: hasKitchenCabinet || undefined,
     hasRangeHood: hasRangeHood || undefined,
     hasFridge: hasFridge || undefined,
-  hasElevator: hasElevator || undefined,
-  allowPet: allowPet || undefined,
-  allowElectricVehicle: allowElectricVehicle || undefined,
+    hasElevator: hasElevator || undefined,
+    allowPet: allowPet || undefined,
+    allowElectricVehicle: allowElectricVehicle || undefined,
     hasWardrobe: hasWardrobe || undefined,
     flexibleHours: flexibleHours || undefined,
     page,
@@ -139,7 +142,7 @@ export default function TimPhongQuanhDayPage() {
       setBedrooms(b);
       setLivingRooms(lr);
       // chỉ set locationSlug nếu param có giá trị (giữ lựa chọn người dùng sau đó)
-  if (locSlug) setLocationSlug(locSlug);
+      if (locSlug) setLocationSlug(locSlug);
 
       // booleans (stored as 'true'/'false')
       const readBool = (k: string) => {
@@ -161,9 +164,9 @@ export default function TimPhongQuanhDayPage() {
       setHasKitchenCabinet(readBool('hasKitchenCabinet'));
       setHasRangeHood(readBool('hasRangeHood'));
       setHasFridge(readBool('hasFridge'));
-  setHasElevator(readBool('hasElevator'));
-  setAllowPet(readBool('allowPet'));
-  setAllowElectricVehicle(readBool('allowElectricVehicle'));
+      setHasElevator(readBool('hasElevator'));
+      setAllowPet(readBool('allowPet'));
+      setAllowElectricVehicle(readBool('allowElectricVehicle'));
 
       // reset page to 1 when params change
       setPage(1);
@@ -251,8 +254,8 @@ export default function TimPhongQuanhDayPage() {
   // reset filters
   const clearAll = () => {
     setQuery("");
-  setLocationSlug(undefined);
-  setSelectedLocation(null);
+    setLocationSlug(undefined);
+    setSelectedLocation(null);
     setStatus("published");
     setMinPrice("0");
     setMaxPrice("12000000");
@@ -263,291 +266,343 @@ export default function TimPhongQuanhDayPage() {
     setGuests("");
     setBathrooms("");
     setHasPrivateBathroom(false);
-  setHasSharedBathroom(false);
+    setHasSharedBathroom(false);
     setHasMezzanine(false);
     setNoOwnerLiving(false);
     setHasAirConditioner(false);
     setHasWaterHeater(false);
     setHasWashingMachine(false);
-  setHasWashingMachineShared(false);
-  setHasWashingMachinePrivate(false);
+    setHasWashingMachineShared(false);
+    setHasWashingMachinePrivate(false);
     setHasWardrobe(false);
-  setHasDesk(false);
-  setHasKitchenTable(false);
-  setHasKitchenCabinet(false);
-  setHasRangeHood(false);
-  setHasFridge(false);
-  setHasElevator(false);
-  setAllowPet(false);
-  setAllowElectricVehicle(false);
+    setHasDesk(false);
+    setHasKitchenTable(false);
+    setHasKitchenCabinet(false);
+    setHasRangeHood(false);
+    setHasFridge(false);
+    setHasElevator(false);
+    setAllowPet(false);
+    setAllowElectricVehicle(false);
     setFlexibleHours(false);
     setOnlyHot(false);
     setSort("newest");
     setPage(1);
   };
 
+  // Map interaction
+  const mapRef = useRef<any>(null); // PropertyMapHandle
+  const [mapItems, setMapItems] = useState<MapApartment[]>([]); // Items visible on map
+  const [activeId, setActiveId] = useState<number | null>(null);
+
   return (
-    <div className="min-h-screen">
-      {/* Topbar */}
-      <div className="max-w-screen-2xl mx-auto pt-10">
-        <div className="px-4 py-4 flex items-center gap-3">
-          <MapPinned />
-          <h1 className="font-bold text-xl md:text-2xl">Tìm phòng quanh đây</h1>
-        </div>
-      </div>
-
-      {/* Layout */}
-      <div className="max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 py-8 px-4">
-        {/* Sidebar removed — replaced by filter button + modal to save space */}
-
-        {/* Results */}
-        <main className="md:col-span-4">
-          <div className="mb-4 flex items-center gap-3 justify-center">
-            {/* Filter button + label placed to the left of the search bar */}
-            <button
-              type="button"
-              onClick={() => setShowFilter(true)}
-              aria-label="Bộ lọc"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-green-200 bg-white text-green-700 hover:bg-green-50"
-            >
-              <FilterX className="w-5 h-5" />
-              <span className="text-sm font-medium">Bộ lọc</span>
-            </button>
-
-            <SearchBar
-              className="w-full max-w-3xl"
-              segmented
-              defaultValue={query}
-              defaultGuests={guests ? Number(guests) : undefined}
-              defaultBeds={bedrooms ? Number(bedrooms) : undefined}
-              onSearch={(q: string, opts) => {
-                setQuery(q);
-                if (opts?.guests !== undefined) setGuests(String(opts.guests));
-                if (opts?.beds !== undefined) setBedrooms(String(opts.beds));
-                setPage(1);
-              }}
-            />
-
-            {/* Filter modal: show current filter UI in a popup */}
-            {showFilter && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-                <div className="absolute inset-0 bg-black/30" onClick={() => setShowFilter(false)} />
-                <div className="relative w-full max-w-2xl mx-auto h-[calc(100vh-4rem)]">
-                  <div className="bg-white rounded-2xl border border-emerald-200 shadow-lg flex flex-col h-full overflow-hidden">
-                    <div className="flex items-center justify-between p-4 border-b">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setShowFilter(false)}
-                          aria-label="Đóng bộ lọc"
-                          className="p-2 rounded-md text-slate-600 hover:bg-slate-100"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                        <h2 className="text-green-900 font-bold text-lg">Bộ lọc</h2>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => { clearAll(); }}
-                          className="text-sm inline-flex items-center gap-1 text-green-700 hover:text-green-900"
-                        >
-                          <RotateCcw className="w-4 h-4" /> Xoá
-                        </button>
-                        <button
-                          onClick={() => { setPage(1); setShowFilter(false); }}
-                          className="text-sm inline-flex items-center gap-1 text-white bg-green-600 px-3 py-1.5 rounded-md"
-                        >
-                          <FilterX className="w-4 h-4" /> Áp dụng
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4 overflow-auto flex-1 space-y-4">
-                      {/* Khu vực */}
-                      <Accordion title="Khu vực">
-                        <LocationLookup
-                          value={selectedLocation}
-                          onChange={async (loc: any) => {
-                            const slug = loc?.slug || (loc?.name ? toSlug(loc.name) : undefined);
-                            setSelectedLocation(loc ?? null);
-                            setLocationSlug(slug);
-                            setPage(1);
-                          }}
-                          placeholder="Chọn khu vực"
-                          levels={["District"] as any}
-                          limit={100}
-                        />
-                        {locationSlug && (
-                          <div className="text-xs text-slate-600 mt-2">
-                            Đang lọc theo: <span className="font-medium text-green-700">{selectedLocation?.name || locationSlug}</span>
-                          </div>
-                        )}
-                      </Accordion>
-
-                      {/* Giá (DualRange) */}
-                      <Accordion title="Giá (VND/tháng)">
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {[
-                            { label: "< 3tr", v: [0, 3_000_000] },
-                            { label: "3–5tr", v: [3_000_000, 5_000_000] },
-                            { label: "5–8tr", v: [5_000_000, 8_000_000] },
-                            { label: "8–12tr", v: [8_000_000, 12_000_000] },
-                          ].map((p) => (
-                            <button
-                              key={p.label}
-                              onClick={() => { setMinPrice(String(p.v[0])); setMaxPrice(String(p.v[1])); setPage(1); }}
-                              className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        <DualRange
-                          min={0}
-                          max={12_000_000}
-                          step={50_000}
-                          valueMin={Number(minPrice || 0)}
-                          valueMax={Number(maxPrice || 12_000_000)}
-                          onChange={(minV, maxV) => {
-                            setMinPrice(String(minV));
-                            setMaxPrice(String(maxV));
-                            setPage(1);
-                          }}
-                          format={(v) => `${toVnd(v)} đ`}
-                        />
-                      </Accordion>
-
-                      {/* Diện tích (DualRange) */}
-                      <Accordion title="Diện tích (m²)">
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {[
-                            { label: "<20", v: [0, 20] },
-                            { label: "20–30", v: [20, 30] },
-                            { label: "30–40", v: [30, 40] },
-                            { label: "≥40", v: [40, 100] },
-                          ].map((p) => (
-                            <button
-                              key={p.label}
-                              onClick={() => { setMinArea(String(p.v[0])); setMaxArea(String(p.v[1])); setPage(1); }}
-                              className="text-xs px-3 py-1.5 rounded-full border border-emerald-200 hover:bg-emerald-50 text-emerald-800"
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        <DualRange
-                          min={0}
-                          max={100}
-                          step={1}
-                          valueMin={Number(minArea || 0)}
-                          valueMax={Number(maxArea || 100)}
-                          onChange={(minV, maxV) => {
-                            setMinArea(String(minV));
-                            setMaxArea(String(maxV));
-                            setPage(1);
-                          }}
-                          format={(v) => `${v} m²`}
-                        />
-                      </Accordion>
-
-                      {/* Phòng ngủ / WC */}
-                      <Accordion title="Số phòng">
-                        <div className="flex flex-col gap-3">
-                          <VerticalCounter label="Phòng ngủ" value={bedrooms} onChange={setBedrooms} max={5} />
-                          <VerticalCounter label="WC" value={bathrooms} onChange={setBathrooms} max={5} />
-                          <VerticalCounter label="Phòng khách" value={livingRooms} onChange={setLivingRooms} max={5} />
-                        </div>
-                      </Accordion>
-
-                      {/* Tiện nghi */}
-                      <Accordion title="Tiện nghi (Nâng cao)">
-                        <div className="grid grid-cols-2 gap-2">
-                          <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>Vệ sinh khép kín</ToggleChip>
-                          <ToggleChip active={hasSharedBathroom} onToggle={() => { setHasSharedBathroom(!hasSharedBathroom); setPage(1); }}>Vệ sinh chung</ToggleChip>
-
-                          <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>Gác xép</ToggleChip>
-                          <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>Không chung chủ</ToggleChip>
-
-                          <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>Điều hoà</ToggleChip>
-                          <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>Nóng lạnh</ToggleChip>
-
-                          <ToggleChip active={hasWashingMachineShared} onToggle={() => { setHasWashingMachineShared(!hasWashingMachineShared); setPage(1); }}>Máy giặt (chung)</ToggleChip>
-                          <ToggleChip active={hasWashingMachinePrivate} onToggle={() => { setHasWashingMachinePrivate(!hasWashingMachinePrivate); setPage(1); }}>Máy giặt (riêng)</ToggleChip>
-
-                          <ToggleChip active={hasWardrobe} onToggle={() => { setHasWardrobe(!hasWardrobe); setPage(1); }}>Tủ quần áo</ToggleChip>
-                          <ToggleChip active={hasDesk} onToggle={() => { setHasDesk(!hasDesk); setPage(1); }}>Bàn làm việc</ToggleChip>
-
-                          <ToggleChip active={hasKitchenTable} onToggle={() => { setHasKitchenTable(!hasKitchenTable); setPage(1); }}>Bàn bếp</ToggleChip>
-                          <ToggleChip active={hasKitchenCabinet} onToggle={() => { setHasKitchenCabinet(!hasKitchenCabinet); setPage(1); }}>Tủ bếp</ToggleChip>
-
-                          <ToggleChip active={hasRangeHood} onToggle={() => { setHasRangeHood(!hasRangeHood); setPage(1); }}>Hút mùi</ToggleChip>
-                          <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>Tủ lạnh</ToggleChip>
-
-                          <ToggleChip active={flexibleHours} onToggle={() => { setFlexibleHours(!flexibleHours); setPage(1); }}>Giờ linh hoạt</ToggleChip>
-                          <ToggleChip active={hasElevator} onToggle={() => { setHasElevator(!hasElevator); setPage(1); }}>Thang máy</ToggleChip>
-                          <ToggleChip active={allowPet} onToggle={() => { setAllowPet(!allowPet); setPage(1); }}>Cho nuôi pet</ToggleChip>
-                          <ToggleChip active={allowElectricVehicle} onToggle={() => { setAllowElectricVehicle(!allowElectricVehicle); setPage(1); }}>Xe điện (sạc/gửi)</ToggleChip>
-                        </div>
-                      </Accordion>
-                    </div>
-
-                    {/* footer removed — actions are available in the header */}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <Toolbar sort={sort} setSort={setSort} view={view} setView={setView} count={total} />
-
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <SkeletonCard key={i} />
-              ))}
+    <div className="min-h-screen flex flex-col">
+      {/* Header/Filter Area */}
+      <div className="bg-white border-b sticky top-0 z-[40]">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <MapPinned className="text-emerald-600 w-6 h-6" />
+              <h1 className="font-bold text-xl text-slate-800">Tìm phòng quanh đây</h1>
             </div>
-          ) : err ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Lỗi tải dữ liệu: {err}</div>
-          ) : view === "list" ? (
-            results.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5">
-                {results.map((r) => (
-                  <RoomCardItem key={r.id} item={r as any} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-emerald-200 bg-white p-6 text-gray-600">
-                Không tìm thấy kết quả phù hợp.
-              </div>
-            )
-          ) : (
-            <div className="rounded-2xl border border-green-200 bg-white overflow-hidden">
-              <div className="flex items-center gap-2 p-3 border-b border-green-100 text-sm text-gray-700">
-                <MapIcon className="text-green-700" />
-                <span>Bản đồ</span>
-              </div>
-              <div className="h-[600px]">
-                <iframe
-                  title="Bản đồ"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d59615.428462975906!2d105.71369061023124!3d20.953949609279487!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3134532bef4bcdb7%3A0xbcc7a679fcba07f6!2zSMOgIMSQw7RuZywgSMOgIE7hu5lpLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1759043217443!5m2!1svi!2s"
-                  className="w-full h-full border-0"
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
+
+            <div className="flex-1 max-w-2xl mx-auto w-full flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowFilter(true)}
+                className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium"
+              >
+                <FilterX className="w-4 h-4" />
+                <span className="hidden sm:inline">Bộ lọc</span>
+              </button>
+              <div className="flex-1">
+                <SearchBar
+                  className="w-full"
+                  segmented
+                  defaultValue={query}
+                  defaultGuests={guests ? Number(guests) : undefined}
+                  defaultBeds={bedrooms ? Number(bedrooms) : undefined}
+                  onSearch={(q: string, opts) => {
+                    setQuery(q);
+                    if (opts?.guests !== undefined) setGuests(String(opts.guests));
+                    if (opts?.beds !== undefined) setBedrooms(String(opts.beds));
+                    setPage(1);
+                  }}
                 />
               </div>
             </div>
-          )}
 
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={(newPage) => setPage(newPage)}
-            onPrev={handlePrev}
-            onNext={handleNext}
-          />
-        </main>
+            {/* View Switcher */}
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1 shrink-0">
+              <button
+                onClick={() => setView("list")}
+                className={cx(
+                  "px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1.5 transition-all",
+                  view === "list" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                <List className="w-4 h-4" /> List
+              </button>
+              <button
+                onClick={() => setView("map")}
+                className={cx(
+                  "px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1.5 transition-all",
+                  view === "map" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                <MapIcon className="w-4 h-4" /> Map
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Modal */}
+      {showFilter && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowFilter(false)} />
+          <div className="relative w-full max-w-2xl mx-auto h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold text-slate-800">Bộ lọc tìm kiếm</h2>
+              <button onClick={() => setShowFilter(false)} className="p-2 hover:bg-slate-100 rounded-full transition">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+              <div className="space-y-6">
+                <Accordion title="Khu vực & Địa điểm">
+                  <LocationLookup
+                    value={selectedLocation}
+                    onChange={async (loc: any) => {
+                      const slug = loc?.slug || (loc?.name ? toSlug(loc.name) : undefined);
+                      setSelectedLocation(loc ?? null);
+                      setLocationSlug(slug);
+                      setPage(1);
+                    }}
+                    placeholder="Tìm kiếm khu vực..."
+                    levels={["District"] as any}
+                    limit={100}
+                  />
+                  {locationSlug && (
+                    <div className="mt-2 text-sm text-emerald-600 font-medium bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100 inline-block">
+                      📍 {selectedLocation?.name || locationSlug}
+                    </div>
+                  )}
+                </Accordion>
+
+                <div className="h-px bg-slate-100" />
+
+                <Accordion title="Khoảng giá (VND/tháng)">
+                  <div className="space-y-4">
+                    <DualRange
+                      min={0}
+                      max={15_000_000}
+                      step={100_000}
+                      valueMin={Number(minPrice || 0)}
+                      valueMax={Number(maxPrice || 15_000_000)}
+                      onChange={(minV, maxV) => {
+                        setMinPrice(String(minV));
+                        setMaxPrice(String(maxV));
+                        setPage(1);
+                      }}
+                      format={(v) => `${toVnd(v)}`}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "< 3tr", v: [0, 3_000_000] },
+                        { label: "3 - 5tr", v: [3_000_000, 5_000_000] },
+                        { label: "5 - 8tr", v: [5_000_000, 8_000_000] },
+                        { label: "8 - 12tr", v: [8_000_000, 12_000_000] },
+                        { label: "> 12tr", v: [12_000_000, 30_000_000] },
+                      ].map((p) => (
+                        <button
+                          key={p.label}
+                          onClick={() => { setMinPrice(String(p.v[0])); setMaxPrice(String(p.v[1])); setPage(1); }}
+                          className="px-3 py-1.5 rounded-full border text-xs font-medium transition hover:border-emerald-500 hover:text-emerald-600"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Accordion>
+
+                <div className="h-px bg-slate-100" />
+
+                <Accordion title="Thông tin phòng">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <label className="text-sm font-semibold text-slate-700">Diện tích (m²)</label>
+                      <DualRange
+                        min={0}
+                        max={100}
+                        step={5}
+                        valueMin={Number(minArea || 0)}
+                        valueMax={Number(maxArea || 100)}
+                        onChange={(minV, maxV) => {
+                          setMinArea(String(minV));
+                          setMaxArea(String(maxV));
+                          setPage(1);
+                        }}
+                        format={(v) => `${v} m²`}
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <VerticalCounter label="Phòng ngủ" value={bedrooms} onChange={setBedrooms} max={5} />
+                      <VerticalCounter label="Phòng khách" value={livingRooms} onChange={setLivingRooms} max={5} />
+                      <VerticalCounter label="Vệ sinh (WC)" value={bathrooms} onChange={setBathrooms} max={3} />
+                    </div>
+                  </div>
+                </Accordion>
+
+                <div className="h-px bg-slate-100" />
+
+                <Accordion title="Tiện nghi & Đặc điểm">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <ToggleChip active={hasPrivateBathroom} onToggle={() => { setHasPrivateBathroom(!hasPrivateBathroom); setPage(1); }}>🚿 KK.Khép kín</ToggleChip>
+                    <ToggleChip active={hasAirConditioner} onToggle={() => { setHasAirConditioner(!hasAirConditioner); setPage(1); }}>❄️ Điều hoà</ToggleChip>
+                    <ToggleChip active={hasWaterHeater} onToggle={() => { setHasWaterHeater(!hasWaterHeater); setPage(1); }}>🔥 Nóng lạnh</ToggleChip>
+                    <ToggleChip active={hasMezzanine} onToggle={() => { setHasMezzanine(!hasMezzanine); setPage(1); }}>🏠 Gác xép</ToggleChip>
+                    <ToggleChip active={hasFridge} onToggle={() => { setHasFridge(!hasFridge); setPage(1); }}>🧊 Tủ lạnh</ToggleChip>
+                    <ToggleChip active={hasWashingMachine} onToggle={() => { setHasWashingMachine(!hasWashingMachine); setPage(1); }}>🧺 Máy giặt</ToggleChip>
+                    <ToggleChip active={hasKitchenCabinet} onToggle={() => { setHasKitchenCabinet(!hasKitchenCabinet); setPage(1); }}>🍳 Tủ bếp</ToggleChip>
+                    <ToggleChip active={hasElevator} onToggle={() => { setHasElevator(!hasElevator); setPage(1); }}>🛗 Thang máy</ToggleChip>
+                    <ToggleChip active={noOwnerLiving} onToggle={() => { setNoOwnerLiving(!noOwnerLiving); setPage(1); }}>🗝️ Ko chung chủ</ToggleChip>
+                    <ToggleChip active={allowPet} onToggle={() => { setAllowPet(!allowPet); setPage(1); }}>🐾  Nuôi thú cưng</ToggleChip>
+                  </div>
+                </Accordion>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t bg-slate-50 flex justify-between items-center">
+              <button
+                onClick={clearAll}
+                className="text-slate-600 hover:text-slate-900 font-medium text-sm px-4 py-2 hover:bg-slate-200 rounded-lg transition"
+              >
+                Xoá tất cả
+              </button>
+              <button
+                onClick={() => { setPage(1); setShowFilter(false); }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2.5 rounded-lg font-bold shadow-lg shadow-emerald-200 transition transform active:scale-95"
+              >
+                Áp dụng bộ lọc
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 max-w-screen-2xl w-full mx-auto">
+        {view === "list" ? (
+          // === LIST VIEW ===
+          <div className="px-4 py-6">
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-slate-600 text-sm">
+                Tìm thấy <b className="text-emerald-700 text-lg">{total}</b> phòng phù hợp
+              </div>
+              <div className="relative">
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as any)}
+                  className="appearance-none bg-white border border-slate-200 text-sm rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium cursor-pointer"
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="price_asc">Giá tăng dần</option>
+                  <option value="price_desc">Giá giảm dần</option>
+                  <option value="area_desc">Diện tích rộng nhất</option>
+                </select>
+                <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : err ? (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-8 rounded-xl text-center">
+                <p className="font-bold">Đã có lỗi xảy ra 😔</p>
+                <p className="text-sm mt-1">{err}</p>
+                <button onClick={() => window.location.reload()} className="mt-4 text-xs underline">Thử lại</button>
+              </div>
+            ) : results.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {results.map((r) => (
+                    <RoomCardItem key={r.id} item={r as any} />
+                  ))}
+                </div>
+                <div className="mt-8">
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    onPrev={handlePrev}
+                    onNext={handleNext}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                <div className="text-4xl mb-3">🔍</div>
+                <h3 className="text-lg font-bold text-slate-700">Không tìm thấy phòng nào</h3>
+                <p className="text-slate-500 text-sm mt-1">Hãy thử thay đổi bộ lọc hoặc tìm khu vực khác xem sao nhé.</p>
+                <button onClick={clearAll} className="mt-4 text-emerald-600 font-semibold text-sm hover:underline">Xoá bộ lọc</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          // === MAP VIEW (SPLIT LAYOUT) ===
+          <div className="flex h-[calc(100vh-80px)] overflow-hidden border-t">
+            {/* Sidebar List */}
+            <div className="w-[400px] shrink-0 bg-white border-r flex flex-col md:w-[360px] lg:w-[400px] absolute z-20 md:static h-full transform transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-xl md:shadow-none">
+              <div className="p-3 border-b bg-slate-50 flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span>Trong khu vực này ({mapItems.length})</span>
+                <span className="hidden md:inline">Di chuyển bản đồ để tìm</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin">
+                {mapItems.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400">
+                    <p className="text-2xl mb-2">🗺️</p>
+                    <p className="text-sm">Không có phòng nào trong vùng hiển thị.</p>
+                    <p className="text-xs mt-1">Hãy thử thu nhỏ hoặc di chuyển bản đồ.</p>
+                  </div>
+                ) : (
+                  mapItems.map((item) => (
+                    // Require MapRoomItem component
+                    <MapRoomItem
+                      key={item.id}
+                      item={item}
+                      isActive={activeId === item.id}
+                      onClick={() => {
+                        setActiveId(item.id);
+                        if (mapRef.current) {
+                          mapRef.current.flyTo(item.lat, item.lng, 16);
+                        }
+                      }}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Map Area */}
+            <div className="flex-1 relative bg-slate-100">
+              <LazyMap
+                ref={mapRef}
+                onItemsChange={(items: MapApartment[]) => setMapItems(items)}
+              />
+              {/* Mobile Toggle Button for Sidebar could go here if needed */}
+              <div className="absolute top-4 left-4 z-[1000] md:hidden">
+                {/* Mobile sidebar toggle would be needed for full mobile support, skipping for now as per desktop-first focus */}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
