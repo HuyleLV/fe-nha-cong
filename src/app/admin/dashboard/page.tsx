@@ -1,9 +1,148 @@
-export default function DashboardPage() {
-    return (
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Trang Quản Trị</h1>
-        <p className="text-2xl font-bold mb-4">Chào mừng bạn đến trang quản trị Nhà Cộng</p>
-      </div>
-    );
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { dashboardService } from "@/services/dashboardService";
+import { Users, Home, FileText, DollarSign, Activity, Building, Calendar } from "lucide-react";
+import { formatMoneyVND } from '@/utils/format-number';
+
+export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchData = async () => {
+      try {
+        const [statsRes, activitiesRes] = await Promise.all([
+          dashboardService.getAdminStats(),
+          dashboardService.getAdminActivities()
+        ]);
+        if (mounted) {
+          setStats(statsRes);
+          setActivities(activitiesRes as unknown as any[]);
+        }
+      } catch (error) {
+        console.error("Failed to load admin dashboard", error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Đang tải dữ liệu...</div>;
   }
-  
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">Tổng Quan Quản Trị</h1>
+        <p className="text-gray-500">Thống kê hoạt động toàn hệ thống</p>
+      </div>
+
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Users */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Người dùng</p>
+              <h3 className="text-2xl font-bold">{stats.users?.total || 0}</h3>
+              <p className="text-xs text-green-600">+{stats.users?.newThisMonth || 0} tháng này</p>
+            </div>
+          </div>
+
+          {/* Apartments */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full">
+              <Home className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Căn hộ</p>
+              <h3 className="text-2xl font-bold">{stats.apartments?.total || 0}</h3>
+              <p className="text-xs text-gray-500">{stats.apartments?.published || 0} đang hiển thị</p>
+            </div>
+          </div>
+
+          {/* Contracts */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className="p-3 bg-amber-100 text-amber-600 rounded-full">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Hợp đồng</p>
+              <h3 className="text-2xl font-bold">{stats.contracts?.active || 0}</h3>
+              <p className="text-xs text-amber-600">{stats.contracts?.expiring || 0} sắp hết hạn</p>
+            </div>
+          </div>
+
+          {/* Revenue (Placeholder logic as real revenue logic might be complex) */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className="p-3 bg-violet-100 text-violet-600 rounded-full">
+              <DollarSign className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Doanh thu tạm tính</p>
+              <h3 className="text-2xl font-bold">{formatMoneyVND(stats.revenue?.total || 0)}</h3>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Recent Activities */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-gray-500" />
+            Hoạt động gần đây
+          </h3>
+          <div className="space-y-4">
+            {activities.length > 0 ? (
+              activities.map((act, idx) => (
+                <div key={idx} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
+                  <div className="mt-1 p-1.5 bg-gray-100 rounded-full">
+                    {act.type.includes('user') ? <Users className="w-4 h-4 text-blue-500" /> : <Home className="w-4 h-4 text-emerald-500" />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">{act.title}</p>
+                    <p className="text-xs text-gray-500">{new Date(act.timestamp).toLocaleString('vi-VN')}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 italic">Chưa có hoạt động nào</p>
+            )}
+          </div>
+        </div>
+
+        {/* System Health / Other Info */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Building className="w-5 h-5 text-gray-500" />
+            Hệ thống
+          </h3>
+          <ul className="space-y-3">
+            <li className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Service Providers</span>
+              <span className="font-semibold">{stats?.services?.providers || 0}</span>
+            </li>
+            <li className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Buildings</span>
+              <span className="font-semibold">{stats?.buildings?.total || 0}</span>
+            </li>
+            <li className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Viewings Today</span>
+              <span className="font-semibold">{stats?.viewings?.today || 0}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}

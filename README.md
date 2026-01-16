@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nhà Cộng Frontend
 
-## Getting Started
+Next.js 15 frontend application for the Nhà Cộng property rental management platform.
 
-First, run the development server:
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Backend API running at `http://localhost:5000` (or configured URL)
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env.local
+# Edit .env.local with your settings
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+fe-nha-cong/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   ├── components/             # Reusable React components
+│   ├── features/               # Feature-specific components
+│   ├── services/               # API service layer (Axios)
+│   ├── utils/                  # Utility functions
+│   └── hooks/                  # Custom React hooks
+├── public/                     # Public static files
+└── .next/                      # Next.js build output
+```
 
-## Learn More
+## 🔧 Environment Variables (`.env.local`)
 
-To learn more about Next.js, take a look at the following resources:
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Site URL
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Google OAuth
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+```
 
-## Deploy on Vercel
+## 🛠️ Available Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+npm run lint             # Lint code
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Styling
+The project uses **Tailwind CSS** for styling.
+
+## 🔐 Authentication
+Authentication is handled via JWT tokens stored in `localStorage` (`access_token`, `auth_user`). Axios interceptors automatically attach the token to outgoing requests.
