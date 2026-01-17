@@ -43,12 +43,12 @@ export interface SystemSettings {
 
 export interface UpdateSystemSettingsDto {
     siteTitle?: string;
-    siteDescription?: string;
-    siteLogo?: string;
-    siteFavicon?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    contactAddress?: string;
+    siteDescription?: string | null;
+    siteLogo?: string | null;
+    siteFavicon?: string | null;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+    contactAddress?: string | null;
     socialMedia?: any;
     storageType?: string;
     storageConfig?: any;
@@ -57,13 +57,13 @@ export interface UpdateSystemSettingsDto {
     timezone?: string;
     currency?: string;
     dateFormat?: string;
-    metaKeywords?: string;
-    metaDescription?: string;
-    googleAnalyticsId?: string;
-    googleTagManagerId?: string;
+    metaKeywords?: string | null;
+    metaDescription?: string | null;
+    googleAnalyticsId?: string | null;
+    googleTagManagerId?: string | null;
     features?: any;
     maintenanceMode?: boolean;
-    maintenanceMessage?: string;
+    maintenanceMessage?: string | null;
 }
 
 const getSettings = async (): Promise<SystemSettings> => {
