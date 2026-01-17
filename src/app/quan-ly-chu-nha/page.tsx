@@ -10,6 +10,12 @@ import {
   CalendarDays,
   CheckCircle,
   Clock,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Briefcase,
+  AlertCircle,
 } from "lucide-react";
 import StatCard from "./components/StatCard";
 import { apartmentService } from "@/services/apartmentService";
@@ -17,7 +23,7 @@ import { buildingService } from "@/services/buildingService";
 import { contractService } from "@/services/contractService";
 import { depositService } from "@/services/depositService";
 import { assetService } from '@/services/assetService';
-import { dashboardService } from "@/services/dashboardService";
+import { landlordDashboardService } from "@/services/landlordDashboardService";
 
 export default function HostDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -34,33 +40,40 @@ export default function HostDashboardPage() {
 
   const [assetCounts, setAssetCounts] = useState({ total: 0, available: 0, inUse: 0, maintenance: 0, retired: 0, warrantyIn: 0, warrantyExpired: 0 });
 
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);
 
-    dashboardService.getLandlordStats()
-      .then((res: any) => {
+    Promise.allSettled([
+      buildingService.getAll({ limit: 1 }),
+      apartmentService.getAll({ limit: 1 }),
+      contractService.list({ limit: 1 }),
+      depositService.list({ limit: 1 }).catch(() => ({ data: [], meta: { total: 0 } })),
+      apartmentService.getAvailable({ limit: 1 }),
+      apartmentService.getUpcomingVacant({ limit: 1 }),
+      apartmentService.getAll({ isApproved: true, limit: 1 }),
+      apartmentService.getAll({ isApproved: false, limit: 1 }),
+    ])
+      .then((results) => {
         if (!mounted) return;
+        try {
+          const [bRes, aRes, cRes, dRes, vRes, uRes, apvRes, apnRes] = results as any;
 
-        // Map backend stats to UI state
-        setCounts({
-          buildings: res.revenue?.totalApartments || 0, // Approx
-          apartments: res.totalApartments || 0,
-          rented: res.activeContracts || 0,
-          deposit: 0, // Backend logic for deposit currently simplified/removed in initial port
-          vacant: (res.totalApartments || 0) - (res.activeContracts || 0), // Rough estimate
-          upcoming: res.expiringContracts || 0,
-          approved: res.apartments?.published || 0, // Check if this field exists in response
-          pending: 0,
-        });
+          const buildings = bRes.status === "fulfilled" ? (bRes.value.meta?.total ?? 0) : 0;
+          const apartments = aRes.status === "fulfilled" ? (aRes.value.meta?.total ?? 0) : 0;
+          const rented = cRes.status === "fulfilled" ? (cRes.value.meta?.total ?? 0) : 0;
+          const deposit = dRes.status === "fulfilled" ? (dRes.value.meta?.total ?? dRes.value?.meta?.total ?? 0) : 0;
+          const vacant = vRes.status === "fulfilled" ? (vRes.value.meta?.total ?? 0) : 0;
+          const upcoming = uRes.status === "fulfilled" ? (uRes.value.meta?.total ?? 0) : 0;
+          const approved = apvRes.status === "fulfilled" ? (apvRes.value.meta?.total ?? 0) : 0;
+          const pending = apnRes.status === "fulfilled" ? (apnRes.value.meta?.total ?? 0) : 0;
 
-        // Keep asset logic separate if dashboardService doesn't cover it yet, 
-        // OR if I want to just focus on the main stats first.
-        // For now, I will keep the asset fetching separately below or remove it if I trust the dashboardService to evolve.
-        // Actually, let's keep assets as is for now since backend dashboard didn't include asset stats.
-      })
-      .catch(err => {
-        console.error("Dashboard load failed", err);
+          setCounts({ buildings, apartments, rented, deposit, vacant, upcoming, approved, pending });
+        } catch (e) {
+          // ignore and keep defaults
+        }
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -71,10 +84,9 @@ export default function HostDashboardPage() {
     };
   }, []);
 
-  // Format helper
   const fmt = (n: number, label = "căn hộ") => `${n} ${label}`;
 
-  // Keep asset loading for now as it uses a separate service not yet in backend dashboard
+  // assets overview: counts by status and warranty
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -99,6 +111,20 @@ export default function HostDashboardPage() {
         if (mounted) setAssetCounts({ total: items.length, available, inUse, maintenance, retired, warrantyIn, warrantyExpired });
       } catch (e) {
         // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Load dashboard stats from API
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const stats = await landlordDashboardService.getStats();
+        if (mounted) setDashboardStats(stats);
+      } catch (e) {
+        console.error('Failed to load dashboard stats:', e);
       }
     })();
     return () => { mounted = false; };
@@ -158,6 +184,191 @@ export default function HostDashboardPage() {
             <StatCard title="Còn bảo hành / Hết" value={loading ? '—' : `${assetCounts.warrantyIn} / ${assetCounts.warrantyExpired}`} color="violet" icon={<CalendarDays className="w-4 h-4" />} href="/quan-ly-chu-nha/danh-muc/tai-san" />
           </div>
         </section>
+
+        {/* KHỐI: THỐNG KÊ TÀI CHÍNH */}
+        {dashboardStats && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">Tài chính</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Tổng quan tài chính</h2>
+                <p className="text-xs text-slate-500">Doanh thu, chi phí và lợi nhuận tháng này.</p>
+              </div>
+              <Link href="/quan-ly-chu-nha/quan-ly-thue" className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline">
+                Quản lý thuê
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Doanh thu tháng này"
+                value={dashboardStats.revenue?.thisMonth ? `${Number(dashboardStats.revenue.thisMonth).toLocaleString('vi-VN')} đ` : "—"}
+                color="emerald"
+                icon={<TrendingUp className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/quan-ly-thue"
+              />
+              <StatCard
+                title="Chi phí tháng này"
+                value={dashboardStats.expenses?.thisMonth ? `${Number(dashboardStats.expenses.thisMonth).toLocaleString('vi-VN')} đ` : "—"}
+                color="rose"
+                icon={<TrendingDown className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/tai-chinh/thu-chi"
+              />
+              <StatCard
+                title="Lợi nhuận tháng này"
+                value={dashboardStats.profit?.thisMonth ? `${Number(dashboardStats.profit.thisMonth).toLocaleString('vi-VN')} đ` : "—"}
+                color={Number(dashboardStats.profit?.thisMonth || 0) >= 0 ? "emerald" : "rose"}
+                icon={<DollarSign className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/quan-ly-thue"
+              />
+              <StatCard
+                title="Thanh toán chờ xử lý"
+                value={dashboardStats.pendingPayments ? `${Number(dashboardStats.pendingPayments).toLocaleString('vi-VN')} đ` : "—"}
+                color="amber"
+                icon={<Clock className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/quan-ly-thue/payments"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* KHỐI: THỐNG KÊ HỢP ĐỒNG */}
+        {dashboardStats && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">Hợp đồng</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Tổng quan hợp đồng</h2>
+                <p className="text-xs text-slate-500">Theo dõi hợp đồng đang hoạt động và sắp hết hạn.</p>
+              </div>
+              <Link href="/quan-ly-chu-nha/khach-hang/hop-dong" className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline">
+                Quản lý hợp đồng
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+              <StatCard
+                title="Hợp đồng đang hoạt động"
+                value={dashboardStats.activeContracts || 0}
+                color="emerald"
+                icon={<CheckCircle className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/khach-hang/hop-dong?status=active"
+              />
+              <StatCard
+                title="Hợp đồng sắp hết hạn (30 ngày)"
+                value={dashboardStats.expiringContracts || 0}
+                color="amber"
+                icon={<AlertCircle className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/khach-hang/hop-dong"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* KHỐI: THỐNG KÊ KHÁCH HÀNG */}
+        {dashboardStats?.customers && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">Khách hàng</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Tổng quan khách hàng</h2>
+                <p className="text-xs text-slate-500">Theo dõi khách hàng mới, tiềm năng và tỷ lệ chuyển đổi.</p>
+              </div>
+              <Link href="/quan-ly-chu-nha/khach-hang/khach-tiem-nang" className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline">
+                Quản lý khách hàng
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <StatCard
+                title="Tổng khách hàng"
+                value={dashboardStats.customers.total || 0}
+                color="slate"
+                icon={<Users className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cu-dan/danh-sach"
+              />
+              <StatCard
+                title="Khách hàng mới (tháng này)"
+                value={dashboardStats.customers.newThisMonth || 0}
+                color="sky"
+                icon={<Users className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cu-dan/danh-sach"
+              />
+              <StatCard
+                title="Khách tiềm năng"
+                value={dashboardStats.customers.potential || 0}
+                color="amber"
+                icon={<Users className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/khach-hang/khach-tiem-nang"
+              />
+              <StatCard
+                title="Đã ký hợp đồng"
+                value={dashboardStats.customers.contracted || 0}
+                color="emerald"
+                icon={<CheckCircle className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/khach-hang/hop-dong"
+              />
+              <StatCard
+                title="Tỷ lệ chuyển đổi"
+                value={dashboardStats.customers.conversionRate ? `${dashboardStats.customers.conversionRate}%` : "0%"}
+                color="violet"
+                icon={<TrendingUp className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/khach-hang"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* KHỐI: THỐNG KÊ CÔNG VIỆC */}
+        {dashboardStats?.tasks && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">Công việc</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-900">Tổng quan công việc</h2>
+                <p className="text-xs text-slate-500">Theo dõi công việc chưa hoàn thành, quá hạn và đã nghiệm thu.</p>
+              </div>
+              <Link href="/quan-ly-chu-nha/cong-viec" className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline">
+                Quản lý công việc
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                title="Tổng công việc"
+                value={dashboardStats.tasks.total || 0}
+                color="slate"
+                icon={<Briefcase className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cong-viec"
+              />
+              <StatCard
+                title="Chưa hoàn thành"
+                value={dashboardStats.tasks.incomplete || 0}
+                color="amber"
+                icon={<Clock className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cong-viec"
+              />
+              <StatCard
+                title="Quá hạn"
+                value={dashboardStats.tasks.overdue || 0}
+                color="rose"
+                icon={<AlertCircle className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cong-viec"
+              />
+              <StatCard
+                title="Đã nghiệm thu"
+                value={dashboardStats.tasks.completed || 0}
+                color="emerald"
+                icon={<CheckCircle className="w-4 h-4" />}
+                href="/quan-ly-chu-nha/cong-viec"
+              />
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
