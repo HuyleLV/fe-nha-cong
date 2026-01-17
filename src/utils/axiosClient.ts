@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Keep baseURL exactly as provided in env; services will compose absolute URLs
 const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   headers: {
     "Content-Type": "application/json",
   },

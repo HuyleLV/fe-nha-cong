@@ -1,5 +1,5 @@
 export function apiUrl(path: string): string {
-  const baseRaw = process.env.NEXT_PUBLIC_API_URL || "";
+  const baseRaw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   const base = baseRaw.replace(/\/+$/, "");
   let p = path.startsWith("/") ? path : `/${path}`;
   // Avoid double '/api' if base already ends with '/api' and path starts with '/api'

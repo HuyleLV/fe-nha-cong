@@ -5,8 +5,8 @@ export interface UserProfile {
     email: string;
     name: string;
     phone: string;
-    avatarUrl?: string;
-    // Add other fields as needed
+    avatarUrl?: string | null;
+    // other fields as used by FE
 }
 
 export const userService = {
