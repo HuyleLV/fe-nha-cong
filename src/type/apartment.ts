@@ -257,4 +257,6 @@ export type ApartmentQuery = {
 
   page?: number;
   limit?: number;
+  /** Only return apartments that have short review fields set (short / short_thumb) */
+  shortOnly?: boolean;
 };

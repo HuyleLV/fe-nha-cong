@@ -1,4 +1,4 @@
-import axios from '../utils/axiosClient';
+import axiosClient from '@/utils/axiosClient';
 
 const API_URL = '/admin/system-settings';
 
@@ -67,27 +67,27 @@ export interface UpdateSystemSettingsDto {
 }
 
 const getSettings = async (): Promise<SystemSettings> => {
-    const response = await axios.get(API_URL);
+    const response = await axiosClient.get(API_URL);
     return response.data;
 };
 
 const getPublicSettings = async (): Promise<Partial<SystemSettings>> => {
-    const response = await axios.get(`${API_URL}/public`);
+    const response = await axiosClient.get(`${API_URL}/public`);
     return response.data;
 };
 
 const updateSettings = async (data: UpdateSystemSettingsDto): Promise<SystemSettings> => {
-    const response = await axios.patch(API_URL, data);
+    const response = await axiosClient.patch(API_URL, data);
     return response.data;
 };
 
 const getStorageConfig = async (): Promise<any> => {
-    const response = await axios.get(`${API_URL}/storage-config`);
+    const response = await axiosClient.get(`${API_URL}/storage-config`);
     return response.data;
 };
 
 const testStorageConnection = async (type: string): Promise<any> => {
-    const response = await axios.post(`${API_URL}/test-storage/${type}`);
+    const response = await axiosClient.post(`${API_URL}/test-storage/${type}`);
     return response.data;
 };
 
