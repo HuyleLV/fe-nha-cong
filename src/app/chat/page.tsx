@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Send, Paperclip } from "lucide-react";
+import { Send, Paperclip, Check, CheckCheck } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { io, Socket } from 'socket.io-client';
@@ -18,6 +18,7 @@ type Message = {
   createdAt: string;
   attachments?: any[];
   icon?: string | null;
+  readAt?: string | null;
 };
 
 export default function ChatPage() {
@@ -41,6 +42,8 @@ export default function ChatPage() {
   const createdForParams = useRef(false);
   const sockRef = useRef<Socket | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [typingText, setTypingText] = useState<string | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (listRef.current) {
@@ -63,7 +66,7 @@ export default function ChatPage() {
 
       let convId = activeConv;
       if (!convId) {
-        const me = await userService.getMe().catch(() => null);
+        const me = await userService.getProfile().catch(() => null);
         if (!me) {
           const next = `/chat?apartmentId=${encodeURIComponent(String(apartmentParam ?? ''))}&ownerId=${encodeURIComponent(String(ownerParam ?? ''))}`;
           router.push(`/dang-nhap?next=${encodeURIComponent(next)}`);
@@ -72,44 +75,44 @@ export default function ChatPage() {
         setMeId(me.id ?? null);
         const participantIds = [Number(owner?.id ?? ownerParam), Number(me.id)];
         try {
-            const createRes = await conversationService.create(participantIds, apartmentParam ? Number(apartmentParam) : undefined);
-            if (createRes && (createRes as any).messageError) {
-              try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch {}
-            }
-            const convObj = createRes && (createRes.conversation ? createRes.conversation : createRes);
-            const id = convObj?.id ?? (convObj && convObj.id === 0 ? 0 : undefined);
-            if (id == null) {
-              if (typeof createRes === 'number') {
-                convId = String(createRes);
-              } else if (createRes && (createRes.conversationId || createRes.id)) {
-                convId = String(createRes.conversationId || createRes.id);
-              } else {
-                throw new Error('Không nhận được id cuộc trò chuyện từ server');
-              }
+          const createRes = await conversationService.create(participantIds, apartmentParam ? Number(apartmentParam) : undefined);
+          if (createRes && (createRes as any).messageError) {
+            try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch { }
+          }
+          const convObj = createRes && (createRes.conversation ? createRes.conversation : createRes);
+          const id = convObj?.id ?? (convObj && convObj.id === 0 ? 0 : undefined);
+          if (id == null) {
+            if (typeof createRes === 'number') {
+              convId = String(createRes);
+            } else if (createRes && (createRes.conversationId || createRes.id)) {
+              convId = String(createRes.conversationId || createRes.id);
             } else {
-              convId = String(id);
+              throw new Error('Không nhận được id cuộc trò chuyện từ server');
             }
+          } else {
+            convId = String(id);
+          }
           setActiveConv(convId);
-            setConversations((s) => {
-              try {
-                const toAdd = convObj || createRes;
-                if (!Array.isArray(s)) return [toAdd];
-                if (s.some((x: any) => String(x?.id) === convId)) return s;
-                return [toAdd, ...s];
-              } catch {
-                return s;
-              }
-            });
+          setConversations((s) => {
+            try {
+              const toAdd = convObj || createRes;
+              if (!Array.isArray(s)) return [toAdd];
+              if (s.some((x: any) => String(x?.id) === convId)) return s;
+              return [toAdd, ...s];
+            } catch {
+              return s;
+            }
+          });
           try {
-              const participants = Array.isArray((convObj || createRes)?.participants) ? (convObj || createRes).participants : [];
-              const other = participants.find((p: any) => Number(p.id) === Number(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me.id)) || participants[0] || null;
+            const participants = Array.isArray((convObj || createRes)?.participants) ? (convObj || createRes).participants : [];
+            const other = participants.find((p: any) => Number(p.id) === Number(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me.id)) || participants[0] || null;
             setOwner(other);
-          } catch {}
+          } catch { }
           // load messages for the newly created conversation
-          try { loadMessagesForConv(convId); } catch (e) {}
+          try { loadMessagesForConv(convId); } catch (e) { }
         } catch (err: any) {
           console.error('Không thể tạo cuộc trò chuyện', err);
-          try { toast.error(typeof err === 'string' ? err : (err?.message || 'Không thể tạo cuộc trò chuyện')); } catch {}
+          try { toast.error(typeof err === 'string' ? err : (err?.message || 'Không thể tạo cuộc trò chuyện')); } catch { }
           return;
         }
       }
@@ -135,7 +138,7 @@ export default function ChatPage() {
       setIcon(null);
     } catch (e) {
       console.error(e);
-      try { toast.error('Gửi tin nhắn thất bại. Vui lòng thử lại.'); } catch {}
+      try { toast.error('Gửi tin nhắn thất bại. Vui lòng thử lại.'); } catch { }
     }
   };
 
@@ -143,7 +146,7 @@ export default function ChatPage() {
     let mounted = true;
     (async () => {
       try {
-        const me = await userService.getMe().catch(() => null);
+        const me = await userService.getProfile().catch(() => null);
         if (!mounted) return;
         setMeId(me?.id ?? null);
         const list = await conversationService.listMine().catch(() => []);
@@ -177,13 +180,13 @@ export default function ChatPage() {
                 const participants = Array.isArray(found.participants) ? found.participants : [];
                 const other = participants.find((p: any) => String(p?.id) === String(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me?.id)) || participants[0] || null;
                 if (other) setOwner(other);
-              } catch {}
+              } catch { }
             }
           }
-        } catch (e) {}
+        } catch (e) { }
       } catch (e) {
         console.error('Failed to load conversations', e);
-        try { toast.error('Không thể tải danh sách cuộc trò chuyện'); } catch {}
+        try { toast.error('Không thể tải danh sách cuộc trò chuyện'); } catch { }
       }
     })();
     return () => { mounted = false; };
@@ -197,14 +200,14 @@ export default function ChatPage() {
         // ensure we have current user id before loading messages (auth may affect results)
         if (!meId) {
           try {
-            const me = await userService.getMe().catch(() => null);
+            const me = await userService.getProfile().catch(() => null);
             setMeId(me?.id ?? null);
-          } catch {}
+          } catch { }
         }
         setActiveConv(String(convQuery));
         // load messages for the conversation from URL
         try { await loadMessagesForConv(convQuery); } catch (e) { /* ignore */ }
-      } catch (e) {}
+      } catch (e) { }
     })();
   }, [convQuery]);
 
@@ -214,7 +217,7 @@ export default function ChatPage() {
       if (!convIdRaw) return;
       const convId = Number(convIdRaw);
       const fetched = await conversationService.getMessages(convId).catch((e) => { throw e; });
-      const mapped: Message[] = (fetched ?? []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null }));
+      const mapped: Message[] = (fetched ?? []).map((m: any) => ({ id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null, readAt: m.readAt }));
       // If no messages returned, but conversation list has a lastMessageText, show that as a fallback
       if ((!Array.isArray(mapped) || mapped.length === 0)) {
         try {
@@ -268,7 +271,7 @@ export default function ChatPage() {
             listRef.current.scrollTop = listRef.current.scrollHeight;
           }
         }, 30);
-      } catch {}
+      } catch { }
     } catch (e) {
       console.error('[Chat] loadMessagesForConv failed', e);
     }
@@ -293,13 +296,13 @@ export default function ChatPage() {
           const a = await apartmentService.getById(Number(apartmentParam));
           setApartment(a);
         } catch (err: any) {
-          try { toast.info('Không thể tải thông tin căn hộ'); } catch {}
+          try { toast.info('Không thể tải thông tin căn hộ'); } catch { }
         }
       }
 
       try {
         // Ensure we have current user id to include in participants
-        const me = await userService.getMe().catch(() => null);
+        const me = await userService.getProfile().catch(() => null);
         if (!me) {
           const next = `/chat?apartmentId=${encodeURIComponent(String(apartmentParam ?? ''))}&ownerId=${encodeURIComponent(String(ownerParam ?? ''))}`;
           router.push(`/dang-nhap?next=${encodeURIComponent(next)}`);
@@ -315,7 +318,7 @@ export default function ChatPage() {
         const createRes = await conversationService.create([Number(ownerParam), Number(me.id)], apartmentParam ? Number(apartmentParam) : undefined, preset);
         // If server returned a wrapper with a messageError, show a warning but continue
         if (createRes && (createRes as any).messageError) {
-          try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch {}
+          try { toast.warn((createRes as any).messageError || 'Không gửi được tin nhắn khởi tạo'); } catch { }
         }
         // createRes may be the conversation object or { conversation, message }
         const conv = createRes && (createRes.conversation ? createRes.conversation : createRes);
@@ -340,10 +343,10 @@ export default function ChatPage() {
           const participants = Array.isArray(conv?.participants) ? conv.participants : [];
           const other = participants.find((p: any) => Number(p.id) === Number(ownerParam)) || participants.find((p: any) => Number(p.id) !== Number(me.id)) || participants[0] || null;
           setOwner(other);
-        } catch {}
+        } catch { }
 
         // Replace URL so chat shows conversation id cleanly
-        try { router.replace(`/chat?c=${encodeURIComponent(idStr)}`); } catch {}
+        try { router.replace(`/chat?c=${encodeURIComponent(idStr)}`); } catch { }
 
         // If server returned an initial message as part of create response, use it
         try {
@@ -358,7 +361,7 @@ export default function ChatPage() {
         }
       } catch (e) {
         console.error('Failed to create/open conversation from params', e);
-        try { toast.error(typeof e === 'string' ? e : ((e as any)?.message || 'Không thể mở cuộc trò chuyện.')); } catch {}
+        try { toast.error(typeof e === 'string' ? e : ((e as any)?.message || 'Không thể mở cuộc trò chuyện.')); } catch { }
       }
     })();
   }, [ownerParam, apartmentParam, router]);
@@ -373,7 +376,7 @@ export default function ChatPage() {
       try {
         if (meId) s.emit('join', { room: `user:${meId}` });
         if (activeConv) s.emit('join', { room: `conversation:${activeConv}` });
-      } catch {}
+      } catch { }
     });
 
     s.on('conversation:message:new', (payload: any) => {
@@ -381,17 +384,41 @@ export default function ChatPage() {
         const m = payload?.message;
         if (!m) return;
         if (String(payload?.conversationId) !== String(activeConv)) return;
+
+        // If this is the active conversation, mark as read immediately
+        if (activeConv) {
+          try { sockRef.current?.emit('conversation:read', { conversationId: activeConv }); } catch { }
+        }
+
         setMessages((prev) => {
           const exists = (prev || []).some((x) => String(x.id) === String(m.id));
           if (exists) return prev;
-          const mapped: Message = { id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null };
+          const mapped: Message = { id: String(m.id), fromMe: Number(m.from?.id) === Number(meId), text: m.text, createdAt: m.createdAt, attachments: m.attachments || [], icon: m.icon ?? null, readAt: m.readAt };
           return [...prev, mapped];
         });
-      } catch (e) {}
+        setTypingText(null);
+      } catch (e) { }
+    });
+
+    s.on('conversation:typing', (payload: any) => {
+      try {
+        if (String(payload?.conversationId) !== String(activeConv)) return;
+        const typerId = Number(payload?.from?.id || payload?.userId);
+        if (typerId === Number(meId)) return;
+
+        const typerName = payload?.from?.name || payload?.name || "Người khác";
+        if (payload.isTyping) {
+          setTypingText(`${typerName} đang soạn tin...`);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setTypingText(null), 3000);
+        } else {
+          setTypingText(null);
+        }
+      } catch { }
     });
 
     return () => {
-      try { s.off('conversation:message:new'); s.disconnect(); } catch {}
+      try { s.off('conversation:message:new'); s.disconnect(); } catch { }
       sockRef.current = null;
     };
   }, [meId, activeConv]);
@@ -402,7 +429,7 @@ export default function ChatPage() {
       if (sockRef.current && activeConv) {
         sockRef.current.emit('join', { room: `conversation:${activeConv}` });
       }
-    } catch {}
+    } catch { }
   }, [activeConv]);
 
   // When active conversation changes (user clicked a conversation or opened via c=), load messages and owner
@@ -425,7 +452,7 @@ export default function ChatPage() {
           <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200">
             <h3 className="font-semibold">Tin nhắn</h3>
           </div>
-            <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-slate-200">
             {conversations.map((c) => {
               const participants = Array.isArray(c?.participants) ? c.participants : [];
               const other = participants.find((p: any) => Number(p.id) !== Number(meId)) || participants[0] || null;
@@ -443,10 +470,10 @@ export default function ChatPage() {
                       try {
                         const otherLocal = Array.isArray(c?.participants) ? c.participants.find((p: any) => Number(p.id) !== Number(meId)) || c.participants[0] || null : null;
                         if (otherLocal) setOwner(otherLocal);
-                      } catch {}
+                      } catch { }
                       // load messages immediately for this conversation
-                      try { await loadMessagesForConv(idStr); } catch (e) {}
-                    } catch (e) {}
+                      try { await loadMessagesForConv(idStr); } catch (e) { }
+                    } catch (e) { }
                   }}
                   className={`w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 ${activeConv === idStr ? 'bg-emerald-50' : ''}`}>
                   <div className="w-10 h-10 rounded-full bg-emerald-100 grid place-items-center text-emerald-700 font-semibold">{initial}</div>
@@ -501,7 +528,7 @@ export default function ChatPage() {
                     )}
 
                     <div className="flex flex-col">
-                      <div className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800"} rounded-xl px-4 py-2 inline-block break-words whitespace-pre-wrap`}> 
+                      <div className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800"} rounded-xl px-4 py-2 inline-block break-words whitespace-pre-wrap`}>
                         {m.icon ? <div className="text-xl mb-1">{m.icon}</div> : null}
                         {m.text ? <div>{m.text}</div> : null}
                         {m.attachments && m.attachments.length ? (
@@ -516,53 +543,78 @@ export default function ChatPage() {
                     </div>
 
                     {isMe && (
-                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white grid place-items-center font-semibold">{meInitial}</div>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white grid place-items-center font-semibold">{meInitial}</div>
+                        {m.readAt ? (
+                          <CheckCheck className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Check className="w-3 h-3 text-slate-400" />
+                        )}
+                      </div>
                     )}
                   </div>
                 );
               })}
+              {typingText && (
+                <div className="flex items-center gap-2 text-slate-500 text-xs italic ml-12 animate-pulse">
+                  <div className="flex gap-1">
+                    <span className="animate-bounce">.</span>
+                    <span className="animate-bounce delay-100">.</span>
+                    <span className="animate-bounce delay-200">.</span>
+                  </div>
+                  {typingText}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="px-4 py-3 border-t border-slate-200 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <button onClick={() => setShowUpload((s) => !s)} className="p-2 rounded bg-slate-100">
-                    <Paperclip className="w-4 h-4 text-slate-600" />
-                  </button>
-                  {attachments && attachments.length > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 grid place-items-center">{attachments.length}</div>
-                  )}
-                  {showUpload && (
-                    <div className="absolute z-50 left-0 mt-2">
-                      <div className="bg-white p-2 rounded shadow border border-slate-200">
-                        <UploadPicker value={attachments} onChange={(v) => setAttachments(Array.isArray(v) ? v : v ? [v] : [])} multiple max={6} />
-                        <div className="text-right mt-2"><button onClick={() => setShowUpload(false)} className="text-sm text-slate-500">Đóng</button></div>
-                      </div>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <button onClick={() => setShowUpload((s) => !s)} className="p-2 rounded bg-slate-100">
+                  <Paperclip className="w-4 h-4 text-slate-600" />
+                </button>
+                {attachments && attachments.length > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 grid place-items-center">{attachments.length}</div>
+                )}
+                {showUpload && (
+                  <div className="absolute z-50 left-0 mt-2">
+                    <div className="bg-white p-2 rounded shadow border border-slate-200">
+                      <UploadPicker value={attachments} onChange={(v) => setAttachments(Array.isArray(v) ? v : v ? [v] : [])} multiple max={6} />
+                      <div className="text-right mt-2"><button onClick={() => setShowUpload(false)} className="text-sm text-slate-500">Đóng</button></div>
                     </div>
-                  )}
-                </div>
-
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-                  placeholder="Gửi tin nhắn..."
-                  className="flex-1 rounded-full border border-slate-200 px-4 py-2 outline-none"
-                />
-                <div className="flex items-center gap-2">
-                  <select value={icon ?? ''} onChange={(e) => setIcon(e.target.value || null)} className="rounded border border-slate-200 px-2 py-1 text-sm">
-                    <option value="">Biểu tượng</option>
-                    <option value="❤️">❤️ Thích</option>
-                    <option value="👍">👍 Tốt</option>
-                    <option value="🙂">🙂 Thân thiện</option>
-                    <option value="❓">❓ Hỏi</option>
-                  </select>
-                  <button onClick={send} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full">
-                    <Send className="w-4 h-4" /> Gửi
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
+
+              <input
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  try {
+                    if (sockRef.current && activeConv) {
+                      sockRef.current.emit('conversation:typing', { conversationId: activeConv, isTyping: true });
+                      // Debounce stop typing? usually handled by server or client timeout, but for now just emit true
+                    }
+                  } catch { }
+                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+                placeholder="Gửi tin nhắn..."
+                className="flex-1 rounded-full border border-slate-200 px-4 py-2 outline-none"
+              />
+              <div className="flex items-center gap-2">
+                <select value={icon ?? ''} onChange={(e) => setIcon(e.target.value || null)} className="rounded border border-slate-200 px-2 py-1 text-sm">
+                  <option value="">Biểu tượng</option>
+                  <option value="❤️">❤️ Thích</option>
+                  <option value="👍">👍 Tốt</option>
+                  <option value="🙂">🙂 Thân thiện</option>
+                  <option value="❓">❓ Hỏi</option>
+                </select>
+                <button onClick={send} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full">
+                  <Send className="w-4 h-4" /> Gửi
+                </button>
+              </div>
+            </div>
           </div>
         </main>
       </div>

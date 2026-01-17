@@ -269,40 +269,40 @@ export default function LoginPage() {
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {/* Left: brand/benefits panel */}
-          <div className="hidden md:flex relative rounded-3xl overflow-hidden ring-1 ring-white/40 backdrop-blur-xl bg-white/70">
-            <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/50 blur-2xl" />
-            <div className="absolute -bottom-12 -right-8 h-44 w-44 rounded-full bg-teal-300/50 blur-2xl" />
+          <div className="hidden md:flex relative rounded-3xl overflow-hidden ring-1 ring-white/40 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 transition-colors">
+            <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/50 blur-2xl dark:opacity-30" />
+            <div className="absolute -bottom-12 -right-8 h-44 w-44 rounded-full bg-teal-300/50 blur-2xl dark:opacity-30" />
             <div className="relative p-8 lg:p-10 flex flex-col justify-center items-center text-center">
               <Image src={logomau} alt="Logo" priority className="h-10 md:h-12 w-auto object-contain" />
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-gray-900">Nền tảng thuê trọ dễ dàng</h2>
-              <p className="mt-1 text-sm text-gray-600">Nhanh chóng • Minh bạch • Hỗ trợ tận tâm</p>
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Nền tảng thuê trọ dễ dàng</h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Nhanh chóng • Minh bạch • Hỗ trợ tận tâm</p>
 
-              <ul className="mt-6 space-y-3 text-sm text-gray-700 text-left max-w-md">
+              <ul className="mt-6 space-y-3 text-sm text-gray-700 dark:text-gray-200 text-left max-w-md">
                 <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" /> Tài khoản miễn phí, bảo mật <b className="ml-1">Shield</b></li>
                 <li className="flex items-start gap-2"><Sparkles className="mt-0.5 h-4 w-4 text-amber-500" /> Tìm phòng nhanh với bộ lọc thông minh</li>
                 <li className="flex items-start gap-2"><Star className="mt-0.5 h-4 w-4 text-rose-500" /> Yêu thích, đặt lịch xem phòng ngay</li>
               </ul>
 
-              <div className="mt-6 text-xs text-gray-600">
+              <div className="mt-6 text-xs text-gray-600 dark:text-gray-400">
                 Bằng việc tiếp tục, bạn đồng ý với <a href="#" onClick={(e) => e.preventDefault()} className="underline decoration-emerald-400 decoration-2 underline-offset-2">Điều khoản</a> & <a href="#" onClick={(e) => e.preventDefault()} className="underline decoration-emerald-400 decoration-2 underline-offset-2">Chính sách</a> của chúng tôi.
               </div>
             </div>
           </div>
 
           {/* Right: form card */}
-          <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40">
+          <div className="relative rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-white/40 dark:border-slate-700/50 transition-colors">
             <div className="absolute inset-0 pointer-events-none">
-              <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-20" />
+              <div className="h-32 w-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 blur-3xl opacity-20 dark:opacity-10" />
             </div>
 
             <div className="relative">
               {/* Header + Tabs */}
               <div className="px-7 pt-7 pb-10 text-center">
                 <div className="flex flex-col items-center">
-                  <h1 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900">
+                  <h1 className="mt-3 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
                     {mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
                   </h1>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {mode === "login" ? "Chào mừng quay lại 👋" : "Nhập thông tin để bắt đầu ✨"}
                   </p>
                 </div>
@@ -336,14 +336,14 @@ export default function LoginPage() {
                 <form id={formId} onSubmit={handleSubmit(onSubmit)} className="px-7 pb-7 space-y-4">
                   {/* Email hoặc số điện thoại */}
                   <label className="block">
-                    <span className="block text-sm font-medium text-gray-700">Email hoặc số điện thoại</span>
-                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                      <Mail className="size-4 shrink-0 text-gray-400" />
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email hoặc số điện thoại</span>
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50 transition-colors">
+                      <Mail className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
                       <input
                         {...register("identifier", { required: true })}
                         type="text"
                         placeholder="you@example.com hoặc 0912345678"
-                        className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                        className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                         required
                       />
                     </div>
@@ -354,15 +354,15 @@ export default function LoginPage() {
                   {/* Password */}
                   <label className="block">
                     <div className="flex items-center justify-between">
-                      <span className="block text-sm font-medium text-gray-700">Mật khẩu</span>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mật khẩu</span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                      <Lock className="size-4 shrink-0 text-gray-400" />
+                    <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50 transition-colors">
+                      <Lock className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
                       <input
                         {...register("password_hash", { required: true })}
                         type="password"
                         placeholder="••••••••"
-                        className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+                        className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                         required
                       />
                     </div>
@@ -370,7 +370,7 @@ export default function LoginPage() {
 
                   {/* Options */}
                   <div className="flex items-center justify-between pt-1">
-                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                       <input type="checkbox" className="rounded border-gray-300" {...register("remember")} />
                       Ghi nhớ đăng nhập
                     </label>
@@ -393,16 +393,16 @@ export default function LoginPage() {
 
                   {/* Divider */}
                   <div className="my-4 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-gray-200" />
-                    <span className="text-xs text-gray-500">hoặc</span>
-                    <div className="h-px flex-1 bg-gray-200" />
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">hoặc</span>
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-slate-700" />
                   </div>
 
                   {/* Google: single button */}
                   <button
                     type="button"
                     aria-label="Tiếp tục với Google"
-                    className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 py-2 text-sm hover:bg-gray-50"
+                    className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                     onClick={onLoginWithGoogle}
                   >
                     <span className="absolute left-3 inline-flex items-center">
@@ -413,7 +413,7 @@ export default function LoginPage() {
 
 
                   {/* Footer text: prompt to register */}
-                  <div className="pt-3 text-center text-sm text-gray-600">
+                  <div className="pt-3 text-center text-sm text-gray-600 dark:text-gray-400">
                     Chưa có tài khoản? {" "}
                     <button
                       type="button"
@@ -432,47 +432,47 @@ export default function LoginPage() {
                     <>
                       {/* Họ và tên */}
                       <label className="block">
-                        <span className="block text-sm font-medium text-gray-700">Họ và tên</span>
-                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                          <UserIcon className="size-4 shrink-0 text-gray-400" />
-                          <input {...reg("name", { required: true, minLength: 2 })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Họ và tên</span>
+                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                          <UserIcon className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <input {...reg("name", { required: true, minLength: 2 })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                         </div>
                       </label>
                       {/* Số điện thoại */}
                       <label className="block">
-                        <span className="block text-sm font-medium text-gray-700">Số điện thoại</span>
-                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                          <Phone className="size-4 shrink-0 text-gray-400" />
-                          <input {...reg("phone", { required: true })} type="tel" inputMode="tel" placeholder="090..." className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Số điện thoại</span>
+                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                          <Phone className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <input {...reg("phone", { required: true })} type="tel" inputMode="tel" placeholder="090..." className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                         </div>
                       </label>
                       {/* Email */}
                       <label className="block">
-                        <span className="block text-sm font-medium text-gray-700">Email</span>
-                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                          <Mail className="size-4 shrink-0 text-gray-400" />
-                          <input {...reg("email", { required: true })} type="email" placeholder="you@example.com" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</span>
+                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                          <Mail className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <input {...reg("email", { required: true })} type="email" placeholder="you@example.com" className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                         </div>
                       </label>
                       {/* PW + confirm */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <label className="block">
-                          <span className="block text-sm font-medium text-gray-700">Mật khẩu</span>
-                          <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                            <Lock className="size-4 shrink-0 text-gray-400" />
-                            <input {...reg("password_hash", { required: true, minLength: 6 })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mật khẩu</span>
+                          <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                            <Lock className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                            <input {...reg("password_hash", { required: true, minLength: 6 })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                           </div>
                         </label>
                         <label className="block">
-                          <span className="block text-sm font-medium text-gray-700">Xác nhận</span>
-                          <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                            <Lock className="size-4 shrink-0 text-gray-400" />
-                            <input {...reg("confirmPassword", { required: true })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Xác nhận</span>
+                          <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                            <Lock className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                            <input {...reg("confirmPassword", { required: true })} type="password" placeholder="••••••••" className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                           </div>
                         </label>
                       </div>
                       {/* Agree */}
-                      <label className="mt-1 inline-flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+                      <label className="mt-1 inline-flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
                         <input type="checkbox" {...reg("agree", { required: true })} className="mt-1 rounded border-gray-300" />
                         <span>
                           Tôi đồng ý với <a className="text-emerald-700 underline" href="#" onClick={(e) => e.preventDefault()}>Điều khoản</a> & <a className="text-emerald-700 underline" href="#" onClick={(e) => e.preventDefault()}>Chính sách</a>.
@@ -485,12 +485,12 @@ export default function LoginPage() {
                   ) : (
                     <>
                       {/* Partner form */}
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-xs text-emerald-800 inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Đăng ký đối tác: để lại thông tin, chúng tôi sẽ liên hệ tư vấn.</div>
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-xs text-emerald-800 dark:text-emerald-400 inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Đăng ký đối tác: để lại thông tin, chúng tôi sẽ liên hệ tư vấn.</div>
                       <label className="block">
-                        <span className="block text-sm font-medium text-gray-700">Họ và tên</span>
-                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300">
-                          <UserIcon className="size-4 shrink-0 text-gray-400" />
-                          <input {...reg("name", { required: true })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 placeholder:text-gray-400" />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Họ và tên</span>
+                        <div className="mt-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-300 dark:focus-within:ring-emerald-500/50">
+                          <UserIcon className="size-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                          <input {...reg("name", { required: true })} placeholder="Nguyễn Văn A" className="w-full outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                         </div>
                       </label>
                       <label className="block">
@@ -508,8 +508,8 @@ export default function LoginPage() {
                         </div>
                       </label>
                       <label className="block">
-                        <span className="block text-sm font-medium text-gray-700">Nhu cầu</span>
-                        <textarea {...reg("need")} rows={3} placeholder="Mô tả nhanh về nhu cầu, số lượng phòng/căn hộ..." className="mt-1 w-full rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-300" />
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nhu cầu</span>
+                        <textarea {...reg("need")} rows={3} placeholder="Mô tả nhanh về nhu cầu, số lượng phòng/căn hộ..." className="mt-1 w-full rounded-2xl border border-gray-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-emerald-500/50 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                       </label>
                       <button type="submit" disabled={isSubmittingRegister} className="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-4 py-2.5 font-medium text-white shadow hover:bg-emerald-700 transition disabled:opacity-60">
                         <span className="relative z-10">{isSubmittingRegister ? "Đang gửi..." : "Gửi đăng ký đối tác"}</span>
@@ -524,14 +524,14 @@ export default function LoginPage() {
               {showForgot ? (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                   <div className="absolute inset-0 bg-black/40" onClick={() => setShowForgot(false)} />
-                  <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-                    <h3 className="text-lg font-semibold">Quên mật khẩu</h3>
-                    <p className="mt-2 text-sm text-gray-600">Nhập email để nhận liên kết đặt lại mật khẩu.</p>
+                  <div className="relative z-10 w-full max-w-md rounded-xl bg-white dark:bg-slate-800 p-6 shadow-lg">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quên mật khẩu</h3>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Nhập email để nhận liên kết đặt lại mật khẩu.</p>
                     <div className="mt-4">
-                      <input value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} type="email" placeholder="you@example.com" className="w-full rounded-xl border px-3 py-2 outline-none" />
+                      <input value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} type="email" placeholder="you@example.com" className="w-full rounded-xl border border-gray-200 dark:border-slate-600 px-3 py-2 outline-none bg-white dark:bg-slate-900 text-gray-900 dark:text-white" />
                     </div>
                     <div className="mt-4 flex justify-end gap-2">
-                      <button type="button" onClick={() => setShowForgot(false)} className="rounded-xl px-4 py-2 border">Hủy</button>
+                      <button type="button" onClick={() => setShowForgot(false)} className="rounded-xl px-4 py-2 border dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700">Hủy</button>
                       <button type="button" onClick={handleForgotSubmit} disabled={isSubmittingForgot} className="rounded-xl bg-emerald-600 px-4 py-2 text-white disabled:opacity-60">{isSubmittingForgot ? 'Đang gửi...' : 'Gửi'}</button>
                     </div>
                   </div>

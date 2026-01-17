@@ -20,7 +20,7 @@ export default function PartnerAdminPage() {
   const [status, setStatus] = useState<PartnerStatus | "">("");
   const [q, setQ] = useState<string>("");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'cancel'|'delete'|null>(null);
+  const [confirmAction, setConfirmAction] = useState<'cancel' | 'delete' | null>(null);
   const [targetId, setTargetId] = useState<number | null>(null);
   const router = useRouter();
   const limit = 10;
@@ -93,7 +93,7 @@ export default function PartnerAdminPage() {
   const handleNext = () => page < totalPages && setPage(page + 1);
 
   return (
-  <div className="mx-auto max-w-screen-2xl p-4">
+    <div className="mx-auto max-w-screen-2xl p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">ĐỐI TÁC - LEADS</h1>
       </div>
@@ -107,7 +107,7 @@ export default function PartnerAdminPage() {
               setPage(1);
               setRole(e.target.value as PartnerRole | "");
             }}
-            className="rounded-lg border px-3 py-2 bg-white shadow-sm text-sm"
+            className="rounded-lg border px-3 py-2 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white shadow-sm text-sm"
           >
             <option value="">Tất cả vai trò</option>
             <option value="landlord">Chủ nhà</option>
@@ -119,7 +119,7 @@ export default function PartnerAdminPage() {
               setPage(1);
               setStatus(e.target.value as PartnerStatus | "");
             }}
-            className="rounded-lg border px-3 py-2 bg-white shadow-sm text-sm"
+            className="rounded-lg border px-3 py-2 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white shadow-sm text-sm"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="pending">Chờ duyệt</option>
@@ -140,7 +140,7 @@ export default function PartnerAdminPage() {
                 fetchPartners();
               }
             }}
-            className="w-64 rounded-lg border px-3 py-2 bg-white shadow-sm text-sm"
+            className="w-64 rounded-lg border px-3 py-2 bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 shadow-sm text-sm"
             placeholder="Tìm theo tên / email / SĐT"
           />
           <button
@@ -156,13 +156,13 @@ export default function PartnerAdminPage() {
       </div>
 
       <AdminTable
-        headers={["ID","Họ tên","Vai trò","Trạng thái","SĐT","Email","Nhu cầu","Ngày tạo","Thao tác"]}
+        headers={["ID", "Họ tên", "Vai trò", "Trạng thái", "SĐT", "Email", "Nhu cầu", "Ngày tạo", "Thao tác"]}
         loading={loading}
         emptyText="Chưa có dữ liệu."
       >
         {partners.map((p) => (
-          <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-            <td className="px-4 py-2 font-medium text-gray-900">{p.id}</td>
+          <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+            <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{p.id}</td>
             <td className="px-4 py-2">
               <span className="line-clamp-1">{p.fullName}</span>
             </td>
@@ -172,12 +172,12 @@ export default function PartnerAdminPage() {
             <td className="px-4 py-2">
               <span className={`px-2 py-1 rounded-md text-xs font-semibold ${statusClass(p.status)}`}>{statusText(p.status)}</span>
             </td>
-            <td className="px-4 py-2 text-gray-700">{p.phone || "—"}</td>
-            <td className="px-4 py-2 text-gray-700">{p.email || "—"}</td>
-            <td className="px-4 py-2 text-gray-700 max-w-[240px]">
+            <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{p.phone || "—"}</td>
+            <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{p.email || "—"}</td>
+            <td className="px-4 py-2 text-gray-700 dark:text-gray-300 max-w-[240px]">
               {p.need ? <span className="line-clamp-2">{p.need}</span> : <span className="text-gray-400">—</span>}
             </td>
-            <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{formatDateTime(p.createdAt)}</td>
+            <td className="px-4 py-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDateTime(p.createdAt)}</td>
             <td className="px-4 py-2">
               <div className="flex justify-center gap-2">
                 <button

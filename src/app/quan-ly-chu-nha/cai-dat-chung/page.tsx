@@ -6,7 +6,7 @@ import { UserOutlined, UploadOutlined, BankOutlined, BellOutlined, SettingOutlin
 import hostSettingsService, { HostSettings } from '@/services/hostSettingsService';
 import userService, { UserProfile } from '@/services/userService';
 
-const { TabPane } = Tabs;
+
 const { Option } = Select;
 
 export default function HostSettingsPage() {
@@ -97,6 +97,139 @@ export default function HostSettingsPage() {
 
   if (loading) return <div>Loading...</div>;
 
+  const tabsItems = [
+    {
+      key: '1',
+      label: <span><UserOutlined />Hồ Sơ</span>,
+      children: (
+        <Card title="Thông Tin Cá Nhân" className="mb-4">
+          <div className="flex items-start gap-6">
+            <div className="text-center">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 mb-2 mx-auto">
+                {userProfile?.avatarUrl ? (
+                  <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <UserOutlined className="text-4xl text-gray-400 mt-8" />
+                )}
+              </div>
+              <Upload
+                customRequest={({ file, onSuccess }) => {
+                  handleAvatarUpload({ file: { originFileObj: file, status: 'done' } });
+                  onSuccess?.("ok");
+                }}
+                showUploadList={false}
+              >
+                <Button icon={<UploadOutlined />}>Đổi Ảnh</Button>
+              </Upload>
+            </div>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Form.Item label="Tên Hiển Thị" name="displayName" rules={[{ required: true }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Số Điện Thoại" name="phone">
+                <Input disabled />
+              </Form.Item>
+              <Form.Item label="Email" name="email">
+                <Input disabled />
+              </Form.Item>
+              <Form.Item label="Giới Thiệu (Bio)" name={['profile', 'bio']}>
+                <Input.TextArea rows={4} />
+              </Form.Item>
+            </div>
+          </div>
+        </Card>
+      )
+    },
+    {
+      key: '2',
+      label: <span><BankOutlined />Tài Chính</span>,
+      children: (
+        <Card title="Tài Khoản Ngân Hàng (Mặc định)" className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item label="Tên Ngân Hàng" name={['payment', 'bankName']}>
+              <Input placeholder="VD: Vietcombank" />
+            </Form.Item>
+            <Form.Item label="Chi Nhánh" name={['payment', 'bankBranch']}>
+              <Input placeholder="VD: CN Hoàn Kiếm" />
+            </Form.Item>
+            <Form.Item label="Số Tài Khoản" name={['payment', 'accountNumber']}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="Tên Chủ Tài Khoản" name={['payment', 'accountHolder']}>
+              <Input />
+            </Form.Item>
+          </div>
+          <div className="bg-yellow-50 p-3 border border-yellow-200 rounded text-yellow-700 text-sm">
+            Lưu ý: Hiện tại hệ thống chỉ hỗ trợ 1 tài khoản ngân hàng mặc định để nhận tiền tự động.
+          </div>
+        </Card>
+      )
+    },
+    {
+      key: '3',
+      label: <span><BellOutlined />Thông Báo</span>,
+      children: (
+        <Card className="mb-4">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <span>Gửi Email</span>
+              <Form.Item name={['notifications', 'email']} valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+            <div className="flex justify-between items-center border-b pb-2">
+              <span>Gửi Tin Nhắn (SMS)</span>
+              <Form.Item name={['notifications', 'sms']} valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+            <div className="flex justify-between items-center border-b pb-2">
+              <span>Thông Báo Đẩy (App)</span>
+              <Form.Item name={['notifications', 'push']} valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+            <h3 className="font-semibold mt-4">Loại Thông Báo</h3>
+            <div className="flex justify-between items-center">
+              <span>Đặt Phòng Mới</span>
+              <Form.Item name={['notifications', 'bookingAlerts']} valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Thanh Toán Hóa Đơn</span>
+              <Form.Item name={['notifications', 'paymentAlerts']} valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+            </div>
+          </div>
+        </Card>
+      )
+    },
+    {
+      key: '4',
+      label: <span><SettingOutlined />Cấu Hình Khác</span>,
+      children: (
+        <Card className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item label="Ngôn Ngữ" name={['preferences', 'language']}>
+              <Select>
+                <Option value="vi">Tiếng Việt</Option>
+                <Option value="en">English</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Múi Giờ" name={['preferences', 'timezone']}>
+              <Select>
+                <Option value="Asia/Ho_Chi_Minh">Vietnam (GMT+7)</Option>
+                {/* Add more */}
+              </Select>
+            </Form.Item>
+          </div>
+        </Card>
+      )
+    }
+  ];
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Cài Đặt Chủ Nhà</h1>
@@ -113,125 +246,7 @@ export default function HostSettingsPage() {
           </Button>
         </div>
 
-        <Tabs defaultActiveKey="1" type="card">
-          <TabPane tab={<span><UserOutlined />Hồ Sơ</span>} key="1">
-            <Card title="Thông Tin Cá Nhân" className="mb-4">
-              <div className="flex items-start gap-6">
-                <div className="text-center">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 mb-2 mx-auto">
-                    {userProfile?.avatarUrl ? (
-                      <img src={userProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <UserOutlined className="text-4xl text-gray-400 mt-8" />
-                    )}
-                  </div>
-                  <Upload
-                    customRequest={({ file, onSuccess }) => {
-                      handleAvatarUpload({ file: { originFileObj: file, status: 'done' } });
-                      onSuccess?.("ok");
-                    }}
-                    showUploadList={false}
-                  >
-                    <Button icon={<UploadOutlined />}>Đổi Ảnh</Button>
-                  </Upload>
-                </div>
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item label="Tên Hiển Thị" name="displayName" rules={[{ required: true }]}>
-                    <Input />
-                  </Form.Item>
-                  <Form.Item label="Số Điện Thoại" name="phone">
-                    <Input disabled />
-                  </Form.Item>
-                  <Form.Item label="Email" name="email">
-                    <Input disabled />
-                  </Form.Item>
-                  <Form.Item label="Giới Thiệu (Bio)" name={['profile', 'bio']}>
-                    <Input.TextArea rows={4} />
-                  </Form.Item>
-                </div>
-              </div>
-            </Card>
-          </TabPane>
-
-          <TabPane tab={<span><BankOutlined />Tài Chính</span>} key="2">
-            <Card title="Tài Khoản Ngân Hàng (Mặc định)" className="mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item label="Tên Ngân Hàng" name={['payment', 'bankName']}>
-                  <Input placeholder="VD: Vietcombank" />
-                </Form.Item>
-                <Form.Item label="Chi Nhánh" name={['payment', 'bankBranch']}>
-                  <Input placeholder="VD: CN Hoàn Kiếm" />
-                </Form.Item>
-                <Form.Item label="Số Tài Khoản" name={['payment', 'accountNumber']}>
-                  <Input />
-                </Form.Item>
-                <Form.Item label="Tên Chủ Tài Khoản" name={['payment', 'accountHolder']}>
-                  <Input />
-                </Form.Item>
-              </div>
-              <div className="bg-yellow-50 p-3 border border-yellow-200 rounded text-yellow-700 text-sm">
-                Lưu ý: Hiện tại hệ thống chỉ hỗ trợ 1 tài khoản ngân hàng mặc định để nhận tiền tự động.
-              </div>
-            </Card>
-          </TabPane>
-
-          <TabPane tab={<span><BellOutlined />Thông Báo</span>} key="3">
-            <Card className="mb-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>Gửi Email</span>
-                  <Form.Item name={['notifications', 'email']} valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>Gửi Tin Nhắn (SMS)</span>
-                  <Form.Item name={['notifications', 'sms']} valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>Thông Báo Đẩy (App)</span>
-                  <Form.Item name={['notifications', 'push']} valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-                <h3 className="font-semibold mt-4">Loại Thông Báo</h3>
-                <div className="flex justify-between items-center">
-                  <span>Đặt Phòng Mới</span>
-                  <Form.Item name={['notifications', 'bookingAlerts']} valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Thanh Toán Hóa Đơn</span>
-                  <Form.Item name={['notifications', 'paymentAlerts']} valuePropName="checked" noStyle>
-                    <Switch />
-                  </Form.Item>
-                </div>
-              </div>
-            </Card>
-          </TabPane>
-
-          <TabPane tab={<span><SettingOutlined />Cấu Hình Khác</span>} key="4">
-            <Card className="mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item label="Ngôn Ngữ" name={['preferences', 'language']}>
-                  <Select>
-                    <Option value="vi">Tiếng Việt</Option>
-                    <Option value="en">English</Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Múi Giờ" name={['preferences', 'timezone']}>
-                  <Select>
-                    <Option value="Asia/Ho_Chi_Minh">Vietnam (GMT+7)</Option>
-                    {/* Add more */}
-                  </Select>
-                </Form.Item>
-              </div>
-            </Card>
-          </TabPane>
-        </Tabs>
+        <Tabs defaultActiveKey="1" type="card" items={tabsItems} />
       </Form>
     </div>
   );

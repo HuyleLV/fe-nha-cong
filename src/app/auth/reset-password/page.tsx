@@ -50,24 +50,48 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl p-6 shadow">
-        <h2 className="text-xl font-semibold">Đặt lại mật khẩu</h2>
+    <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-8 border border-slate-200 dark:border-slate-800 backdrop-blur-sm">
+        <h2 className="text-2xl font-bold text-center mb-6 text-slate-900 dark:text-white">Đặt lại mật khẩu</h2>
         {!token ? (
-          <div className="mt-4 text-sm text-gray-700">Liên kết đặt lại không hợp lệ hoặc thiếu token.</div>
+          <div className="mt-4 text-sm text-center text-slate-500 dark:text-slate-400">Liên kết đặt lại không hợp lệ hoặc thiếu token.</div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Mật khẩu mới</label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mật khẩu mới" className="mt-1 w-full rounded-xl border px-3 py-2 outline-none" />
+              <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Mật khẩu mới</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu</label>
-              <input type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} placeholder="Xác nhận mật khẩu" className="mt-1 w-full rounded-xl border px-3 py-2 outline-none" />
+              <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Xác nhận mật khẩu</label>
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+              />
             </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => router.push("/dang-nhap")} className="rounded-xl px-4 py-2 border">Hủy</button>
-              <button type="submit" disabled={isSubmitting} className="rounded-xl bg-emerald-600 px-4 py-2 text-white disabled:opacity-60">{isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}</button>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push("/dang-nhap")}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg transition-all shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 disabled:opacity-60 disabled:shadow-none"
+              >
+                {isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+              </button>
             </div>
           </form>
         )}

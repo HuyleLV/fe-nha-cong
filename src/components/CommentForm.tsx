@@ -12,7 +12,7 @@ function isLoggedIn(): boolean {
       const v = `; ${document.cookie}`;
       const parts = v.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop()!.split(";").shift() || null;
-    } catch {}
+    } catch { }
     return null;
   };
   const cookieToken = getCookie("access_token");
@@ -48,7 +48,7 @@ export default function CommentForm({ targetType, targetId }: { targetType: stri
         }
 
         setLoadingUser(true);
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (!mounted) return;
         setPhoneVerified(!!me?.phoneVerified);
         setMe(me ?? null);
@@ -70,7 +70,7 @@ export default function CommentForm({ targetType, targetId }: { targetType: stri
       await commentService.create({ targetType, targetId, content });
       setContent("");
       // notify other components to refresh
-      try { window.dispatchEvent(new CustomEvent('comments:changed')); } catch {}
+      try { window.dispatchEvent(new CustomEvent('comments:changed')); } catch { }
       toast.success("Đã gửi bình luận");
     } catch (e: any) {
       // Be gentle: if 401/403 just show message to user, do not log errors
@@ -127,7 +127,7 @@ export default function CommentForm({ targetType, targetId }: { targetType: stri
             // eslint-disable-next-line @next/next/no-img-element
             <img loading="lazy" src={me.avatarUrl} alt={me.name || 'avatar'} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-emerald-700">{(me?.name || 'U').split(' ').map((s: string) => s[0]).slice(0,2).join('').toUpperCase()}</div>
+            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-emerald-700">{(me?.name || 'U').split(' ').map((s: string) => s[0]).slice(0, 2).join('').toUpperCase()}</div>
           )}
         </div>
         <div className="flex-1">
@@ -154,4 +154,4 @@ export default function CommentForm({ targetType, targetId }: { targetType: stri
     </div>
   );
 }
- 
+

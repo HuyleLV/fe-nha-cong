@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { LayoutDashboard, Users, FileText, CalendarDays, DollarSign, PlusCircle, Star, LogOut, ChevronDown } from "lucide-react";
 import type { User } from "@/type/user";
 
@@ -35,14 +36,14 @@ export default function CuDanSidebar() {
   };
 
   const menu: MenuItem[] = [
-  { href: "/quan-ly-cu-dan", label: "Tổng quan", icon: LayoutDashboard },
+    { href: "/quan-ly-cu-dan", label: "Tổng quan", icon: LayoutDashboard },
     { href: "/quan-ly-cu-dan/phong-da-xem", label: "Lịch sử xem phòng", icon: FileText },
     { href: "/quan-ly-cu-dan/lich-su-thue", label: "Lịch sử thuê phòng", icon: CalendarDays },
     { href: "/quan-ly-cu-dan/diem-cong", label: "Điểm cộng", icon: Star },
     { href: "/quan-ly-cu-dan/dong-cong", label: "Đồng cộng", icon: DollarSign },
     { href: "/quan-ly-cu-dan/uu-dai", label: "Ưu đãi", icon: DollarSign },
     { href: "/quan-ly-cu-dan/khuyen-mai", label: "Khuyến mãi", icon: DollarSign },
-  { href: "/quan-ly-cu-dan/dang-ky-ctv", label: "Đăng ký CTV", icon: PlusCircle },
+    { href: "/quan-ly-cu-dan/dang-ky-ctv", label: "Đăng ký CTV", icon: PlusCircle },
     {
       href: "/quan-ly-cu-dan/yeu-cau",
       label: "Trang yêu cầu",
@@ -64,25 +65,28 @@ export default function CuDanSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white text-slate-700 flex flex-col min-h-screen border-r border-slate-200 shadow-sm pt-5">
+    <aside className="w-64 bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300 flex flex-col min-h-screen border-r border-slate-200 dark:border-slate-800 shadow-sm pt-5">
       <div className="px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white grid place-items-center">
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <div className="leading-tight">
-            <h1 className="font-semibold text-slate-800">Quản lý cư dân</h1>
-            <p className="text-xs text-slate-500">Khu vực quản lý cư dân</p>
+            <h1 className="font-semibold text-slate-800 dark:text-slate-200">Quản lý cư dân</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Khu vực quản lý cư dân</p>
           </div>
         </div>
       </div>
 
       <div className="px-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <div className="h-9 w-9 rounded-full bg-emerald-600 text-white grid place-items-center text-sm font-medium">{initials}</div>
           <div className="min-w-0">
-            <div className="text-sm font-medium text-slate-800 truncate">{info?.name ?? "Cư dân"}</div>
-            {info?.email && <div className="text-xs text-slate-500 truncate">{info.email}</div>}
+            <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{info?.name ?? "Cư dân"}</div>
+            {info?.email && <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{info.email}</div>}
+          </div>
+          <div className="ml-auto">
+            <ThemeSwitcher />
           </div>
         </div>
       </div>
@@ -97,9 +101,8 @@ export default function CuDanSidebar() {
               <div key={m.href}>
                 <Link
                   href={m.href}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                    active ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                  }`}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${active ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-900/50" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
+                    }`}
                 >
                   {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
                   <m.icon className="w-4.5 h-4.5" />
@@ -113,9 +116,8 @@ export default function CuDanSidebar() {
             <Link
               key={m.href}
               href={m.href}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                itemActive ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-              }`}
+              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${itemActive ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-900/50" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
+                }`}
             >
               {itemActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
               <Icon className="w-4.5 h-4.5" />
@@ -125,10 +127,10 @@ export default function CuDanSidebar() {
         })}
       </nav>
 
-      <div className="mt-auto p-4 border-t border-slate-200">
+      <div className="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={onLogout}
-          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition cursor-pointer dark:border-slate-700 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-900"
         >
           <LogOut className="w-4.5 h-4.5" />
           <span>Đăng xuất</span>

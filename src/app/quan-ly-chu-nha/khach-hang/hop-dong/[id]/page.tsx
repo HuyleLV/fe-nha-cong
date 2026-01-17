@@ -59,7 +59,7 @@ export default function ContractEditPage() {
     xe: 'Xe',
     luot: 'Lượt/Lần',
   } as Record<string, string>)[String(u ?? '')] ?? (u ?? '');
-  
+
   // Viewer modal state for contract preview
   const [viewerId, setViewerId] = useState<number | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function ContractEditPage() {
       }
 
       // Do not hide parent headers/sidebars here. We'll inject styles into the iframe instead.
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const injectHideIntoIframe = () => {
@@ -113,21 +113,21 @@ export default function ContractEditPage() {
         aside[class*="w-64"], aside.hostSidebar, aside[id*="sidebar"] { display: none !important; visibility: hidden !important; }
       `;
       (doc.head || doc.body || doc.documentElement).appendChild(style);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
     try {
       applyFloatingHide(!!viewerOpen);
       if (viewerOpen) setTimeout(() => injectHideIntoIframe(), 200);
-    } catch (e) {}
-    return () => { try { applyFloatingHide(false); } catch (e) {} };
+    } catch (e) { }
+    return () => { try { applyFloatingHide(false); } catch (e) { } };
   }, [viewerOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     (window as any).__openContractViewer = (id: number) => { setViewerId(id); setViewerOpen(true); };
-    return () => { try { delete (window as any).__openContractViewer; } catch (e) {} };
+    return () => { try { delete (window as any).__openContractViewer; } catch (e) { } };
   }, []);
 
   const closeViewer = () => { setViewerOpen(false); setViewerId(null); };
@@ -135,9 +135,9 @@ export default function ContractEditPage() {
     try {
       applyFloatingHide(true);
       const win = iframeRef.current?.contentWindow;
-      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      const cleanup = () => { try { applyFloatingHide(false); } catch { } };
       if (win) {
-        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        try { win.addEventListener?.('afterprint', cleanup); } catch { }
         win.focus();
         win.print();
         setTimeout(cleanup, 1500);
@@ -145,7 +145,7 @@ export default function ContractEditPage() {
         window.print();
         setTimeout(cleanup, 1500);
       }
-    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch {} }
+    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch { } }
   };
 
   const downloadDoc = async () => {
@@ -178,13 +178,13 @@ export default function ContractEditPage() {
           rentAmount: stripTrailingZerosForInput(data.rentAmount ?? 0),
           depositAmount: stripTrailingZerosForInput(data.depositAmount ?? 0),
           depositPaid: data.depositPaid ?? '0',
-          startDate: data.startDate ? new Date(data.startDate).toISOString().slice(0,10) : '',
-          expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString().slice(0,10) : '',
+          startDate: data.startDate ? new Date(data.startDate).toISOString().slice(0, 10) : '',
+          expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString().slice(0, 10) : '',
           status: data.status ?? 'active',
           note: data.note ?? '',
           invoiceTemplate: data.invoiceTemplate ?? '',
           paymentCycle: data.paymentCycle ? String(data.paymentCycle) : '1',
-          billingStartDate: data.billingStartDate ? new Date(data.billingStartDate).toISOString().slice(0,10) : '',
+          billingStartDate: data.billingStartDate ? new Date(data.billingStartDate).toISOString().slice(0, 10) : '',
           attachments: data.attachments ?? [],
           attachmentsSingle: (data.attachments && Array.isArray(data.attachments) && data.attachments.length) ? data.attachments[0] : null,
           serviceFees: (data as any)?.serviceFees ?? [],
@@ -195,7 +195,7 @@ export default function ContractEditPage() {
             meter: f.meter ?? '',
             initialIndex: f.initialIndex ?? '',
             quantity: f.quantity ?? '',
-            billingDate: f.billingDate ? new Date(f.billingDate).toISOString().slice(0,10) : '',
+            billingDate: f.billingDate ? new Date(f.billingDate).toISOString().slice(0, 10) : '',
             unitPrice: f.unitPrice ?? '',
             unit: f.unit ?? '',
           })));
@@ -274,7 +274,7 @@ export default function ContractEditPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && me.id) setMeId(me.id);
         await loadBuildings(me?.id ?? undefined);
         await Promise.all([
@@ -330,7 +330,7 @@ export default function ContractEditPage() {
 
   const onSubmit = async (data: ContractForm) => {
     try {
-  const payload: any = {
+      const payload: any = {
         buildingId: data.buildingId ?? null,
         apartmentId: data.apartmentId ?? null,
         customerId: data.customerId ?? null,
@@ -498,7 +498,7 @@ export default function ContractEditPage() {
                       <>
                         <option value="">-- Chọn khách hàng --</option>
                         {customers.map((c: any) => (<option key={c.id} value={String(c.id)}>{c.name || c.email || `#${c.id}`}{c.phone ? ' • ' + c.phone : ''}</option>))}
-                     </>
+                      </>
                     )}
                   </select>
                 </div>
@@ -612,7 +612,7 @@ export default function ContractEditPage() {
                     <PlusCircle className="w-4 h-4" />
                   </button>
                 </div>
-                <AdminTable headers={["Dịch vụ","Công tơ","Chỉ số đầu","Số lượng","Đơn giá","Đơn vị tính","Ngày tính phí","Hành động"]}>
+                <AdminTable headers={["Dịch vụ", "Công tơ", "Chỉ số đầu", "Số lượng", "Đơn giá", "Đơn vị tính", "Ngày tính phí", "Hành động"]}>
                   {feeFields.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-4 text-center text-slate-500">Chưa có phí dịch vụ</td>
@@ -647,7 +647,7 @@ export default function ContractEditPage() {
 
             </div>
           </div>
-      
+
 
           {/* Popup thêm phí dịch vụ */}
           {showFeeModal && (

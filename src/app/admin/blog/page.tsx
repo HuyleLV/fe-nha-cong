@@ -28,8 +28,8 @@ export default function BlogPage() {
     (n ?? 0) >= 80
       ? "bg-emerald-100 text-emerald-700"
       : (n ?? 0) >= 50
-      ? "bg-amber-100 text-amber-700"
-      : "bg-rose-100 text-rose-700";
+        ? "bg-amber-100 text-amber-700"
+        : "bg-rose-100 text-rose-700";
 
   const seoBarClass = (n?: number) =>
     (n ?? 0) >= 80 ? "bg-emerald-500" : (n ?? 0) >= 50 ? "bg-amber-500" : "bg-rose-500";
@@ -41,8 +41,8 @@ export default function BlogPage() {
     s === BlogStatus.Published
       ? "text-green-600"
       : s === BlogStatus.Draft
-      ? "text-yellow-600"
-      : "text-gray-500";
+        ? "text-yellow-600"
+        : "text-gray-500";
 
   const fallbackKeyword = (b: Blog) => {
     // ưu tiên field focusKeyword từ API, sau đó lấy tag đầu, sau đó gợi ý 3 từ đầu của title
@@ -83,7 +83,7 @@ export default function BlogPage() {
     );
 
   return (
-  <div className="mx-auto max-w-screen-2xl p-4">
+    <div className="mx-auto max-w-screen-2xl p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">QUẢN LÝ BLOG</h1>
         <button
@@ -94,7 +94,7 @@ export default function BlogPage() {
         </button>
       </div>
       <AdminTable
-        headers={["ID","Tiêu đề","Slug","Tags","Keyword","SEO","Trạng thái","Views","Ngày tạo","Ngày cập nhật","Thao tác"]}
+        headers={["ID", "Tiêu đề", "Slug", "Tags", "Keyword", "SEO", "Trạng thái", "Views", "Ngày tạo", "Ngày cập nhật", "Thao tác"]}
         loading={loading}
         emptyText="Chưa có bài viết nào."
       >
@@ -103,15 +103,15 @@ export default function BlogPage() {
           const kw = fallbackKeyword(b);
 
           return (
-            <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-2 font-medium text-gray-900">{b.id}</td>
-              <td className="px-4 py-2">
+            <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{b.id}</td>
+              <td className="px-4 py-2 dark:text-gray-200">
                 <span>{b.title}</span>
               </td>
-              <td className="px-4 py-2 text-gray-700">{b.slug}</td>
-              <td className="px-4 py-2 text-gray-700">{b.tags?.length ? b.tags.join(", ") : <span className="text-gray-400">—</span>}</td>
+              <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{b.slug}</td>
+              <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{b.tags?.length ? b.tags.join(", ") : <span className="text-gray-400 dark:text-gray-500">—</span>}</td>
               <td className="px-4 py-2">
-                <span className="inline-flex max-w-[180px] items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-xs truncate">{kw || "—"}</span>
+                <span className="inline-flex max-w-[180px] items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 px-2 py-0.5 text-xs truncate">{kw || "—"}</span>
               </td>
               <td className="px-4 py-2">
                 <div className="flex items-center gap-2">
@@ -122,9 +122,9 @@ export default function BlogPage() {
                 </div>
               </td>
               <td className={`px-4 py-2 font-semibold ${statusClass(b.status)}`}>{statusText(b.status)} {b.isPinned ? "• Pinned" : ""}</td>
-              <td className="px-4 py-2">{b.viewCount ?? 0}</td>
-              <td className="px-4 py-2 text-gray-500">{formatDateTime(b.createdAt)}</td>
-              <td className="px-4 py-2 text-gray-500">{formatDateTime(b.updatedAt)}</td>
+              <td className="px-4 py-2 dark:text-gray-300">{b.viewCount ?? 0}</td>
+              <td className="px-4 py-2 text-gray-500 dark:text-gray-400">{formatDateTime(b.createdAt)}</td>
+              <td className="px-4 py-2 text-gray-500 dark:text-gray-400">{formatDateTime(b.updatedAt)}</td>
               <td className="px-4 py-2">
                 <div className="flex justify-center gap-2">
                   <button title="Sửa" className="flex items-center gap-1 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition cursor-pointer" onClick={() => router.push(`/admin/blog/${b.id}`)}>

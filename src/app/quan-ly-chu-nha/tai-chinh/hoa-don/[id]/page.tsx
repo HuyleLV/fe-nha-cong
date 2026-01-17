@@ -38,7 +38,7 @@ export default function InvoiceEditPage() {
     printTemplate: "",
     account: '',
     note: "",
-  items: [] as InvoiceItem[],
+    items: [] as InvoiceItem[],
   });
   const [buildings, setBuildings] = useState<any[]>([]);
   const [apartments, setApartments] = useState<any[]>([]);
@@ -79,14 +79,14 @@ export default function InvoiceEditPage() {
         const res = await buildingService.getAll({ page: 1, limit: 200 });
         const items = (res as any)?.items ?? (res as any)?.data ?? res ?? [];
         setBuildings(items);
-      } catch {}
+      } catch { }
     })();
     setContracts([]);
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && me.id) setMeId(me.id);
-      } catch (err) {}
+      } catch (err) { }
     })();
   }, []);
 
@@ -97,7 +97,7 @@ export default function InvoiceEditPage() {
       const res = await apartmentService.getAll({ page: 1, limit: 1000, ...params });
       const items = (res as any)?.items ?? (res as any)?.data ?? res ?? [];
       setApartments(items);
-    } catch {}
+    } catch { }
   };
 
   const loadApartmentServices = async (apartmentId?: number) => {
@@ -254,12 +254,12 @@ export default function InvoiceEditPage() {
       const items: InvoiceItem[] = fees.map((f: any, idx: number) => {
         const svc = (resolved[idx] as any)?.status === 'fulfilled' ? (resolved[idx] as any).value : null;
         const name = svc?.name ?? (f?.serviceId ? `Dịch vụ ${f.serviceId}` : f?.name ?? 'Dịch vụ');
-        const billingDate = f?.billingDate ? new Date(f.billingDate).toISOString().slice(0,10) : "";
+        const billingDate = f?.billingDate ? new Date(f.billingDate).toISOString().slice(0, 10) : "";
         const initial = f?.initialIndex != null ? String(f.initialIndex) : "";
         return {
           serviceName: name,
           // Prefer `unitPrice` (newer API shape), fall back to `price` or fee-level price
-          unitPrice: svc?.unitPrice != null ? String(svc.unitPrice) : (svc?.price != null ? String(svc.price) : (f?.unitPrice != null ? String(f.unitPrice) : (f?.price != null ? String(f.price) : "")) ),
+          unitPrice: svc?.unitPrice != null ? String(svc.unitPrice) : (svc?.price != null ? String(svc.price) : (f?.unitPrice != null ? String(f.unitPrice) : (f?.price != null ? String(f.price) : ""))),
           unit: svc?.unit ?? f?.unit ?? "",
           // keep both possible keys so the UI inputs and save() mapper work
           meterIndex: initial,
@@ -294,16 +294,16 @@ export default function InvoiceEditPage() {
         buildingId: data.buildingId ?? "",
         apartmentId: data.apartmentId ?? "",
         contractId: data.contractId ?? "",
-        customerId: data.customerId ?? '' ,
-        customerName: data.customerName ?? '' ,
-        customerPhone: data.customerPhone ?? '' ,
-        customerEmail: data.customerEmail ?? '' ,
-        customerAddress: data.customerAddress ?? '' ,
+        customerId: data.customerId ?? '',
+        customerName: data.customerName ?? '',
+        customerPhone: data.customerPhone ?? '',
+        customerEmail: data.customerEmail ?? '',
+        customerAddress: data.customerAddress ?? '',
         period: data.period ?? "",
         issueDate: data.issueDate ? new Date(data.issueDate).toISOString().slice(0, 10) : "",
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString().slice(0, 10) : "",
         printTemplate: data.printTemplate ?? "",
-  account: data.account ?? '',
+        account: data.account ?? '',
         note: data.note ?? "",
         items: (data.items ?? []).map((it: any) => ({
           serviceName: it.serviceName ?? "",
@@ -315,8 +315,8 @@ export default function InvoiceEditPage() {
           meter: it.meter ?? "",
           quantity: it.quantity ?? "",
           vat: it.vat ?? "",
-          billingDate: it.fromDate ? new Date(it.fromDate).toISOString().slice(0, 10) : (it.billingDate ? new Date(it.billingDate).toISOString().slice(0,10) : ""),
-          fromDate: it.fromDate ? new Date(it.fromDate).toISOString().slice(0, 10) : (it.billingDate ? new Date(it.billingDate).toISOString().slice(0,10) : ""),
+          billingDate: it.fromDate ? new Date(it.fromDate).toISOString().slice(0, 10) : (it.billingDate ? new Date(it.billingDate).toISOString().slice(0, 10) : ""),
+          fromDate: it.fromDate ? new Date(it.fromDate).toISOString().slice(0, 10) : (it.billingDate ? new Date(it.billingDate).toISOString().slice(0, 10) : ""),
           toDate: it.toDate ? new Date(it.toDate).toISOString().slice(0, 10) : "",
           amount: it.amount ?? "",
         })),
@@ -359,7 +359,7 @@ export default function InvoiceEditPage() {
     if (!meId) return;
     (async () => {
       try {
-        const res = await bankAccountService.hostList({ page:1, limit:200 });
+        const res = await bankAccountService.hostList({ page: 1, limit: 200 });
         const items = res.items ?? [];
         const list = items as any[];
         const map: Record<number, number> = {};
@@ -381,7 +381,7 @@ export default function InvoiceEditPage() {
           const def = items.find((x: any) => x.isDefault);
           if (def) {
             const label = `${def.bankName} — ${def.accountNumber}${def.branch ? ' — ' + def.branch : ''} (${def.accountHolder})`;
-            setForm((s:any)=>({...s, account: label}));
+            setForm((s: any) => ({ ...s, account: label }));
           }
         }
       } catch (err) {
@@ -718,167 +718,167 @@ export default function InvoiceEditPage() {
                     </div>
                   )}
                 </div>
-                </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium">Ngày lập</label>
-                  <input
-                    type="date"
-                    value={form.issueDate ?? ""}
-                    onChange={(e) => onChange("issueDate", e.target.value)}
-                    className={"mt-1 " + inputCls}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium">Ngày lập</label>
+                <input
+                  type="date"
+                  value={form.issueDate ?? ""}
+                  onChange={(e) => onChange("issueDate", e.target.value)}
+                  className={"mt-1 " + inputCls}
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium">Hạn thanh toán</label>
-                  <input
-                    type="date"
-                    value={form.dueDate ?? ""}
-                    onChange={(e) => onChange("dueDate", e.target.value)}
-                    className={"mt-1 " + inputCls}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium">Hạn thanh toán</label>
+                <input
+                  type="date"
+                  value={form.dueDate ?? ""}
+                  onChange={(e) => onChange("dueDate", e.target.value)}
+                  className={"mt-1 " + inputCls}
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium">
-                    Mẫu in hóa đơn <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={String(form.printTemplate ?? "")}
-                    onChange={(e) => onChange("printTemplate", e.target.value)}
-                    className={"mt-1 " + inputCls}
-                  >
-                    <option value="">-- Chọn mẫu in --</option>
-                    <option value="hoa-don-dat-coc">Hóa đơn đặt cọc</option>
-                    <option value="hoa-don-hang-thang">Hóa đơn hàng tháng</option>
-                    <option value="hoa-don-thanh-ly-hop-dong">Hóa đơn tiền thanh lý hợp đồng trước hạn và đúng hạn</option>
-                    <option value="hoa-don-hoan-tien-dat-coc">Hóa đơn hoàn tiền đặt cọc</option>
-                    <option value="hoa-don-chuyen-nhuong">Hóa đơn chuyển nhượng phòng</option>
-                    <option value="hoa-don-hop-dong-moi">Hóa đơn hợp đồng mới</option>
-                  </select>
-                </div>
-                    <div>
-                      <label className="block text-sm font-medium">Tài khoản</label>
-                      <select value={String(form.account ?? "")} onChange={(e) => onChange('account', e.target.value)} className={"mt-1 " + inputCls}>
-                        <option value="">-- Chọn tài khoản nhận tiền --</option>
-                        <option value="Tiền mặt">Tiền mặt</option>
-                        {bankAccounts.map((a) => {
-                          const balRaw = (a as any).balance;
-                          let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
-                          if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic
-                          const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
-                          const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
-                          return <option key={a.id} value={label}>{label}</option>;
-                        })}
-                      </select>
-                    </div>
+              <div>
+                <label className="block text-sm font-medium">
+                  Mẫu in hóa đơn <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={String(form.printTemplate ?? "")}
+                  onChange={(e) => onChange("printTemplate", e.target.value)}
+                  className={"mt-1 " + inputCls}
+                >
+                  <option value="">-- Chọn mẫu in --</option>
+                  <option value="hoa-don-dat-coc">Hóa đơn đặt cọc</option>
+                  <option value="hoa-don-hang-thang">Hóa đơn hàng tháng</option>
+                  <option value="hoa-don-thanh-ly-hop-dong">Hóa đơn tiền thanh lý hợp đồng trước hạn và đúng hạn</option>
+                  <option value="hoa-don-hoan-tien-dat-coc">Hóa đơn hoàn tiền đặt cọc</option>
+                  <option value="hoa-don-chuyen-nhuong">Hóa đơn chuyển nhượng phòng</option>
+                  <option value="hoa-don-hop-dong-moi">Hóa đơn hợp đồng mới</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Tài khoản</label>
+                <select value={String(form.account ?? "")} onChange={(e) => onChange('account', e.target.value)} className={"mt-1 " + inputCls}>
+                  <option value="">-- Chọn tài khoản nhận tiền --</option>
+                  <option value="Tiền mặt">Tiền mặt</option>
+                  {bankAccounts.map((a) => {
+                    const balRaw = (a as any).balance;
+                    let balNumber = (balRaw !== undefined && balRaw !== null) ? Number(balRaw) : undefined;
+                    if (typeof balNumber === 'number' && balNumber !== 0 && Math.abs(balNumber) < 10000) balNumber = balNumber * 1000; // heuristic
+                    const bal = (balNumber !== undefined && balNumber !== null) ? formatMoneyVND(balNumber || 0, false) : undefined;
+                    const label = `${a.bankName} — ${a.accountNumber}${a.branch ? ' — ' + a.branch : ''}${bal ? ' — Số dư: ' + bal : ''} (${a.accountHolder})`;
+                    return <option key={a.id} value={label}>{label}</option>;
+                  })}
+                </select>
+              </div>
             </div>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-                <h3 className="font-semibold text-slate-700">Dịch vụ tính phí</h3>
-              </div>
-              <button
-                onClick={() =>
-                  setForm((s: any) => ({
-                    ...s,
-                    items: [
-                      ...(s.items || []),
-                      {
-                        serviceName: "",
-                        unitPrice: "",
-                        meterIndex: "",
-                        initialIndex: "",
-                        meter: "",
-                        quantity: "",
-                        vat: "",
-                        billingDate: "",
-                        fromDate: "",
-                        toDate: "",
-                        amount: "",
-                      },
-                    ],
-                  }))
-                }
-                className="inline-flex items-center gap-2 bg-slate-700 text-white p-2 rounded-md hover:bg-slate-800"
-              >
-                <PlusCircle className="w-4 h-4" />
-              </button>
+          <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <h3 className="font-semibold text-slate-700">Dịch vụ tính phí</h3>
             </div>
-            <div className="p-2">
-              <AdminTable headers={["Dịch vụ", "Công tơ", "Chỉ số đầu", "Số lượng", "Đơn giá", "Đơn vị tính", "Ngày tính phí", ""]}>
-                {(form.items || []).length === 0
-                  ? null
-                  : (form.items || []).map((it: any, idx: number) => (
-                      <tr key={idx} className="border-t">
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-slate-700">{it.serviceName ?? "-"}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-slate-700">{(it.meter as any) ?? '-'}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-slate-700">{(it.initialIndex as any) ?? '-'}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-slate-700">{(it.quantity as any) ?? '-'}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="text"
-                            value={(it.unitPrice !== undefined && it.unitPrice !== null) ? stripTrailingDotZero(it.unitPrice) : ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((s: any) => {
-                                const arr = [...(s.items || [])];
-                                arr[idx] = { ...arr[idx], unitPrice: v };
-                                return { ...s, items: arr };
-                              });
-                            }}
-                            className={inputCls}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-slate-700">{tUnit(it.unit) ?? (it.unit || "-")}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <input
-                            type="date"
-                            value={(it.billingDate as any) ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              setForm((s: any) => {
-                                const arr = [...(s.items || [])];
-                                arr[idx] = { ...arr[idx], billingDate: v };
-                                return { ...s, items: arr };
-                              });
-                            }}
-                            className={inputCls}
-                          />
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            title="Xóa"
-                            onClick={() =>
-                              setForm((s: any) => {
-                                const arr = [...(s.items || [])];
-                                arr.splice(idx, 1);
-                                return { ...s, items: arr };
-                              })
-                            }
-                            className="p-2 rounded bg-red-600 text-white hover:bg-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-              </AdminTable>
-            </div>
+            <button
+              onClick={() =>
+                setForm((s: any) => ({
+                  ...s,
+                  items: [
+                    ...(s.items || []),
+                    {
+                      serviceName: "",
+                      unitPrice: "",
+                      meterIndex: "",
+                      initialIndex: "",
+                      meter: "",
+                      quantity: "",
+                      vat: "",
+                      billingDate: "",
+                      fromDate: "",
+                      toDate: "",
+                      amount: "",
+                    },
+                  ],
+                }))
+              }
+              className="inline-flex items-center gap-2 bg-slate-700 text-white p-2 rounded-md hover:bg-slate-800"
+            >
+              <PlusCircle className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="p-2">
+            <AdminTable headers={["Dịch vụ", "Công tơ", "Chỉ số đầu", "Số lượng", "Đơn giá", "Đơn vị tính", "Ngày tính phí", ""]}>
+              {(form.items || []).length === 0
+                ? null
+                : (form.items || []).map((it: any, idx: number) => (
+                  <tr key={idx} className="border-t">
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-slate-700">{it.serviceName ?? "-"}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-slate-700">{(it.meter as any) ?? '-'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-slate-700">{(it.initialIndex as any) ?? '-'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-slate-700">{(it.quantity as any) ?? '-'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={(it.unitPrice !== undefined && it.unitPrice !== null) ? stripTrailingDotZero(it.unitPrice) : ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((s: any) => {
+                            const arr = [...(s.items || [])];
+                            arr[idx] = { ...arr[idx], unitPrice: v };
+                            return { ...s, items: arr };
+                          });
+                        }}
+                        className={inputCls}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-slate-700">{tUnit(it.unit) ?? (it.unit || "-")}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="date"
+                        value={(it.billingDate as any) ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((s: any) => {
+                            const arr = [...(s.items || [])];
+                            arr[idx] = { ...arr[idx], billingDate: v };
+                            return { ...s, items: arr };
+                          });
+                        }}
+                        className={inputCls}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        title="Xóa"
+                        onClick={() =>
+                          setForm((s: any) => {
+                            const arr = [...(s.items || [])];
+                            arr.splice(idx, 1);
+                            return { ...s, items: arr };
+                          })
+                        }
+                        className="p-2 rounded bg-red-600 text-white hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </AdminTable>
+          </div>
         </div>
       </div>
     </div>

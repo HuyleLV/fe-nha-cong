@@ -46,7 +46,7 @@ export default function FloorMapPage() {
     (async () => {
       setLoading(true);
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         // load buildings (backend should scope to host unless user is admin)
         const bRes = await buildingService.getAll({ page: 1, limit: 200 });
         setBuildings(bRes.items || []);

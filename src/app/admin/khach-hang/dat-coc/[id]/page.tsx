@@ -70,7 +70,7 @@ export default function DepositEditPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && (me as any).id) setMeId((me as any).id);
       } catch (err) {
         // ignore
@@ -106,7 +106,7 @@ export default function DepositEditPage() {
         setApartments([]);
       }
     })();
-  }, [watch('buildingId')] );
+  }, [watch('buildingId')]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -124,9 +124,9 @@ export default function DepositEditPage() {
           occupantsCount: d.occupantsCount ?? 1,
           rentAmount: d.rentAmount ?? 0,
           depositAmount: d.depositAmount ?? 0,
-          depositDate: d.depositDate ? new Date(d.depositDate).toISOString().slice(0,10) : '',
-          moveInDate: d.moveInDate ? new Date(d.moveInDate).toISOString().slice(0,10) : '',
-          billingStartDate: d.billingStartDate ? new Date(d.billingStartDate).toISOString().slice(0,10) : '',
+          depositDate: d.depositDate ? new Date(d.depositDate).toISOString().slice(0, 10) : '',
+          moveInDate: d.moveInDate ? new Date(d.moveInDate).toISOString().slice(0, 10) : '',
+          billingStartDate: d.billingStartDate ? new Date(d.billingStartDate).toISOString().slice(0, 10) : '',
           contractDuration: d.contractDuration ?? '',
           rentFrom: d.rentFrom ?? '',
           rentTo: d.rentTo ?? '',

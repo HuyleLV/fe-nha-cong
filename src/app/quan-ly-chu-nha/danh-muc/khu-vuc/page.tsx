@@ -195,38 +195,38 @@ function KhuVucManager() {
               </td>
             </tr>
           ) : (
-                areas.map((a, idx) => (
-                  <tr key={a.id}>
-                    <td className="py-2 text-sm text-slate-700">{a.id}</td>
-                    <td className="py-2 text-sm text-slate-700">{a.name}</td>
-                    <td className="py-2 text-sm text-slate-700">{districtMap[a.districtId] ?? a.districtId}</td>
-                    <td className="py-2 text-sm text-slate-700 text-center">{a.buildingCount ?? 0}</td>
-                    <td className="py-2 text-sm text-slate-700 text-center">
-                      <div className="inline-flex items-center gap-2">
-                        <button onClick={() => startEdit(a)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingId(a.id);
-                            setName(a.name);
-                            setDistrictId(a.districtId);
-                            setModalMode("delete");
-                            setModalOpen(true);
-                          }}
-                          className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                          title="Xóa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+            areas.map((a, idx) => (
+              <tr key={a.id}>
+                <td className="py-2 text-sm text-slate-700 dark:text-slate-200">{a.id}</td>
+                <td className="py-2 text-sm text-slate-700 dark:text-slate-200">{a.name}</td>
+                <td className="py-2 text-sm text-slate-700 dark:text-slate-200">{districtMap[a.districtId] ?? a.districtId}</td>
+                <td className="py-2 text-sm text-slate-700 dark:text-slate-200 text-center">{a.buildingCount ?? 0}</td>
+                <td className="py-2 text-sm text-slate-700 dark:text-slate-200 text-center">
+                  <div className="inline-flex items-center gap-2">
+                    <button onClick={() => startEdit(a)} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingId(a.id);
+                        setName(a.name);
+                        setDistrictId(a.districtId);
+                        setModalMode("delete");
+                        setModalOpen(true);
+                      }}
+                      className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                      title="Xóa"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
           )}
         </AdminTable>
 
-        
+
         <div className="mt-4">
           <Pagination
             page={page}
@@ -243,8 +243,8 @@ function KhuVucManager() {
           onClose={() => setModalOpen(false)}
           footer={
             modalMode === "delete" ? (
-                <div className="flex justify-end gap-2">
-                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50">
+              <div className="flex justify-end gap-2">
+                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50 dark:border-slate-600 dark:text-slate-300">
                   <X className="w-4 h-4" /> Hủy
                 </button>
                 <button disabled={actionLoading} onClick={() => remove(editingId ?? "")} className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md disabled:opacity-50">
@@ -252,8 +252,8 @@ function KhuVucManager() {
                 </button>
               </div>
             ) : (
-                <div className="flex justify-end gap-2">
-                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50">
+              <div className="flex justify-end gap-2">
+                <button disabled={actionLoading} onClick={() => setModalOpen(false)} className="inline-flex items-center gap-2 border px-3 py-2 rounded-md disabled:opacity-50 dark:border-slate-600 dark:text-slate-300">
                   <X className="w-4 h-4" /> Hủy
                 </button>
                 <button disabled={actionLoading} onClick={save} className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md disabled:opacity-50">
@@ -264,13 +264,13 @@ function KhuVucManager() {
           }
         >
           {modalMode === "delete" ? (
-            <div>Bạn có chắc muốn xóa khu vực "{name}" không?</div>
+            <div className="dark:text-slate-300">Bạn có chắc muốn xóa khu vực "{name}" không?</div>
           ) : (
             <div className="space-y-4">
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Quận</label>
-                <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Quận</label>
+                <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                   <option value="">-- Chọn quận --</option>
                   {districts.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -278,21 +278,21 @@ function KhuVucManager() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-slate-500">Quận là danh mục do Admin quản lý.</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Quận là danh mục do Admin quản lý.</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Tên đường</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tên đường</label>
                 <input
                   ref={inputRef}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nhập tên đường, ví dụ: Nguyễn Trãi"
-                  className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                  className="mt-1 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                 />
-                <p className="mt-1 text-xs text-slate-500">Nhập tên đường hoặc vị trí. Ví dụ: Nguyễn Trãi, Lý Thường Kiệt…</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Nhập tên đường hoặc vị trí. Ví dụ: Nguyễn Trãi, Lý Thường Kiệt…</p>
               </div>
 
-              
+
               {error && <div className="text-sm text-red-600">{error}</div>}
             </div>
           )}

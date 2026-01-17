@@ -19,14 +19,14 @@ type FormValues = {
 };
 
 const inputCls =
-  "h-10 w-full rounded-lg border border-slate-300/80 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white";
-const textMuted = "text-sm text-slate-600";
+  "h-10 w-full rounded-lg border border-slate-300/80 dark:border-slate-600 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 transition-colors";
+const textMuted = "text-sm text-slate-600 dark:text-slate-300";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-    <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
+    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
       <ChevronRight className="w-4 h-4 text-slate-400" />
-      <h3 className="font-semibold text-slate-700">{title}</h3>
+      <h3 className="font-semibold text-slate-700 dark:text-slate-200">{title}</h3>
     </div>
     <div className="p-4">{children}</div>
   </div>
@@ -67,8 +67,8 @@ export default function AdminUserEditPage() {
     if (!isEdit) return setLoading(false);
     (async () => {
       try {
-  const u = await userService.getAdminUser(Number(id));
-  const uiRole = u.role as User['role'];
+        const u = await userService.getAdminUser(Number(id));
+        const uiRole = u.role as User['role'];
         reset({
           name: u.name || "",
           email: u.email || "",
@@ -120,7 +120,7 @@ export default function AdminUserEditPage() {
 
   async function onSubmit(values: FormValues) {
     try {
-  const backendRole = (values.role === "host" ? "host" : values.role) as "customer" | "host" | "admin" | undefined;
+      const backendRole = (values.role === "host" ? "host" : values.role) as "customer" | "host" | "admin" | undefined;
       const payload = {
         name: values.name?.trim() || undefined,
         email: values.email.trim(),
@@ -156,13 +156,13 @@ export default function AdminUserEditPage() {
   return (
     <div className="mx-auto max-w-4xl">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-emerald-600" />
             <div>
-              <p className="text-sm text-slate-500">{isEdit ? "Chỉnh sửa người dùng" : "Tạo người dùng mới"}</p>
-              <h1 className="text-lg font-semibold text-slate-800 line-clamp-1">Quản lý người dùng</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{isEdit ? "Chỉnh sửa người dùng" : "Tạo người dùng mới"}</p>
+              <h1 className="text-lg font-semibold text-slate-800 dark:text-white line-clamp-1">Quản lý người dùng</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export default function AdminUserEditPage() {
             <button
               type="button"
               onClick={() => router.push("/admin/users")}
-              className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"
+              className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
             >
               Hủy
             </button>

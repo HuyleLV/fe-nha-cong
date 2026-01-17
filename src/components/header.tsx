@@ -30,12 +30,13 @@ import {
   Users,
   FileText,
 } from "lucide-react";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { User } from "@/type/user";
 import { toast } from "react-toastify";
 import { asImageSrc } from "@/utils/imageUrl";
-  import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
-  import { useMessagesSocket } from "@/hooks/useMessagesSocket";
-  import { usePathname } from 'next/navigation';
+import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
+import { useMessagesSocket } from "@/hooks/useMessagesSocket";
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const router = useRouter();
@@ -227,7 +228,7 @@ export default function Header() {
     toast.success("Đăng xuất thành công!");
     try {
       router.replace("/dang-nhap");
-    } catch {}
+    } catch { }
   };
 
   const ensureAuthAnd = (action: () => void) => {
@@ -261,7 +262,7 @@ export default function Header() {
               `hidden md:flex items-center gap-6 text-base font-semibold ` +
               (showCompactSearch
                 ? `text-white`
-                : `bg-white rounded-full shadow text-slate-700`)
+                : `bg-white dark:bg-slate-900 rounded-full shadow text-slate-700 dark:text-slate-100`)
             }
           >
             {!showCompactSearch ? (
@@ -269,7 +270,7 @@ export default function Header() {
                 <Link
                   key={m.label}
                   href={m.href}
-                  className={`px-6 py-2 rounded-full hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] transition ${showCompactSearch ? '' : ''}`}
+                  className={`px-6 py-2 rounded-full hover:text-white dark:hover:text-white hover:bg-gradient-to-r hover:from-[#006633] hover:to-[#4CAF50] transition ${showCompactSearch ? '' : ''}`}
                 >
                   {m.label}
                 </Link>
@@ -285,6 +286,7 @@ export default function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2 md:gap-3">
+            <ThemeSwitcher />
             {/* Bell notifications */}
             <div className="relative">
               <button
@@ -310,17 +312,17 @@ export default function Header() {
                   <div className="flex items-center justify-between px-4 py-2 bg-emerald-50">
                     <div className="text-sm font-semibold">Thông báo</div>
                     <div className="flex items-center gap-3">
-                      {(auth && String(auth.role).toLowerCase()==='admin') && (
+                      {(auth && String(auth.role).toLowerCase() === 'admin') && (
                         <Link href="/admin/yeu-cau" className="text-xs text-emerald-700 hover:underline">Quản lý yêu cầu</Link>
                       )}
-                      <button className="text-xs text-emerald-700" onClick={()=> { markAllRead(); setOpenBell(false);} }>Đánh dấu đã đọc</button>
+                      <button className="text-xs text-emerald-700" onClick={() => { markAllRead(); setOpenBell(false); }}>Đánh dấu đã đọc</button>
                     </div>
                   </div>
                   <div className="max-h-[320px] overflow-auto">
                     {items.length === 0 ? (
                       <div className="px-4 py-6 text-sm text-slate-500">Chưa có thông báo mới</div>
                     ) : (
-                      items.map((n,i)=> (
+                      items.map((n, i) => (
                         <div key={i} className="px-4 py-3 border-b hover:bg-emerald-50">
                           <div className="text-sm font-medium">{n.title}</div>
                           {n.content && (
@@ -337,7 +339,7 @@ export default function Header() {
             <Link
               href="/chat"
               aria-label="Chat"
-              onClick={() => { try { markAllMsgsRead(); } catch {} }}
+              onClick={() => { try { markAllMsgsRead(); } catch { } }}
               className="relative p-2 rounded-full bg-gradient-to-r from-[#006633] to-[#4CAF50] border border-white/60 hover:scale-110 hover:shadow-lg transition cursor-pointer"
             >
               <MessageSquare className="text-white w-5 h-5" />
@@ -396,12 +398,12 @@ export default function Header() {
                       <div className="shrink-0">
                         <div className="w-9 h-9 rounded-full bg-emerald-600 text-white grid place-items-center overflow-hidden">
                           {auth.avatarUrl && !avatarBroken ? (
-                              <div className="w-full h-full rounded-full overflow-hidden">
-                                <MyImage src={asImageSrc(auth.avatarUrl)} alt="avatar" className="rounded-full" priority={false} />
-                              </div>
-                            ) : (
-                              <UserIcon className="w-5 h-5" />
-                            )}
+                            <div className="w-full h-full rounded-full overflow-hidden">
+                              <MyImage src={asImageSrc(auth.avatarUrl)} alt="avatar" className="rounded-full" priority={false} />
+                            </div>
+                          ) : (
+                            <UserIcon className="w-5 h-5" />
+                          )}
                         </div>
                       </div>
                       <div className="min-w-0">
@@ -507,9 +509,8 @@ export default function Header() {
 
       {/* ===== Mobile Off-canvas (md:hidden) ===== */}
       <aside
-        className={`fixed top-0 right-0 z-[60] h-dvh w-[86%] max-w-xs bg-white text-slate-800 shadow-2xl md:hidden transition-transform duration-300 ${
-          openNavMobile ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 z-[60] h-dvh w-[86%] max-w-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-2xl md:hidden transition-transform duration-300 ${openNavMobile ? "translate-x-0" : "translate-x-full"
+          }`}
         role="dialog"
         aria-modal="true"
         aria-label="Menu điều hướng (mobile)"
@@ -517,11 +518,14 @@ export default function Header() {
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="flex items-center gap-2">
             <Image src={logo} alt="Logo" width={28} height={28} />
-            <span className="font-semibold text-slate-700">NhaCong</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-200">NhaCong</span>
           </div>
-          <button onClick={() => setOpenNavMobile(false)} className="p-2 rounded-full hover:bg-slate-100" aria-label="Đóng">
-            <X className="w-5 h-5 text-slate-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            <button onClick={() => setOpenNavMobile(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Đóng">
+              <X className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+            </button>
+          </div>
         </div>
 
         <nav className="px-3 py-2">
@@ -530,7 +534,7 @@ export default function Header() {
               key={m.label}
               href={m.href}
               onClick={() => setOpenNavMobile(false)}
-              className="block rounded-xl px-4 py-3 text-[15px] font-medium hover:bg-emerald-50 hover:text-emerald-700"
+              className="block rounded-xl px-4 py-3 text-[15px] font-medium hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400"
             >
               {m.label}
             </Link>
@@ -563,7 +567,7 @@ export default function Header() {
           </div>
         )}
 
-        <div className="mx-3 my-3 h-px bg-slate-200" />
+        <div className="mx-3 my-3 h-px bg-slate-200 dark:bg-slate-700" />
 
         <div className="px-3">
           {!auth ? (
@@ -712,9 +716,8 @@ export default function Header() {
 
       {/* ===== Desktop Off-canvas (hidden md:flex) ===== */}
       <aside
-        className={`fixed top-0 right-0 z-[60] hidden md:flex h-dvh w-[420px] bg-white text-slate-800 shadow-2xl transition-transform duration-300 ${
-          openNavDesktop ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 z-[60] hidden md:flex h-dvh w-[420px] bg-white text-slate-800 shadow-2xl transition-transform duration-300 ${openNavDesktop ? "translate-x-0" : "translate-x-full"
+          }`}
         role="dialog"
         aria-modal="true"
         aria-label="Menu mở rộng (desktop)"

@@ -169,11 +169,11 @@ export default function AccountPage() {
       await userService.postVerifyEmail({ email, code: emailCode.trim() });
       // fetch latest profile and persist to storage
       try {
-        const me: any = await userService.getMe();
+        const me: any = await userService.getProfile();
         const json = JSON.stringify(me);
         setCookie('auth_user', json, 60 * 60 * 24 * 30);
         localStorage.setItem('auth_user', json);
-      } catch {}
+      } catch { }
       toast.success('Xác thực email thành công');
       // refresh auth from /me or token
       window.dispatchEvent(new CustomEvent('auth:update'));
@@ -239,7 +239,7 @@ export default function AccountPage() {
     const u = readAuth();
     if (!u) {
       toast.info("Vui lòng đăng nhập để xem tài khoản");
-  router.replace("/dang-nhap");
+      router.replace("/dang-nhap");
       return;
     }
     setAuth(u);
@@ -306,13 +306,13 @@ export default function AccountPage() {
   };
   const monthLabel = useMemo(() => month.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }), [month]);
   const startOfMonth = useMemo(() => new Date(month.getFullYear(), month.getMonth(), 1), [month]);
-  const endOfMonth = useMemo(() => new Date(month.getFullYear(), month.getMonth()+1, 0), [month]);
+  const endOfMonth = useMemo(() => new Date(month.getFullYear(), month.getMonth() + 1, 0), [month]);
   const startWeekday = (startOfMonth.getDay() + 6) % 7; // Mon=0
   const daysInMonth = endOfMonth.getDate();
   const days: string[] = useMemo(() => {
     const arr: string[] = [];
-    for (let i=0;i<startWeekday;i++) arr.push("");
-    for (let d=1; d<=daysInMonth; d++) {
+    for (let i = 0; i < startWeekday; i++) arr.push("");
+    for (let d = 1; d <= daysInMonth; d++) {
       arr.push(fmtDate(new Date(month.getFullYear(), month.getMonth(), d)));
     }
     // pad to full weeks (42 cells)
@@ -327,7 +327,7 @@ export default function AccountPage() {
       (m[key] ||= []).push(v);
     }
     // sort each day by time
-    Object.keys(m).forEach(k => m[k].sort((a,b) => +new Date(a.preferredAt) - +new Date(b.preferredAt)));
+    Object.keys(m).forEach(k => m[k].sort((a, b) => +new Date(a.preferredAt) - +new Date(b.preferredAt)));
     return m;
   }, [viewings]);
 
@@ -335,8 +335,8 @@ export default function AccountPage() {
 
   // Deprecated local statusLabel replaced by viewingStatusLabel util
 
-  const goPrevMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()-1, 1));
-  const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth()+1, 1));
+  const goPrevMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
+  const goNextMonth = () => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   /* ---------- HANDLERS ---------- */
   const handleRemoveFav = async (id: number) => {
@@ -378,7 +378,7 @@ export default function AccountPage() {
 
   /* ---------- RENDER ---------- */
   return (
-    <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors">
       {/* ===== Header user ===== */}
       <section className="relative">
         {/* Decorative background */}
@@ -387,102 +387,102 @@ export default function AccountPage() {
           <div className="absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-teal-200/40 blur-3xl" />
         </div>
         <div className="max-w-screen-2xl mx-auto px-4 pt-24 pb-10">
-          <div className="rounded-3xl bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border border-emerald-100 shadow-xl p-6 md:p-8">
+          <div className="rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70 border border-emerald-100 dark:border-slate-800 shadow-xl p-6 md:p-8 transition-colors">
             <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="p-0.5 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400">
-              <div className="h-20 w-20 rounded-[0.9rem] bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
-              {auth.avatarUrl && !avatarBroken ? (
-                <img
-                  src={asImageSrc(auth.avatarUrl)}
-                  alt="Ảnh đại diện"
-                  className="h-full w-full object-cover"
-                  onError={() => setAvatarBroken(true)}
-                />
-              ) : (
-                <UserIcon className="w-10 h-10" />
-              )}
+              <div className="p-0.5 rounded-2xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400">
+                <div className="h-20 w-20 rounded-[0.9rem] bg-emerald-600 text-white grid place-items-center overflow-hidden ring-4 ring-white shadow">
+                  {auth.avatarUrl && !avatarBroken ? (
+                    <img
+                      src={asImageSrc(auth.avatarUrl)}
+                      alt="Ảnh đại diện"
+                      className="h-full w-full object-cover"
+                      onError={() => setAvatarBroken(true)}
+                    />
+                  ) : (
+                    <UserIcon className="w-10 h-10" />
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">{auth.name || "Người dùng"}</h1>
-                {((auth as any).email_verified === 1) && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 text-emerald-700 border-emerald-200">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Email đã xác minh
-                  </span>
-                )}
-                {((auth as any).phone_verified === 1) && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 text-emerald-700 border-emerald-200">
-                    <ShieldCheck className="w-3.5 h-3.5" /> SĐT đã xác minh
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 justify-center md:justify-start">
-                {auth.provider && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-700">
-                    <Fingerprint className="w-3.5 h-3.5" /> Đăng nhập: {auth.provider}
-                  </span>
-                )}
-                {typeof auth.rewardBalance === 'number' && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 px-2 py-0.5 text-xs text-amber-700">
-                    <Sparkles className="w-3.5 h-3.5" /> Điểm thưởng: {auth.rewardBalance}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-slate-600 mt-2 flex flex-col sm:flex-row sm:gap-4 justify-center md:justify-start">
-                <span className="inline-flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> {auth.email}
-                </span>
-                {auth.phone && (
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{auth.name || "Người dùng"}</h1>
+                  {((auth as any).email_verified === 1) && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Email đã xác minh
+                    </span>
+                  )}
+                  {((auth as any).phone_verified === 1) && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] border bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                      <ShieldCheck className="w-3.5 h-3.5" /> SĐT đã xác minh
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 justify-center md:justify-start">
+                  {auth.provider && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-xs text-slate-700 dark:text-slate-300">
+                      <Fingerprint className="w-3.5 h-3.5" /> Đăng nhập: {auth.provider}
+                    </span>
+                  )}
+                  {typeof auth.rewardBalance === 'number' && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 dark:border-amber-800 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+                      <Sparkles className="w-3.5 h-3.5" /> Điểm thưởng: {auth.rewardBalance}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 flex flex-col sm:flex-row sm:gap-4 justify-center md:justify-start">
                   <span className="inline-flex items-center gap-2">
-                    <Phone className="w-4 h-4" /> {auth.phone}
+                    <Mail className="w-4 h-4" /> {auth.email}
                   </span>
-                )}
-              </p>
-              {/* Verification actions */}
-              <div className="mt-3 flex flex-col gap-2">
-                {/* Email verify */}
-                {((auth as any).email_verified !== 1) && (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-50/40 p-2">
-                    <span className="text-sm text-rose-600">Email chưa xác minh</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={requestEmailVerification} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition">Gửi mã xác minh</button>
-                      <input value={emailCode} onChange={e=>setEmailCode(e.target.value)} placeholder="Nhập mã" className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
-                      <button onClick={submitEmailCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                  {auth.phone && (
+                    <span className="inline-flex items-center gap-2">
+                      <Phone className="w-4 h-4" /> {auth.phone}
+                    </span>
+                  )}
+                </p>
+                {/* Verification actions */}
+                <div className="mt-3 flex flex-col gap-2">
+                  {/* Email verify */}
+                  {((auth as any).email_verified !== 1) && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-900/10 p-2">
+                      <span className="text-sm text-rose-600 dark:text-rose-400">Email chưa xác minh</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={requestEmailVerification} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">Gửi mã xác minh</button>
+                        <input value={emailCode} onChange={e => setEmailCode(e.target.value)} placeholder="Nhập mã" className="border dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
+                        <button onClick={submitEmailCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {/* Phone verify */}
-                {((auth as any).phone_verified !== 1) && (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-50/40 p-2">
-                    <span className="text-sm text-rose-600">Số điện thoại chưa xác minh</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={requestPhoneOtp} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition">Gửi mã OTP</button>
-                      <input value={phoneCode} onChange={e=>setPhoneCode(e.target.value)} placeholder="Nhập mã" className="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
-                      <button onClick={submitPhoneCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                  )}
+                  {/* Phone verify */}
+                  {((auth as any).phone_verified !== 1) && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-amber-200/70 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-900/10 p-2">
+                      <span className="text-sm text-rose-600 dark:text-rose-400">Số điện thoại chưa xác minh</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={requestPhoneOtp} className="px-3 py-1.5 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">Gửi mã OTP</button>
+                        <input value={phoneCode} onChange={e => setPhoneCode(e.target.value)} placeholder="Nhập mã" className="border dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-300" />
+                        <button onClick={submitPhoneCode} className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">Xác minh</button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  {auth.address && (
+                    <div className="inline-flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Địa chỉ: {auth.address}</div>
+                  )}
+                  {auth.gender && (
+                    <div className="inline-flex items-center gap-2"><UserIcon className="w-3.5 h-3.5" /> Giới tính: {auth.gender === 'male' ? 'Nam' : auth.gender === 'female' ? 'Nữ' : 'Khác'}</div>
+                  )}
+                  {auth.dateOfBirth && (
+                    <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Ngày sinh: {new Date(auth.dateOfBirth as any).toLocaleDateString('vi-VN')}</div>
+                  )}
+                  {auth.createdAt && (
+                    <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Tham gia: {new Date(auth.createdAt as any).toLocaleDateString('vi-VN')}</div>
+                  )}
+                  {auth.referralCode && (
+                    <div className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5" /> Mã giới thiệu: {auth.referralCode}</div>
+                  )}
+                </div>
               </div>
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-600">
-                {auth.address && (
-                  <div className="inline-flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /> Địa chỉ: {auth.address}</div>
-                )}
-                {auth.gender && (
-                  <div className="inline-flex items-center gap-2"><UserIcon className="w-3.5 h-3.5" /> Giới tính: {auth.gender === 'male' ? 'Nam' : auth.gender === 'female' ? 'Nữ' : 'Khác'}</div>
-                )}
-                {auth.dateOfBirth && (
-                  <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Ngày sinh: {new Date(auth.dateOfBirth as any).toLocaleDateString('vi-VN')}</div>
-                )}
-                {auth.createdAt && (
-                  <div className="inline-flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5" /> Tham gia: {new Date(auth.createdAt as any).toLocaleDateString('vi-VN')}</div>
-                )}
-                {auth.referralCode && (
-                  <div className="inline-flex items-center gap-2"><Sparkles className="w-3.5 h-3.5" /> Mã giới thiệu: {auth.referralCode}</div>
-                )}
-              </div>
-            </div>
               <div className="w-full md:w-auto flex flex-wrap justify-center md:justify-end items-center gap-2 mt-2 md:mt-0 md:self-start md:ml-auto">
                 <button
                   onClick={() => { setEditing((v) => !v); if (!editing) setShowChangePwd(false); }}
@@ -497,6 +497,18 @@ export default function AccountPage() {
                   {showChangePwd ? 'Đóng đổi mật khẩu' : 'Đổi mật khẩu'}
                 </button>
                 <button
+                  onClick={() => { setEditing((v) => !v); if (!editing) setShowChangePwd(false); }}
+                  className="h-10 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-4 py-2 flex items-center gap-2 transition"
+                >
+                  {editing ? 'Đóng sửa' : 'Cập nhật thông tin'}
+                </button>
+                <button
+                  onClick={() => { setShowChangePwd((v) => !v); if (!showChangePwd) setEditing(false); }}
+                  className="h-10 rounded-xl border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-4 py-2 flex items-center gap-2 transition"
+                >
+                  {showChangePwd ? 'Đóng đổi mật khẩu' : 'Đổi mật khẩu'}
+                </button>
+                <button
                   onClick={() => {
                     clearAuth();
                     if (typeof window !== 'undefined') {
@@ -505,7 +517,7 @@ export default function AccountPage() {
                     toast.info("Đã đăng xuất");
                     router.replace("/dang-nhap");
                   }}
-                  className="h-10 rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 flex items-center gap-2 transition"
+                  className="h-10 rounded-xl border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 px-4 py-2 flex items-center gap-2 transition"
                 >
                   <LogOut className="w-4 h-4" /> Đăng xuất
                 </button>
@@ -513,47 +525,47 @@ export default function AccountPage() {
             </div>
 
             {editing && (
-              <div className="mt-6 border-t border-slate-100 pt-4">
+              <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
                 <CompleteProfileSheet
                   initialName={auth?.name || ''}
                   initialPhone={auth?.phone || ''}
                   email={auth?.email || ''}
                   initialGender={(auth as any)?.gender || null}
-                  initialDateOfBirth={auth?.dateOfBirth ? new Date(auth.dateOfBirth as any).toISOString().slice(0,10) : ''}
+                  initialDateOfBirth={auth?.dateOfBirth ? new Date(auth.dateOfBirth as any).toISOString().slice(0, 10) : ''}
                   initialAvatarUrl={auth?.avatarUrl || ''}
                   initialAddress={auth?.address || ''}
                   onDone={() => {
-                  const next = readAuth();
-                  setAuth(next);
-                  setEditing(false);
-                }} />
+                    const next = readAuth();
+                    setAuth(next);
+                    setEditing(false);
+                  }} />
               </div>
             )}
 
             {showChangePwd && (
-              <div className="mt-6 border-t border-slate-100 pt-4">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <h3 className="text-base font-semibold text-slate-900">Đổi mật khẩu</h3>
-                  <p className="text-sm text-slate-600 mb-3">Vui lòng nhập mật khẩu hiện tại để đổi sang mật khẩu mới.</p>
+              <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">Đổi mật khẩu</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">Vui lòng nhập mật khẩu hiện tại để đổi sang mật khẩu mới.</p>
                   <div className="grid sm:grid-cols-3 gap-3">
                     <input
                       type="password"
                       placeholder="Mật khẩu hiện tại"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       value={pwdCurrent}
                       onChange={(e) => setPwdCurrent(e.target.value)}
                     />
                     <input
                       type="password"
                       placeholder="Mật khẩu mới"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       value={pwdNew}
                       onChange={(e) => setPwdNew(e.target.value)}
                     />
                     <input
                       type="password"
                       placeholder="Nhập lại mật khẩu mới"
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                       value={pwdConfirm}
                       onChange={(e) => setPwdConfirm(e.target.value)}
                     />
@@ -593,25 +605,25 @@ export default function AccountPage() {
 
             {/* Quick stats */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
-              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-emerald-50/40 p-4 min-h-[90px]">
-                <div className="text-xs text-slate-500">Phòng đã yêu thích</div>
+              <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-gradient-to-b from-white to-emerald-50/40 dark:from-slate-800 dark:to-emerald-900/10 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Phòng đã yêu thích</div>
                 <div className="mt-1 flex items-center gap-2">
                   <Heart className="w-4 h-4 text-rose-500" />
-                  <div className="text-xl font-semibold text-slate-900">{totalFavorites}</div>
+                  <div className="text-xl font-semibold text-slate-900 dark:text-white">{totalFavorites}</div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-sky-50/40 p-4 min-h-[90px]">
-                <div className="text-xs text-slate-500">Lịch xem sắp tới</div>
+              <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-gradient-to-b from-white to-sky-50/40 dark:from-slate-800 dark:to-sky-900/10 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Lịch xem sắp tới</div>
                 <div className="mt-1 flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-sky-600" />
-                  <div className="text-xl font-semibold text-slate-900">{upcomingViewings}</div>
+                  <CalendarDays className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                  <div className="text-xl font-semibold text-slate-900 dark:text-white">{upcomingViewings}</div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-amber-50/40 p-4 min-h-[90px]">
-                <div className="text-xs text-slate-500">Tổng số lịch đã đặt</div>
+              <div className="rounded-2xl border border-slate-100 dark:border-slate-700 bg-gradient-to-b from-white to-amber-50/40 dark:from-slate-800 dark:to-amber-900/10 p-4 min-h-[90px]">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Tổng số lịch đã đặt</div>
                 <div className="mt-1 flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-amber-600" />
-                  <div className="text-xl font-semibold text-slate-900">{totalViewings}</div>
+                  <CalendarIcon className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <div className="text-xl font-semibold text-slate-900 dark:text-white">{totalViewings}</div>
                 </div>
               </div>
             </div>
@@ -622,26 +634,26 @@ export default function AccountPage() {
       {/* ===== Lịch xem phòng của tôi ===== */}
       <section className="max-w-screen-2xl mx-auto px-4 pb-10">
         <div className="mb-4 flex items-center gap-2">
-          <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900">
-            <CalendarDays className="w-5 h-5 text-emerald-600" /> Lịch xem phòng của tôi
+          <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+            <CalendarDays className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Lịch xem phòng của tôi
           </h2>
-          {loadingViewings && <span className="text-sm text-slate-500">Đang tải…</span>}
+          {loadingViewings && <span className="text-sm text-slate-500 dark:text-slate-400">Đang tải…</span>}
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
           {/* Calendar grid */}
-          <div className="rounded-2xl bg-white border shadow-sm p-4 lg:col-span-2">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 border shadow-sm border-slate-200 dark:border-slate-800 p-4 lg:col-span-2">
             <div className="mb-2 flex items-center justify-between">
-              <button onClick={goPrevMonth} className="rounded-lg p-2 hover:bg-slate-50">
+              <button onClick={goPrevMonth} className="rounded-lg p-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="text-sm font-semibold text-slate-800 uppercase tracking-wide">{monthLabel}</div>
-              <button onClick={goNextMonth} className="rounded-lg p-2 hover:bg-slate-50">
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wide">{monthLabel}</div>
+              <button onClick={goNextMonth} className="rounded-lg p-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-500">
-              {['T2','T3','T4','T5','T6','T7','CN'].map(d => <div key={d} className="py-0.5">{d}</div>)}
+            <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-500 dark:text-slate-400">
+              {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map(d => <div key={d} className="py-0.5">{d}</div>)}
             </div>
             <div className="mt-1 grid grid-cols-7 gap-2">
               {days.map((d, idx) => {
@@ -652,9 +664,8 @@ export default function AccountPage() {
                   <button
                     key={idx}
                     onClick={() => d && setSelectedDate(d)}
-                    className={`aspect-square rounded-lg border text-sm ${
-                      d ? 'bg-white hover:bg-slate-50' : 'bg-transparent border-transparent'
-                    } ${isSelected ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'border-slate-100'} flex flex-col items-center justify-center p-0.5`}
+                    className={`aspect-square rounded-lg border text-sm ${d ? 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-200' : 'bg-transparent border-transparent'
+                      } ${isSelected ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-700'} flex flex-col items-center justify-center p-0.5`}
                   >
                     <span className="leading-none">{dayNum}</span>
                     {d && events.length > 0 && (() => {
@@ -719,8 +730,8 @@ export default function AccountPage() {
           </div>
 
           {/* Day details */}
-          <div className="rounded-2xl bg-white border shadow-sm p-3">
-            <div className="mb-2 text-sm font-semibold text-slate-800">
+          <div className="rounded-2xl bg-white dark:bg-slate-900 border shadow-sm border-slate-200 dark:border-slate-800 p-3">
+            <div className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
               {(() => {
                 const [y, m, d] = selectedDate.split('-').map(Number);
                 const localDate = new Date(y, (m || 1) - 1, d || 1);
@@ -728,33 +739,32 @@ export default function AccountPage() {
               })()}
             </div>
             {selectedEvents.length === 0 ? (
-              <div className="text-sm text-slate-500">Không có lịch trong ngày này.</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Không có lịch trong ngày này.</div>
             ) : (
               <ul className="space-y-2.5">
                 {selectedEvents.map((v) => {
                   const hhmm = new Date(v.preferredAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                   const isDeposit = isDepositViewing(v);
                   return (
-                    <li key={v.id} className="rounded-xl border border-slate-100 bg-white p-2.5">
+                    <li key={v.id} className="rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5">
                       <div className="flex items-center justify-between">
-                        <div className={`flex items-center gap-2 ${isDeposit ? 'text-violet-700' : 'text-emerald-700'}`}>
+                        <div className={`flex items-center gap-2 ${isDeposit ? 'text-violet-700 dark:text-violet-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                           <Clock className="h-3.5 w-3.5" />
                           <span className="font-semibold">{hhmm}</span>
                           {isDeposit && (
                             <span className="rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 px-1.5 py-0.5 text-[10px] leading-none">Đặt cọc</span>
                           )}
                         </div>
-                        <span className={`rounded-full px-2 py-0.5 text-xs ${
-                          v.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        <span className={`rounded-full px-2 py-0.5 text-xs ${v.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                           v.status === 'cancelled' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                          v.status === 'visited' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
-                          isDeposit ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>{viewingStatusLabel(v)}</span>
+                            v.status === 'visited' ? 'bg-sky-50 text-sky-700 border border-sky-200' :
+                              isDeposit ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}>{viewingStatusLabel(v)}</span>
                       </div>
-                      {viewingDisplayNote(v) && <div className="mt-0.5 text-xs text-slate-600">{viewingDisplayNote(v)}</div>}
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
+                      {viewingDisplayNote(v) && <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{viewingDisplayNote(v)}</div>}
+                      <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                         <MapPin className="h-3.5 w-3.5" /> Mã tin: #{v.apartmentId}
-                        <a className="ml-auto inline-flex items-center gap-1 text-emerald-700 hover:underline" href={`/room/${v.apartmentId}`}>
+                        <a className="ml-auto inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:underline" href={`/room/${v.apartmentId}`}>
                           Xem phòng <ExternalLink className="h-3 w-3" />
                         </a>
                       </div>
@@ -770,13 +780,13 @@ export default function AccountPage() {
       {/* ===== Danh sách yêu thích ===== */}
       <section className="max-w-screen-2xl mx-auto px-4 pb-20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900">
+          <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
             <Heart className="w-5 h-5 text-rose-500" /> Phòng đã yêu thích
           </h2>
           {saved.length > 0 && (
             <button
               onClick={handleClearAll}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 text-rose-700 rounded-xl hover:bg-rose-50 cursor-pointer transition"
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 cursor-pointer transition"
             >
               <Trash2 className="w-4 h-4" /> Xóa tất cả
             </button>
@@ -784,11 +794,11 @@ export default function AccountPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border bg-white p-10 text-center text-slate-600 shadow-sm">
+          <div className="rounded-2xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-10 text-center text-slate-600 dark:text-slate-400 shadow-sm">
             Đang tải danh sách yêu thích...
           </div>
         ) : saved.length === 0 ? (
-          <div className="rounded-2xl border bg-white p-10 text-center text-slate-600 shadow-sm">
+          <div className="rounded-2xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-10 text-center text-slate-600 dark:text-slate-400 shadow-sm">
             Bạn chưa lưu phòng nào. Hãy nhấn biểu tượng{" "}
             <Heart className="inline w-4 h-4 -mt-1 text-rose-500" /> ở trang phòng để thêm vào danh sách.
           </div>

@@ -16,7 +16,7 @@ export default function AdminTable({ headers, children, emptyText = "Chưa có d
       if (!React.isValidElement(child)) return child;
       const el = child as React.ReactElement<any>;
       const existing = (el.props && (el.props.className as string)) || '';
-      const merged = [existing, 'hover:bg-slate-50 transition-colors'].filter(Boolean).join(' ');
+      const merged = [existing, 'hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors'].filter(Boolean).join(' ');
       return React.cloneElement(el, { className: merged });
     });
   };
@@ -24,14 +24,14 @@ export default function AdminTable({ headers, children, emptyText = "Chưa có d
   return (
     <div className="mt-5 overflow-x-auto rounded bg-white shadow">
       <div className="min-w-full">
-  <table className={`w-full text-[15px] table-auto border-collapse [&_th]:border [&_th]:border-slate-200 [&_td]:border [&_td]:border-slate-200 [&_th]:bg-slate-100 [&_th]:text-center [&_td]:!text-center [&_td>img]:mx-auto [&_td>button]:mx-auto [&_td>a]:mx-auto [&_td>div]:mx-auto [&_th:last-child]:text-center [&_td:last-child]:text-center [&_td:last-child>div]:flex [&_td:last-child>div]:items-center [&_td:last-child>div]:justify-center [&_td:last-child>div]:gap-2`}>
+        <table className={`w-full text-[15px] table-auto border-collapse [&_th]:border [&_th]:border-slate-200 dark:[&_th]:border-slate-700 [&_td]:border [&_td]:border-slate-200 dark:[&_td]:border-slate-700 [&_th]:bg-slate-100 dark:[&_th]:bg-slate-900 [&_th]:text-center [&_td]:!text-center [&_td>img]:mx-auto [&_td>button]:mx-auto [&_td>a]:mx-auto [&_td>div]:mx-auto [&_th:last-child]:text-center [&_td:last-child]:text-center [&_td:last-child>div]:flex [&_td:last-child>div]:items-center [&_td:last-child>div]:justify-center [&_td:last-child>div]:gap-2`}>
           <thead className="sticky top-0 z-10">
             <tr>
               {headers.map((h, i) => {
                 return (
                   <th
                     key={i}
-                    className={`px-4 py-3 font-semibold uppercase tracking-wide text-[12px] text-center`}
+                    className={`px-4 py-3 font-semibold uppercase tracking-wide text-[12px] text-center dark:text-slate-300`}
                   >
                     {h}
                   </th>
@@ -39,14 +39,14 @@ export default function AdminTable({ headers, children, emptyText = "Chưa có d
               })}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
             {loading ? (
               <tr>
-                <td colSpan={headers.length} className="py-7 text-center text-slate-500">Đang tải…</td>
+                <td colSpan={headers.length} className="py-7 text-center text-slate-500 dark:text-slate-400">Đang tải…</td>
               </tr>
             ) : React.Children.count(children) === 0 ? (
               <tr>
-                <td colSpan={headers.length} className="py-7 text-center text-slate-500">{emptyText}</td>
+                <td colSpan={headers.length} className="py-7 text-center text-slate-500 dark:text-slate-400">{emptyText}</td>
               </tr>
             ) : (
               enhanceRows(children)

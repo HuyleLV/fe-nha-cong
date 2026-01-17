@@ -76,7 +76,7 @@ export default function DebtsPage() {
       <Spin spinning={loading}>
         <Table
           columns={columns}
-          dataSource={data || []}
+          dataSource={Array.isArray(data) ? data : []}
           rowKey="id"
           pagination={{
             ...pagination,

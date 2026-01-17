@@ -68,7 +68,7 @@ export default function FinancialDashboard() {
                                 title="Tổng Thu"
                                 value={cashFlowData?.totalIncome}
                                 precision={0}
-                                valueStyle={{ color: '#3f8600' }}
+                                styles={{ content: { color: '#3f8600' } }}
                                 prefix={<ArrowUpOutlined />}
                                 suffix="₫"
                             />
@@ -80,7 +80,7 @@ export default function FinancialDashboard() {
                                 title="Tổng Chi"
                                 value={cashFlowData?.totalExpense}
                                 precision={0}
-                                valueStyle={{ color: '#cf1322' }}
+                                styles={{ content: { color: '#cf1322' } }}
                                 prefix={<ArrowDownOutlined />}
                                 suffix="₫"
                             />
@@ -92,7 +92,7 @@ export default function FinancialDashboard() {
                                 title="Dòng Tiền Thuần"
                                 value={cashFlowData?.netFlow}
                                 precision={0}
-                                valueStyle={{ color: cashFlowData?.netFlow >= 0 ? '#3f8600' : '#cf1322' }}
+                                styles={{ content: { color: cashFlowData?.netFlow >= 0 ? '#3f8600' : '#cf1322' } }}
                                 prefix={<WalletOutlined />}
                                 suffix="₫"
                             />

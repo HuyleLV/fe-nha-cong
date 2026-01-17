@@ -59,7 +59,7 @@ export default function Page() {
 
   const tFee = (ft?: string | null) => {
     if (!ft) return '-';
-    switch(ft) {
+    switch (ft) {
       case 'rent': return 'Tiền nhà';
       case 'deposit': return 'Tiền cọc';
       case 'water': return 'Tiền nước';
@@ -106,32 +106,32 @@ export default function Page() {
   return (
     <div className="p-6">
       <Panel title="Quản lý Dịch vụ" actions={(
-        <Link href="/admin/danh-muc/dich-vu/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md" title="Thêm dịch vụ"><PlusCircle className="w-5 h-5"/></Link>
+        <Link href="/admin/danh-muc/dich-vu/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md" title="Thêm dịch vụ"><PlusCircle className="w-5 h-5" /></Link>
       )}>
-        <AdminTable headers={["Mã","Tên dịch vụ","Loại phí","Loại đơn giá","Đơn giá","Đơn vị tính","Thuế suất","Tòa nhà","Ghi chú","Hành động"]}>
+        <AdminTable headers={["Mã", "Tên dịch vụ", "Loại phí", "Loại đơn giá", "Đơn giá", "Đơn vị tính", "Thuế suất", "Tòa nhà", "Ghi chú", "Hành động"]}>
           {items.length === 0 ? (
-            <tr><td colSpan={10} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có dịch vụ'}</td></tr>
+            <tr><td colSpan={10} className="py-6 text-center text-slate-500 dark:text-slate-400">{loading ? 'Đang tải...' : 'Chưa có dịch vụ'}</td></tr>
           ) : items.map((it, idx) => (
-            <tr key={it.id} className="border-b">
-              <td className="py-3 text-sm text-slate-700">{items.length - idx}</td>
-              <td className="py-3 text-sm text-slate-700">{it.name}</td>
-              <td className="py-3 text-sm text-slate-700">{tFee(it.feeType)}</td>
-              <td className="py-3 text-sm text-slate-700">{tPriceType(it.priceType)}</td>
-              <td className="py-3 text-sm text-slate-700">{it.unitPrice != null && it.unitPrice !== '' ? formatMoneyVND(Number(String(it.unitPrice).replace(/,/g, ''))) : '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{tUnit(it.unit)}</td>
-              <td className="py-3 text-sm text-slate-700">{it.taxRate ?? '-'}</td>
-              <td className="py-3 text-sm text-slate-700">
+            <tr key={it.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{items.length - idx}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.name}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{tFee(it.feeType)}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{tPriceType(it.priceType)}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.unitPrice != null && it.unitPrice !== '' ? formatMoneyVND(Number(String(it.unitPrice).replace(/,/g, ''))) : '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{tUnit(it.unit)}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.taxRate ?? '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">
                 {it.buildingId ? (
                   buildingMap[it.buildingId]
                     ? `${it.buildingId}_${buildingMap[it.buildingId]}`
                     : String(it.buildingId)
                 ) : '-'}
               </td>
-              <td className="py-3 text-sm text-slate-700">{it.note ?? '-'}</td>
-              <td className="py-3 text-sm text-slate-700 text-center">
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200 max-w-[150px] truncate" title={it.note ?? ''}>{it.note ?? '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200 text-center">
                 <div className="inline-flex items-center gap-2">
-                  <Link href={`/admin/danh-muc/dich-vu/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></Link>
-                  <button onClick={() => remove(it.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <Link href={`/admin/danh-muc/dich-vu/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4" /></Link>
+                  <button onClick={() => remove(it.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </td>
             </tr>

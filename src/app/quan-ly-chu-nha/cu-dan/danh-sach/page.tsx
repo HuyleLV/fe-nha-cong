@@ -21,14 +21,14 @@ type CustomerRow = {
   address?: string | null;
 };
 
-export default function CuDanListPage(){
+export default function CuDanListPage() {
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(5);
   const [total, setTotal] = useState<number>(0);
   const [meId, setMeId] = useState<number | null>(null);
-  
+
 
   const load = async (p = page) => {
     setLoading(true);
@@ -63,9 +63,9 @@ export default function CuDanListPage(){
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && me.id) setMeId(me.id);
-      } catch (err) {}
+      } catch (err) { }
     })();
   }, []);
 
@@ -84,7 +84,7 @@ export default function CuDanListPage(){
     <div className="p-6">
       <Panel title="Cư dân">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-600">Danh sách cư dân của chủ nhà.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Danh sách cư dân của chủ nhà.</p>
         </div>
 
         <AdminTable
@@ -94,17 +94,17 @@ export default function CuDanListPage(){
         >
           {Array.isArray(rows) ? (
             rows.map((r) => (
-              <tr key={r.id} className="border-t">
-                <td className="px-4 py-3 text-left">{r.id}</td>
-                <td className="px-4 py-3 text-left">{r.name}</td>
-                <td className="px-4 py-3">{r.phone}</td>
-                <td className="px-4 py-3">{r.gender ? (r.gender === 'male' ? 'Nam' : r.gender === 'female' ? 'Nữ' : 'Khác') : ''}</td>
-                <td className="px-4 py-3">{r.idCardNumber ?? (r.idCardFront || r.idCardBack ? 'Có' : 'Chưa')}</td>
-                <td className="px-4 py-3">{r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString() : ''}</td>
-                <td className="px-4 py-3">{r.address ?? ''}</td>
+              <tr key={r.id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+                <td className="px-4 py-3 text-left text-slate-700 dark:text-slate-300">{r.id}</td>
+                <td className="px-4 py-3 text-left font-medium text-slate-800 dark:text-slate-200">{r.name}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.phone}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.gender ? (r.gender === 'male' ? 'Nam' : r.gender === 'female' ? 'Nữ' : 'Khác') : ''}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.idCardNumber ?? (r.idCardFront || r.idCardBack ? 'Có' : 'Chưa')}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString() : ''}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.address ?? ''}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link href={`/quan-ly-chu-nha/khach-hang/khach-tiem-nang/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa">
+                    <Link href={`/quan-ly-chu-nha/khach-hang/khach-tiem-nang/${r.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600" title="Sửa">
                       <Edit3 className="w-4 h-4 text-white" />
                     </Link>
                   </div>
@@ -116,7 +116,7 @@ export default function CuDanListPage(){
               console.error('Expected rows to be an array but got:', rows);
               return (
                 <tr>
-                  <td colSpan={8} className="px-4 py-3 text-center text-sm text-slate-500">Dữ liệu không hợp lệ</td>
+                  <td colSpan={8} className="px-4 py-3 text-center text-sm text-slate-500 dark:text-slate-400">Dữ liệu không hợp lệ</td>
                 </tr>
               );
             })()

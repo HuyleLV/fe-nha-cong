@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientLayout>
           {children}
@@ -37,6 +37,7 @@ export default function RootLayout({
 export const metadata: Metadata = {
   title: "Nhà Cộng",
   description: "Nền tảng thuê phòng trọ, căn hộ dịch vụ",
+  manifest: "/manifest.json",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",

@@ -9,7 +9,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 
-export default function AdminPhuongTienPage(){
+export default function AdminPhuongTienPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -28,26 +28,26 @@ export default function AdminPhuongTienPage(){
   return (
     <div className="p-6">
       <Panel title="Phương tiện" actions={(
-        <Link href="/admin/khach-hang/phuong-tien/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md" title="Thêm phương tiện"><PlusCircle className="w-5 h-5"/></Link>
+        <Link href="/admin/khach-hang/phuong-tien/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white p-2 rounded-md" title="Thêm phương tiện"><PlusCircle className="w-5 h-5" /></Link>
       )}>
         <p className="text-sm text-slate-600 mb-4">Quản lý phương tiện liên quan đến khách (admin).</p>
-        <AdminTable headers={["Mã","Loại","Dòng xe","Màu","Biển số","Chủ xe","Tòa nhà","Căn hộ","Hành động"]}>
+        <AdminTable headers={["Mã", "Loại", "Dòng xe", "Màu", "Biển số", "Chủ xe", "Tòa nhà", "Căn hộ", "Hành động"]}>
           {items.length === 0 ? (
-            <tr><td colSpan={9} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có phương tiện'}</td></tr>
+            <tr><td colSpan={9} className="py-6 text-center text-slate-500 dark:text-slate-400">{loading ? 'Đang tải...' : 'Chưa có phương tiện'}</td></tr>
           ) : items.map((it, idx) => (
-            <tr key={it.id} className="border-b">
-              <td className="py-3 text-sm text-slate-700">{items.length - idx}</td>
-              <td className="py-3 text-sm text-slate-700">{it.type || '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.model || '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.color || '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.plateNumber || '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.ownerName || '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.buildingId ?? '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{it.apartmentId ?? '-'}</td>
-              <td className="py-3 text-sm text-slate-700 text-center">
+            <tr key={it.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{items.length - idx}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.type || '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.model || '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.color || '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.plateNumber || '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.ownerName || '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.buildingId ?? '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.apartmentId ?? '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200 text-center">
                 <div className="inline-flex items-center gap-2">
-                  <Link href={`/admin/khach-hang/phuong-tien/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></Link>
-                  <button onClick={() => { setTargetId(it.id); setConfirmOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <Link href={`/admin/khach-hang/phuong-tien/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4" /></Link>
+                  <button onClick={() => { setTargetId(it.id); setConfirmOpen(true); }} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </td>
             </tr>

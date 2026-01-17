@@ -1,18 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-
-const api = axios.create({
-    baseURL: API_URL,
-});
-
-api.interceptors.request.use((config) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import axiosClient from "@/utils/axiosClient";
 
 export interface HostSettings {
     profile: {
@@ -51,18 +37,15 @@ export interface HostSettings {
 
 export const hostSettingsService = {
     getSettings: async () => {
-        const response = await api.get('/host/settings');
-        return response.data;
+        return axiosClient.get('/host/settings') as Promise<HostSettings>;
     },
 
     updateSettings: async (settings: Partial<HostSettings>) => {
-        const response = await api.patch('/host/settings', settings);
-        return response.data;
+        return axiosClient.patch('/host/settings', settings) as Promise<HostSettings>;
     },
 
     resetSettings: async () => {
-        const response = await api.delete('/host/settings');
-        return response.data;
+        return axiosClient.delete('/host/settings') as Promise<any>;
     }
 };
 

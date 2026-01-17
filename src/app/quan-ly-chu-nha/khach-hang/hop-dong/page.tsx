@@ -16,7 +16,7 @@ import { tContractStatus } from '@/app/admin/i18n';
 
 type Row = ContractRow;
 
-export default function HopDongPage(){
+export default function HopDongPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -46,9 +46,9 @@ export default function HopDongPage(){
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && me.id) setMeId(me.id);
-      } catch (err) {}
+      } catch (err) { }
     })();
   }, []);
 
@@ -108,7 +108,7 @@ export default function HopDongPage(){
 
       // (Don't hide header/sidebar in the parent document here.)
       // The iframe content will be adjusted via injectHideIntoIframe to hide its own header/sidebar.
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const injectHideIntoIframe = () => {
@@ -128,15 +128,15 @@ export default function HopDongPage(){
         aside[class*="w-64"], aside.hostSidebar, aside[id*="sidebar"] { display: none !important; visibility: hidden !important; }
       `;
       (doc.head || doc.body || doc.documentElement).appendChild(style);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
     try {
       applyFloatingHide(!!viewerOpen);
       if (viewerOpen) setTimeout(() => injectHideIntoIframe(), 200);
-    } catch (e) {}
-    return () => { try { applyFloatingHide(false); } catch (e) {} };
+    } catch (e) { }
+    return () => { try { applyFloatingHide(false); } catch (e) { } };
   }, [viewerOpen]);
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function HopDongPage(){
       setViewerId(id);
       setViewerOpen(true);
     };
-    return () => { try { delete (window as any).__openContractViewer; } catch (e) {} };
+    return () => { try { delete (window as any).__openContractViewer; } catch (e) { } };
   }, []);
 
   const closeViewer = () => { setViewerOpen(false); setViewerId(null); };
@@ -153,9 +153,9 @@ export default function HopDongPage(){
     try {
       applyFloatingHide(true);
       const win = iframeRef.current?.contentWindow;
-      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      const cleanup = () => { try { applyFloatingHide(false); } catch { } };
       if (win) {
-        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        try { win.addEventListener?.('afterprint', cleanup); } catch { }
         win.focus();
         win.print();
         setTimeout(cleanup, 1500);
@@ -163,7 +163,7 @@ export default function HopDongPage(){
         window.print();
         setTimeout(cleanup, 1500);
       }
-    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch {} }
+    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch { } }
   };
 
   const downloadDoc = async () => {
@@ -231,7 +231,7 @@ export default function HopDongPage(){
           </div>
         </div>
 
-        <AdminTable headers={["Mã hợp đồng","Trạng thái","Vị trí","Khách hàng","Giá thuê","Tiền cọc","Ngày bắt đầu","Ngày kết thúc","Hành động"]} loading={loading} emptyText="Chưa có hợp đồng">
+        <AdminTable headers={["Mã hợp đồng", "Trạng thái", "Vị trí", "Khách hàng", "Giá thuê", "Tiền cọc", "Ngày bắt đầu", "Ngày kết thúc", "Hành động"]} loading={loading} emptyText="Chưa có hợp đồng">
           {Array.isArray(rows) ? (
             rows.map((r: any) => (
               <tr key={r.id} className="border-t">
@@ -269,29 +269,29 @@ export default function HopDongPage(){
         </AdminTable>
         <Pagination page={page} limit={limit} total={total} onPageChange={(p) => load(p)} />
       </Panel>
-        {/* Viewer modal for contract preview */}
-        {viewerOpen && viewerId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeViewer} />
-            <div className="relative w-[95%] md:w-3/4 lg:w-2/3 h-[85%] bg-white rounded-lg shadow-lg overflow-hidden z-60">
-              <div className="flex items-center justify-between p-3 border-b">
-                <div className="text-sm font-semibold">Xem hợp đồng #{viewerId}</div>
-                <div className="flex items-center gap-2">
-                  <button onClick={viewerPrint} className="px-3 py-1 bg-emerald-600 text-white rounded">In / Save as PDF</button>
-                  <button onClick={downloadDoc} className="px-3 py-1 bg-sky-600 text-white rounded">Tải Word</button>
-                  <button onClick={closeViewer} className="p-2 rounded bg-slate-200" aria-label="Đóng"><XCircle className="w-4 h-4" /></button>
-                </div>
+      {/* Viewer modal for contract preview */}
+      {viewerOpen && viewerId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={closeViewer} />
+          <div className="relative w-[95%] md:w-3/4 lg:w-2/3 h-[85%] bg-white rounded-lg shadow-lg overflow-hidden z-60">
+            <div className="flex items-center justify-between p-3 border-b">
+              <div className="text-sm font-semibold">Xem hợp đồng #{viewerId}</div>
+              <div className="flex items-center gap-2">
+                <button onClick={viewerPrint} className="px-3 py-1 bg-emerald-600 text-white rounded">In / Save as PDF</button>
+                <button onClick={downloadDoc} className="px-3 py-1 bg-sky-600 text-white rounded">Tải Word</button>
+                <button onClick={closeViewer} className="p-2 rounded bg-slate-200" aria-label="Đóng"><XCircle className="w-4 h-4" /></button>
               </div>
-              <iframe
-                ref={iframeRef}
-                onLoad={() => injectHideIntoIframe()}
-                src={`/quan-ly-chu-nha/khach-hang/print-contract?id=${viewerId}`}
-                className="w-full h-full border-0"
-                title={`Contract ${viewerId}`}
-              />
             </div>
+            <iframe
+              ref={iframeRef}
+              onLoad={() => injectHideIntoIframe()}
+              src={`/quan-ly-chu-nha/khach-hang/print-contract?id=${viewerId}`}
+              className="w-full h-full border-0"
+              title={`Contract ${viewerId}`}
+            />
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

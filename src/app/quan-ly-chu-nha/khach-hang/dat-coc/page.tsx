@@ -15,7 +15,7 @@ import { formatMoneyVND, fNumber } from '@/utils/format-number';
 
 type Row = { id: number; status?: string; buildingId?: number; apartmentId?: number; customerInfo?: string; customerName?: string | null; customerPhone?: string | null; depositDate?: string; rentAmount?: number; depositAmount?: number };
 
-export default function DatCocPage(){
+export default function DatCocPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [buildings, setBuildings] = useState<any[]>([]);
@@ -25,7 +25,7 @@ export default function DatCocPage(){
   const [total, setTotal] = useState<number>(0);
   const [meId, setMeId] = useState<number | null>(null);
 
-  const [filter, setFilter] = useState<'all'|'pending'|'signed'|'cancelled'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'signed' | 'cancelled'>('all');
 
   const load = async (p = page) => {
     setLoading(true);
@@ -48,7 +48,7 @@ export default function DatCocPage(){
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && (me as any).id) setMeId((me as any).id);
       } catch (err) {
         // ignore
@@ -125,7 +125,7 @@ export default function DatCocPage(){
       }
 
       // Do not hide parent headers/sidebars here; this will be done inside the iframe content.
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const injectHideIntoIframe = () => {
@@ -145,15 +145,15 @@ export default function DatCocPage(){
         aside[class*="w-64"], aside.hostSidebar, aside[id*="sidebar"] { display: none !important; visibility: hidden !important; }
       `;
       (doc.head || doc.body || doc.documentElement).appendChild(style);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
     try {
       applyFloatingHide(!!viewerOpen);
       if (viewerOpen) setTimeout(() => injectHideIntoIframe(), 200);
-    } catch (e) {}
-    return () => { try { applyFloatingHide(false); } catch (e) {} };
+    } catch (e) { }
+    return () => { try { applyFloatingHide(false); } catch (e) { } };
   }, [viewerOpen]);
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function DatCocPage(){
       setViewerId(id);
       setViewerOpen(true);
     };
-    return () => { try { delete (window as any).__openDepositViewer; } catch (e) {} };
+    return () => { try { delete (window as any).__openDepositViewer; } catch (e) { } };
   }, []);
 
   const closeViewer = () => { setViewerOpen(false); setViewerId(null); };
@@ -170,9 +170,9 @@ export default function DatCocPage(){
     try {
       applyFloatingHide(true);
       const win = iframeRef.current?.contentWindow;
-      const cleanup = () => { try { applyFloatingHide(false); } catch {} };
+      const cleanup = () => { try { applyFloatingHide(false); } catch { } };
       if (win) {
-        try { win.addEventListener?.('afterprint', cleanup); } catch {}
+        try { win.addEventListener?.('afterprint', cleanup); } catch { }
         win.focus();
         win.print();
         setTimeout(cleanup, 1500);
@@ -180,7 +180,7 @@ export default function DatCocPage(){
         window.print();
         setTimeout(cleanup, 1500);
       }
-    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch {} }
+    } catch (e) { console.error('Print failed', e); toast.error('Không thể in (hãy mở trang chi tiết để in)'); try { applyFloatingHide(false); } catch { } }
   };
 
   const downloadDoc = async () => {
@@ -198,7 +198,7 @@ export default function DatCocPage(){
     } catch (e) { console.error('Download doc failed', e); toast.error('Không thể tải file Word'); }
   };
 
-  
+
 
   return (
     <div className="p-6">
@@ -218,7 +218,7 @@ export default function DatCocPage(){
             const pending = rows.filter(r => (r.status ?? 'pending') === 'pending').length;
             const signed = rows.filter(r => r.status === 'signed').length;
             const cancelled = rows.filter(r => r.status === 'cancelled').length;
-            const box = (title: string, count: number, key: 'all'|'pending'|'signed'|'cancelled') => {
+            const box = (title: string, count: number, key: 'all' | 'pending' | 'signed' | 'cancelled') => {
               const isActive = filter === key;
               const base = isActive ? 'ring-1 ring-slate-200 shadow-md' : 'shadow-sm';
               if (key === 'all') {
@@ -281,7 +281,7 @@ export default function DatCocPage(){
           })()}
         </div>
 
-        <AdminTable headers={["Mã đặt cọc","Trạng thái","Tòa nhà","Căn hộ","Khách hàng","Giá thuê","Giá cọc","Ngày cọc","Hành động"]} loading={loading} emptyText="Chưa có đặt cọc">
+        <AdminTable headers={["Mã đặt cọc", "Trạng thái", "Tòa nhà", "Căn hộ", "Khách hàng", "Giá thuê", "Giá cọc", "Ngày cọc", "Hành động"]} loading={loading} emptyText="Chưa có đặt cọc">
           {rows.filter(r => filter === 'all' ? true : ((r.status ?? 'pending') === filter)).map(r => (
             <tr key={r.id} className="border-t">
               <td className="px-4 py-3">#{r.id}</td>
