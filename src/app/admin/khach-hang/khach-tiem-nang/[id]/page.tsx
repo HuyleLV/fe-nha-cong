@@ -16,7 +16,7 @@ type FormData = {
   phone?: string;
   password?: string;
   note?: string;
-  gender?: 'male'|'female'|'other'|'';
+  gender?: 'male' | 'female' | 'other' | '';
   avatar?: string | null;
   idCardFront?: string | null;
   idCardBack?: string | null;
@@ -44,7 +44,7 @@ export default function AdminCustomerLeadEditPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && (me as any).id) setMeId((me as any).id);
       } catch (err) {
         // ignore
@@ -91,7 +91,7 @@ export default function AdminCustomerLeadEditPage() {
             const params: any = { q: data.email, limit: 5 };
             if (meId) params.ownerId = meId;
             const found = await userService.listAdminUsers(params);
-            const exists = (found.data || []).some(u => String(u.email || '').toLowerCase() === String(data.email).toLowerCase());
+            const exists = (found.data || []).some((u: any) => String(u.email || '').toLowerCase() === String(data.email).toLowerCase());
             if (exists) {
               toast.error('Email đã tồn tại, vui lòng sử dụng email khác');
               return;
@@ -105,7 +105,7 @@ export default function AdminCustomerLeadEditPage() {
             if (meId) params2.ownerId = meId;
             const found = await userService.listAdminUsers(params2);
             const norm = String(data.phone).replace(/\s+/g, '');
-            const exists = (found.data || []).some(u => String(u.phone || '').replace(/\s+/g, '') === norm);
+            const exists = (found.data || []).some((u: any) => String(u.phone || '').replace(/\s+/g, '') === norm);
             if (exists) {
               toast.error('Số điện thoại đã tồn tại, vui lòng sử dụng số khác');
               return;
@@ -229,65 +229,65 @@ export default function AdminCustomerLeadEditPage() {
             <div className="p-4">
               <div className="flex items-start gap-6">
                 <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Họ và tên</label>
-                        <input className={inputCls + ' text-lg font-medium'} {...register('name', { required: 'Vui lòng nhập tên' })} />
-                        {errors.name && <p className="text-red-600 text-sm mt-1">{String((errors.name as any)?.message || 'Bắt buộc')}</p>}
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Họ và tên</label>
+                      <input className={inputCls + ' text-lg font-medium'} {...register('name', { required: 'Vui lòng nhập tên' })} />
+                      {errors.name && <p className="text-red-600 text-sm mt-1">{String((errors.name as any)?.message || 'Bắt buộc')}</p>}
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Điện thoại</label>
-                        <input className={inputCls} {...register('phone')} />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Điện thoại</label>
+                      <input className={inputCls} {...register('phone')} />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Email</label>
-                        <input className={inputCls} {...register('email', { pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email không hợp lệ' } })} />
-                        {errors.email && <p className="text-red-600 text-sm mt-1">{String((errors.email as any)?.message)}</p>}
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Email</label>
+                      <input className={inputCls} {...register('email', { pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email không hợp lệ' } })} />
+                      {errors.email && <p className="text-red-600 text-sm mt-1">{String((errors.email as any)?.message)}</p>}
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Ngày sinh</label>
-                        <input type="date" className={inputCls} {...register('dateOfBirth')} />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Ngày sinh</label>
+                      <input type="date" className={inputCls} {...register('dateOfBirth')} />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Giới tính</label>
-                        <select className={inputCls} {...register('gender')}>
-                          <option value="">-- Chọn --</option>
-                          <option value="male">Nam</option>
-                          <option value="female">Nữ</option>
-                          <option value="other">Khác</option>
-                        </select>
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Giới tính</label>
+                      <select className={inputCls} {...register('gender')}>
+                        <option value="">-- Chọn --</option>
+                        <option value="male">Nam</option>
+                        <option value="female">Nữ</option>
+                        <option value="other">Khác</option>
+                      </select>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Số CCCD/CMND</label>
-                        <input className={inputCls} {...register('idCardNumber')} />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Số CCCD/CMND</label>
+                      <input className={inputCls} {...register('idCardNumber')} />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Nơi cấp</label>
-                        <input className={inputCls} {...register('idIssuePlace')} />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Nơi cấp</label>
+                      <input className={inputCls} {...register('idIssuePlace')} />
+                    </div>
 
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Ngày cấp</label>
-                        <input type="date" className={inputCls} {...register('idIssueDate')} />
-                      </div>
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Ngày cấp</label>
+                      <input type="date" className={inputCls} {...register('idIssueDate')} />
+                    </div>
 
-                      <div>
-                        { !isEdit && (
-                          <div>
-                            <label className="block text-sm text-slate-600 mb-1">Mật khẩu</label>
-                            <input className={inputCls} {...register('password', { minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' } })} type="password" />
-                            {errors.password && <p className="text-red-600 text-sm mt-1">{String((errors.password as any)?.message)}</p>}
-                          </div>
-                        )}
-                      </div>
+                    <div>
+                      {!isEdit && (
+                        <div>
+                          <label className="block text-sm text-slate-600 mb-1">Mật khẩu</label>
+                          <input className={inputCls} {...register('password', { minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' } })} type="password" />
+                          {errors.password && <p className="text-red-600 text-sm mt-1">{String((errors.password as any)?.message)}</p>}
+                        </div>
+                      )}
+                    </div>
 
-                    { !isEdit && (
+                    {!isEdit && (
                       <div>
                         <label className="block text-sm text-slate-600 mb-1">Mật khẩu</label>
                         <input className={inputCls} {...register('password', { minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' } })} type="password" />

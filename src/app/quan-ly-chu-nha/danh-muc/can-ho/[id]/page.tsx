@@ -93,20 +93,20 @@ export default function HostApartmentFormPage() {
       bedrooms: 0,
       bathrooms: 0,
       livingRooms: 0,
-    roomCode: "",
-  guests: 0,
-  floorNumber: undefined as unknown as number, // chỉ áp dụng nếu thuộc toà nhà
+      roomCode: "",
+      guests: 0,
+      floorNumber: undefined as unknown as number, // chỉ áp dụng nếu thuộc toà nhà
       areaM2: "",
       rentPrice: "0",
       currency: "VND",
       status: "draft" as ApartmentStatus,
-  roomStatus: 'o_ngay',
-  depositAmount: "",
-  discountAmount: "",
-  discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
-  commissionAmount: "",
-  needsFill: false,
-  fillPaymentAmount: "",
+      roomStatus: 'o_ngay',
+      depositAmount: "",
+      discountAmount: "",
+      discountInput: "", // ô nhập hợp nhất (ví dụ: 15% hoặc 500000)
+      commissionAmount: "",
+      needsFill: false,
+      fillPaymentAmount: "",
       coverImageUrl: "",
       images: [],
 
@@ -239,7 +239,7 @@ export default function HostApartmentFormPage() {
       setLoadingDetail(true);
       try {
         const ap: Apartment = await apartmentService.getById(Number(id));
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         // if owner id exists, enforce equality
         if (ap.createdById && me && String(ap.createdById) !== String(me.id)) {
           toast.error("Bạn không có quyền xem/chỉnh sửa căn hộ này");
@@ -258,7 +258,7 @@ export default function HostApartmentFormPage() {
           return first || "";
         };
         const savedVideo = detectVideo((ap as any).images as string[]);
-  reset({
+        reset({
           title: ap.title,
           slug: ap.slug,
           excerpt: ap.excerpt || "",
@@ -268,9 +268,9 @@ export default function HostApartmentFormPage() {
           lat: ap.lat || "",
           lng: ap.lng || "",
           bedrooms: ap.bedrooms,
-          	livingRooms: ap.livingRooms ?? 0,
-            roomCode: (ap as any).roomCode ?? "",
-            guests: (ap as any).guests ?? 0,
+          livingRooms: ap.livingRooms ?? 0,
+          roomCode: (ap as any).roomCode ?? "",
+          guests: (ap as any).guests ?? 0,
           bathrooms: ap.bathrooms,
           floorNumber: (ap as any).floorNumber ?? (undefined as unknown as number),
           areaM2: ap.areaM2 || "",
@@ -281,7 +281,7 @@ export default function HostApartmentFormPage() {
           discountAmount: (ap as any).discountAmount ?? "",
           discountInput: (() => {
             const amtStr = (ap as any).discountAmount;
-            const amtVal = amtStr ? parseFloat(String(amtStr).replace(/,/g,'')) : 0;
+            const amtVal = amtStr ? parseFloat(String(amtStr).replace(/,/g, '')) : 0;
             if (amtVal > 0) return String(Math.round(amtVal));
             return "";
           })(),
@@ -289,7 +289,7 @@ export default function HostApartmentFormPage() {
           depositAmount: (ap as any).depositAmount ?? "",
           images: ap.images || [],
           isVerified: ap.isVerified ?? false,
-          commissionAmount: stripTrailingZerosDecimal((ap as any).commissionAmount ?? ((ap as any).commissionPercent != null ? String(Math.round(parseFloat(String(ap.rentPrice || '0').replace(/,/g,'')) * ((ap as any).commissionPercent || 0) / 100)) : "")),
+          commissionAmount: stripTrailingZerosDecimal((ap as any).commissionAmount ?? ((ap as any).commissionPercent != null ? String(Math.round(parseFloat(String(ap.rentPrice || '0').replace(/,/g, '')) * ((ap as any).commissionPercent || 0) / 100)) : "")),
           needsFill: (ap as any).needsFill ?? (ap as any).needs_fill ?? false,
           fillPaymentAmount: stripTrailingZerosDecimal((ap as any).fillPaymentAmount ?? (ap as any).fill_payment_amount ?? ""),
           locationId: (ap.location?.id as unknown as number) ?? (undefined as unknown as number),
@@ -314,13 +314,13 @@ export default function HostApartmentFormPage() {
           hasDressingTable: (ap as any).hasDressingTable ?? false,
           hasSofa: (ap as any).hasSofa ?? false,
 
-          	hasSharedBathroom: ap.hasSharedBathroom ?? false,
-          	hasWashingMachineShared: ap.hasWashingMachineShared ?? false,
-          	hasWashingMachinePrivate: ap.hasWashingMachinePrivate ?? false,
-          	hasDesk: ap.hasDesk ?? false,
-          	hasKitchenTable: ap.hasKitchenTable ?? false,
-          	hasRangeHood: ap.hasRangeHood ?? false,
-          	hasFridge: ap.hasFridge ?? false,
+          hasSharedBathroom: ap.hasSharedBathroom ?? false,
+          hasWashingMachineShared: ap.hasWashingMachineShared ?? false,
+          hasWashingMachinePrivate: ap.hasWashingMachinePrivate ?? false,
+          hasDesk: ap.hasDesk ?? false,
+          hasKitchenTable: ap.hasKitchenTable ?? false,
+          hasRangeHood: ap.hasRangeHood ?? false,
+          hasFridge: ap.hasFridge ?? false,
 
           hasPrivateBathroom: ap.hasPrivateBathroom ?? false,
           hasMezzanine: ap.hasMezzanine ?? false,
@@ -358,7 +358,7 @@ export default function HostApartmentFormPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         setUserRole(me?.role || null);
       } catch {
         setUserRole(null);
@@ -412,7 +412,7 @@ export default function HostApartmentFormPage() {
       rentPrice: (values.rentPrice ?? "0").toString(),
       currency: values.currency || "VND",
       depositAmount: values.depositAmount ? String(values.depositAmount) : undefined,
-  // discount sẽ được phân tích từ discountInput bên dưới
+      // discount sẽ được phân tích từ discountInput bên dưới
       coverImageUrl: values.coverImageUrl?.trim() || undefined,
       images: imagesOrdered.length ? imagesOrdered : undefined,
       description: values.description || "",
@@ -421,12 +421,12 @@ export default function HostApartmentFormPage() {
       waterPricePerM3: toIntOrNull(values.waterPricePerM3),
       internetPricePerRoom: toIntOrNull(values.internetPricePerRoom),
       commonServiceFeePerPerson: toIntOrNull(values.commonServiceFeePerPerson),
-  serviceFeeNote: values.serviceFeeNote?.trim() || undefined,
+      serviceFeeNote: values.serviceFeeNote?.trim() || undefined,
       furnitureNote: values.furnitureNote?.trim() || undefined,
       amenitiesNote: values.amenitiesNote?.trim() || undefined,
     };
 
-  // Clean up fields that should not be sent as null to satisfy BE DTO (@IsOptional + @IsInt)
+    // Clean up fields that should not be sent as null to satisfy BE DTO (@IsOptional + @IsInt)
     // - If buildingId is null/NaN, drop it so BE treats as undefined
     if ((payload as any).buildingId == null || Number.isNaN((payload as any).buildingId)) {
       delete (payload as any).buildingId;
@@ -454,13 +454,13 @@ export default function HostApartmentFormPage() {
       const price = parseFloat(String(values.rentPrice || payload.rentPrice || "0").replace(/,/g, '.')) || 0;
       // Normalize both host and admin input: if user types '15%' convert to VND using rentPrice.
       if (/^\d+(?:\.\d+)?%$/.test(rawDiscount)) {
-        const pct = parseFloat(rawDiscount.replace('%',''));
+        const pct = parseFloat(rawDiscount.replace('%', ''));
         if (Number.isFinite(pct) && pct >= 0 && price > 0) {
           const amt = Math.round(price * pct / 100);
           (payload as any).discountAmount = String(amt);
         }
       } else if (/^\d+(?:[.,]\d+)?$/.test(rawDiscount)) {
-        const amt = parseFloat(rawDiscount.replace(/,/g,'.'));
+        const amt = parseFloat(rawDiscount.replace(/,/g, '.'));
         if (Number.isFinite(amt) && amt >= 0) {
           (payload as any).discountAmount = String(Math.round(amt));
         }
@@ -505,9 +505,9 @@ export default function HostApartmentFormPage() {
       delete (payload as any).fillPaymentAmount;
     }
 
-  // Remove local-only fields
-  delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
-  delete (payload as any).videoUrl; // ✅ chỉ dùng để sắp xếp, không gửi riêng
+    // Remove local-only fields
+    delete (payload as any).focusKeyword; // ✅ loại bỏ keyword khi gửi
+    delete (payload as any).videoUrl; // ✅ chỉ dùng để sắp xếp, không gửi riêng
 
     try {
       if (isEdit) {
@@ -531,7 +531,7 @@ export default function HostApartmentFormPage() {
                 // setError from react-hook-form to show inline messages
                 setError(k as any, { type: 'server', message: msg });
                 shown = true;
-              } catch {}
+              } catch { }
             }
             if (!shown) toast.error('Có lỗi từ server. Vui lòng kiểm tra lại.');
             return;
@@ -569,7 +569,7 @@ export default function HostApartmentFormPage() {
               try {
                 setError(k as any, { type: 'server', message: msg });
                 shown = true;
-              } catch {}
+              } catch { }
             }
             if (!shown) toast.error('Có lỗi từ server. Vui lòng kiểm tra lại.');
             return;
@@ -658,17 +658,17 @@ export default function HostApartmentFormPage() {
           {/* Title & slug */}
           <Section title="Tiêu đề & Permalink">
             <div className="space-y-3">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Tiêu đề <span className="text-red-600 ml-1">*</span>
-                  </label>
-                  <input
-                    className={inputCls}
-                    placeholder="Nhập tiêu đề căn hộ…"
-                    aria-required="true"
-                    required
-                    {...register("title", { required: "Vui lòng nhập tiêu đề căn hộ" })}
-                  />
-                {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
+              <label className="block text-sm font-medium text-slate-700">
+                Tiêu đề <span className="text-red-600 ml-1">*</span>
+              </label>
+              <input
+                className={inputCls}
+                placeholder="Nhập tiêu đề căn hộ…"
+                aria-required="true"
+                required
+                {...register("title", { required: "Vui lòng nhập tiêu đề căn hộ" })}
+              />
+              {errors.title && <p className="text-red-600 text-sm">{String(errors.title.message)}</p>}
               <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-slate-400" />
                 <span className="font-medium">Permalink:</span>
@@ -763,14 +763,14 @@ export default function HostApartmentFormPage() {
           {/* Amenities */}
           <Section title="Tiện nghi">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasPrivateBathroom")} /> Vệ sinh khép kín</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasSharedBathroom")} /> Vệ sinh chung</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasElevator")} /> Thang máy</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowPet")} /> Cho nuôi pet</label>
-          <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowElectricVehicle")} /> Xe điện (sạc/gửi)</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasPrivateBathroom")} /> Vệ sinh khép kín</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasSharedBathroom")} /> Vệ sinh chung</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasMezzanine")} /> Gác xép</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("noOwnerLiving")} /> Không chung chủ</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("flexibleHours")} /> Giờ linh hoạt</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("hasElevator")} /> Thang máy</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowPet")} /> Cho nuôi pet</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" {...register("allowElectricVehicle")} /> Xe điện (sạc/gửi)</label>
             </div>
             <div className="mt-3">
               <label className="block text-sm text-slate-600 mb-1">Ghi chú tiện nghi (hiển thị cho khách)</label>
@@ -834,7 +834,7 @@ export default function HostApartmentFormPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-slate-600 mb-1">Trạng thái phòng</label>
-                  <select className={inputCls} {...register("roomStatus") }>
+                  <select className={inputCls} {...register("roomStatus")}>
                     <option value="o_ngay">Ở ngay</option>
                     <option value="sap_trong">Sắp trống</option>
                     <option value="het_phong">Hết phòng</option>
@@ -869,77 +869,77 @@ export default function HostApartmentFormPage() {
                   </div>
                 ) : null}
 
-              
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">Phòng ngủ</label>
-                  <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng ngủ không hợp lệ" } })} />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">Vệ sinh</label>
-                  <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng vệ sinh không hợp lệ" } })} />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">Phòng khách</label>
-                  <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng khách không hợp lệ" } })} />
-                </div>
-			<div>
-			  <label className="block text-sm text-slate-600 mb-1">Mã phòng (tuỳ chọn)</label>
-			  <input type="text" className={inputCls} placeholder="VD: P302" {...register("roomCode", { maxLength: { value: 50, message: "Mã phòng quá dài" } })} />
-			</div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">Phòng ngủ</label>
+                    <input type="number" min={0} className={inputCls} {...register("bedrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng ngủ không hợp lệ" } })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">Vệ sinh</label>
+                    <input type="number" min={0} className={inputCls} {...register("bathrooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng vệ sinh không hợp lệ" } })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">Phòng khách</label>
+                    <input type="number" min={0} className={inputCls} {...register("livingRooms", { valueAsNumber: true, min: { value: 0, message: "Số phòng khách không hợp lệ" } })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">Mã phòng (tuỳ chọn)</label>
+                    <input type="text" className={inputCls} placeholder="VD: P302" {...register("roomCode", { maxLength: { value: 50, message: "Mã phòng quá dài" } })} />
+                  </div>
                   <div>
                     <label className="block text-sm text-slate-600 mb-1">Số người ở tối đa</label>
                     <input type="number" min={0} className={inputCls} {...register("guests", { valueAsNumber: true, min: { value: 0, message: "Số người ở tối đa không hợp lệ" } })} />
                   </div>
-                    {/* Floor number only when buildingId is selected */}
-                    {watch("buildingId") ? (
-                      <div>
-                        <label className="block text-sm text-slate-600 mb-1">Tầng (≥1)</label>
-                        <input
-                          type="number"
-                          min={1}
-                          className={inputCls}
-                          placeholder="Ví dụ: 3"
-                          {...register("floorNumber", {
-                            valueAsNumber: true,
-                            min: { value: 1, message: "Tầng phải >= 1" },
-                          })}
-                        />
-                        {errors.floorNumber && (
-                          <p className="text-red-600 text-sm mt-1">{String(errors.floorNumber.message)}</p>
-                        )}
-                      </div>
-                    ) : null}
-              </div>
+                  {/* Floor number only when buildingId is selected */}
+                  {watch("buildingId") ? (
+                    <div>
+                      <label className="block text-sm text-slate-600 mb-1">Tầng (≥1)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className={inputCls}
+                        placeholder="Ví dụ: 3"
+                        {...register("floorNumber", {
+                          valueAsNumber: true,
+                          min: { value: 1, message: "Tầng phải >= 1" },
+                        })}
+                      />
+                      {errors.floorNumber && (
+                        <p className="text-red-600 text-sm mt-1">{String(errors.floorNumber.message)}</p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
-              <div className="my-2">
-                <label className="block text-sm text-slate-600 mb-1">Giá thuê <span className="text-red-600 ml-1">*</span></label>
-                <input inputMode="numeric" aria-required="true" required className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
-                {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
-              </div>
-              <div className="my-2">
-                <label className="block text-sm text-slate-600 mb-1">Tiền đặt cọc (VND)</label>
-                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 1300000" {...register("depositAmount")} />
-                <p className="text-xs text-slate-500 mt-1">Để trống nếu không có đặt cọc.</p>
-              </div>
-              <div className="md:col-span-2 my-2">
-                <label className="block text-sm text-slate-600 mb-1">{userRole === 'host' ? 'Ưu đãi (số tiền, VND)' : 'Ưu đãi (% hoặc số tiền)'}</label>
-                <input
-                  type="text"
-                  className={inputCls}
-                  placeholder={userRole === 'host' ? 'Ví dụ: 500000' : 'Ví dụ: 15% hoặc 500000'}
-                  {...register("discountInput" as any)}
-                />
-                <p className="text-xs text-slate-500 mt-1">{userRole === 'host' ? 'Nhập số tiền giảm (VD: 500000).' : 'Nhập %. Để trống nếu không có ưu đãi.'}</p>
-              </div>
+                <div className="my-2">
+                  <label className="block text-sm text-slate-600 mb-1">Giá thuê <span className="text-red-600 ml-1">*</span></label>
+                  <input inputMode="numeric" aria-required="true" required className={inputCls} placeholder="Ví dụ: 6500000" {...register("rentPrice", { required: "Vui lòng nhập giá thuê", validate: (v) => (v && String(v).trim().length > 0) || "Giá thuê không được để trống" })} />
+                  {errors.rentPrice && <p className="text-red-600 text-sm">{String(errors.rentPrice.message)}</p>}
+                </div>
+                <div className="my-2">
+                  <label className="block text-sm text-slate-600 mb-1">Tiền đặt cọc (VND)</label>
+                  <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 1300000" {...register("depositAmount")} />
+                  <p className="text-xs text-slate-500 mt-1">Để trống nếu không có đặt cọc.</p>
+                </div>
+                <div className="md:col-span-2 my-2">
+                  <label className="block text-sm text-slate-600 mb-1">{userRole === 'host' ? 'Ưu đãi (số tiền, VND)' : 'Ưu đãi (% hoặc số tiền)'}</label>
+                  <input
+                    type="text"
+                    className={inputCls}
+                    placeholder={userRole === 'host' ? 'Ví dụ: 500000' : 'Ví dụ: 15% hoặc 500000'}
+                    {...register("discountInput" as any)}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">{userRole === 'host' ? 'Nhập số tiền giảm (VD: 500000).' : 'Nhập %. Để trống nếu không có ưu đãi.'}</p>
+                </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (VND)</label>
-                <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 200000" {...register("commissionAmount" as any)} />
-                <p className="text-xs text-slate-500 mt-1">Nhập số tiền hoa hồng dành cho CTV (VND). Để trống nếu không áp dụng.</p>
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-slate-600 mb-1">Hoa hồng CTV (VND)</label>
+                  <input inputMode="numeric" className={inputCls} placeholder="Ví dụ: 200000" {...register("commissionAmount" as any)} />
+                  <p className="text-xs text-slate-500 mt-1">Nhập số tiền hoa hồng dành cho CTV (VND). Để trống nếu không áp dụng.</p>
+                </div>
               </div>
-            </div>
             </div>
           </Section>
 

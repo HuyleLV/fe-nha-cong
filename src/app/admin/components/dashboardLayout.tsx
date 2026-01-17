@@ -39,7 +39,7 @@ export default function DashboardLayoutClient({
       try {
         localStorage.removeItem("tokenAdmin");
         localStorage.removeItem("adminInfo");
-      } catch {}
+      } catch { }
     }
 
     if ((!tokenValid || info?.role !== "admin") && !pathname.includes("/login")) {
@@ -52,7 +52,7 @@ export default function DashboardLayoutClient({
   return (
     <div className="flex">
       {!isLogin && <Sidebar />}
-      <main className="flex-1 p-6 bg-gray-100">{children}</main>
+      <main className="flex-1 p-6 bg-gray-100 dark:bg-slate-900 transition-colors">{children}</main>
     </div>
   );
 }

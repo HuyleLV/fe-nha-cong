@@ -45,22 +45,22 @@ export default function Page() {
   return (
     <div className="p-6">
       <Panel title="Quản lý Giường" actions={(
-        <Link href="/admin/danh-muc/giuong/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md" title="Thêm giường"><PlusCircle className="w-5 h-5"/></Link>
+        <Link href="/admin/danh-muc/giuong/create" className="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-md" title="Thêm giường"><PlusCircle className="w-5 h-5" /></Link>
       )}>
-        <AdminTable headers={["Mã","Tên giường","Giá thuê","Đặt cọc","Trạng thái","Hành động"]}>
+        <AdminTable headers={["Mã", "Tên giường", "Giá thuê", "Đặt cọc", "Trạng thái", "Hành động"]}>
           {items.length === 0 ? (
-            <tr><td colSpan={6} className="py-6 text-center text-slate-500">{loading ? 'Đang tải...' : 'Chưa có giường'}</td></tr>
+            <tr><td colSpan={6} className="py-6 text-center text-slate-500 dark:text-slate-400">{loading ? 'Đang tải...' : 'Chưa có giường'}</td></tr>
           ) : items.map((it, idx) => (
-            <tr key={it.id} className="border-b">
-              <td className="py-3 text-sm text-slate-700">{items.length - idx}</td>
-              <td className="py-3 text-sm text-slate-700">{it.name}</td>
-              <td className="py-3 text-sm text-slate-700">{it.rentPrice}</td>
-              <td className="py-3 text-sm text-slate-700">{it.depositAmount ?? '-'}</td>
-              <td className="py-3 text-sm text-slate-700">{(function(s){ if(!s) return '-'; if(s === 'active') return 'Hoạt động'; if(s === 'inactive') return 'Không hoạt động'; if(s === 'draft') return 'Nháp'; return s; })(it.status)}</td>
+            <tr key={it.id} className="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{items.length - idx}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.name}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.rentPrice}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{it.depositAmount ?? '-'}</td>
+              <td className="py-3 text-sm text-slate-700 dark:text-slate-200">{(function (s) { if (!s) return '-'; if (s === 'active') return 'Hoạt động'; if (s === 'inactive') return 'Không hoạt động'; if (s === 'draft') return 'Nháp'; return s; })(it.status)}</td>
               <td className="py-3 text-sm text-slate-700 text-center">
                 <div className="inline-flex items-center gap-2">
-                  <Link href={`/admin/danh-muc/giuong/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4"/></Link>
-                  <button onClick={() => remove(it.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4"/></button>
+                  <Link href={`/admin/danh-muc/giuong/${it.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700" title="Sửa"><Edit3 className="w-4 h-4" /></Link>
+                  <button onClick={() => remove(it.id)} className="inline-flex items-center justify-center p-2 rounded-md bg-red-600 text-white hover:bg-red-700" title="Xóa"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </td>
             </tr>

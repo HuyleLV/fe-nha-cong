@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ================== CSS Variables ================== */
 :root {
@@ -20,11 +21,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Support for next-themes class-based toggling */
+[data-theme='dark'],
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 /* ================== Base ================== */
@@ -37,21 +38,24 @@ body {
 
 /* ================== HTML Render Typography ================== */
 .html-render h1 {
-  font-size: 2rem; /* 32px */
+  font-size: 2rem;
+  /* 32px */
   font-weight: 700;
   line-height: 1.2;
   margin: 1.5rem 0 1rem;
 }
 
 .html-render h2 {
-  font-size: 1.5rem; /* 24px */
+  font-size: 1.5rem;
+  /* 24px */
   font-weight: 600;
   line-height: 1.3;
   margin: 1.25rem 0 0.75rem;
 }
 
 .html-render h3 {
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.25rem;
+  /* 20px */
   font-weight: 600;
   margin: 1rem 0 0.5rem;
 }
@@ -78,15 +82,18 @@ body {
 }
 
 .html-render blockquote {
-  border-left: 4px solid #d1d5db; /* gray-300 */
+  border-left: 4px solid #d1d5db;
+  /* gray-300 */
   padding-left: 1rem;
   margin: 1rem 0;
   font-style: italic;
-  color: #6b7280; /* gray-500 */
+  color: #6b7280;
+  /* gray-500 */
 }
 
 .html-render code {
-  background: #f3f4f6; /* gray-100 */
+  background: #f3f4f6;
+  /* gray-100 */
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-family: var(--font-mono);
@@ -94,7 +101,8 @@ body {
 }
 
 .html-render pre {
-  background: #0f172a; /* slate-900 */
+  background: #0f172a;
+  /* slate-900 */
   color: #f9fafb;
   padding: 1rem;
   border-radius: 0.5rem;
@@ -114,18 +122,21 @@ body {
 
 .html-render th,
 .html-render td {
-  border: 1px solid #e5e7eb; /* gray-200 */
+  border: 1px solid #e5e7eb;
+  /* gray-200 */
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 .html-render th {
-  background: #f9fafb; /* gray-50 */
+  background: #f9fafb;
+  /* gray-50 */
   font-weight: 600;
 }
 
 .html-render a {
-  color: #2563eb; /* blue-600 */
+  color: #2563eb;
+  /* blue-600 */
   text-decoration: none;
 }
 
@@ -184,10 +195,13 @@ body.hide-floating-buttons .floating-chat-buttons {
   overflow: hidden;
   box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
 }
+
 .leaflet-popup-content {
   margin: 0 !important;
-  width: 260px !important; /* Wider popup */
+  width: 260px !important;
+  /* Wider popup */
 }
+
 .leaflet-container a.leaflet-popup-close-button {
   top: 8px !important;
   right: 8px !important;
@@ -200,11 +214,13 @@ body.hide-floating-buttons .floating-chat-buttons {
   align-items: center;
   justify-content: center;
   font-size: 16px !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0 !important;
 }
+
 .cluster-custom-icon {
-  background: rgba(16, 185, 129, 0.95); /* Emerald-500 */
+  background: rgba(16, 185, 129, 0.95);
+  /* Emerald-500 */
   color: white;
   border-radius: 50%;
   display: flex;
@@ -216,7 +232,9 @@ body.hide-floating-buttons .floating-chat-buttons {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2);
   transition: transform 0.2s;
 }
+
 .cluster-custom-icon:hover {
   transform: scale(1.1);
-  background: rgba(5, 150, 105, 1); /* Emerald-600 */
+  background: rgba(5, 150, 105, 1);
+  /* Emerald-600 */
 }

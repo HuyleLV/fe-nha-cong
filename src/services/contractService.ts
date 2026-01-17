@@ -18,6 +18,10 @@ export const contractService = {
     const payload: any = await axiosClient.get(apiUrl(`/api/contracts/stats`)) as any;
     return payload?.data ?? payload;
   },
+  async myHistory(): Promise<{ contracts: any[]; deposits: any[] }> {
+    const payload: any = await axiosClient.get(apiUrl(`/api/contracts/my-rental-history`)) as any;
+    return payload?.data ?? payload;
+  },
   async get(id: number) {
     const payload: any = await axiosClient.get(apiUrl(`/api/contracts/${id}`)) as any;
     return payload?.data ?? payload;

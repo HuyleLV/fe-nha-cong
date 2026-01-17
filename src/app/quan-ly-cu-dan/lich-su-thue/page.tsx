@@ -5,6 +5,7 @@ import { apiUrl } from '@/utils/apiUrl';
 import Panel from "@/app/quan-ly-chu-nha/components/Panel";
 import AdminTable from "@/components/AdminTable";
 import Link from "next/link";
+import { contractService } from "@/services/contractService";
 
 type Contract = {
   id: number | string;
@@ -26,23 +27,33 @@ export default function LichSuThuePage() {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch(apiUrl('/api/cu-dan/lich-su-thue'), { credentials: "include" });
+        const res = await contractService.myHistory();
         if (!mounted) return;
-        if (!res.ok) {
-          setItems(mockContracts);
-        } else {
-          const data = await res.json();
-          const mapped: Contract[] = (data || []).map((d: any, i: number) => ({
-            id: d.id ?? i,
-            roomTitle: d.room?.title ?? d.title ?? d.roomTitle ?? "Căn hộ",
-            roomSlug: d.room?.slug ?? d.slug ?? d.roomSlug ?? "",
-            type: d.type ?? d.contract_type ?? (d.deposit ? "deposit" : "rental"),
-            amount: d.amount ?? d.value ?? d.price ?? 0,
-            status: d.status ?? d.state ?? "",
-            date: d.date ?? d.createdAt ?? d.created_at ?? new Date().toISOString(),
-          }));
-          setItems(mapped);
-        }
+
+        const contracts = res.contracts || [];
+        const deposits = res.deposits || [];
+
+        const mappedContracts = contracts.map((d: any) => ({
+          id: d.id,
+          roomTitle: d.apartment?.name ?? "Căn hộ",
+          roomSlug: d.apartment?.slug ?? "",
+          type: "Hợp đồng thuê",
+          amount: d.price ?? 0,
+          status: d.status,
+          date: d.created_at,
+        }));
+
+        const mappedDeposits = deposits.map((d: any) => ({
+          id: d.id,
+          roomTitle: d.apartment?.name ?? "Căn hộ",
+          roomSlug: d.apartment?.slug ?? "",
+          type: "Đặt cọc",
+          amount: d.amount ?? 0,
+          status: "Đã cọc",
+          date: d.created_at,
+        }));
+
+        setItems([...mappedContracts, ...mappedDeposits].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       } catch (err) {
         console.error(err);
         setItems(mockContracts);

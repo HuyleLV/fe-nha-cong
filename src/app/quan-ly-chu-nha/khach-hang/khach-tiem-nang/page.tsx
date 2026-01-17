@@ -9,7 +9,7 @@ import { Edit3, Trash2, UserPlus, Calendar, ShoppingCart, FileText, FileCheck, X
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Pagination';
 
-type StatusKey = 'new'|'appointment'|'sales'|'deposit_form'|'contract'|'failed';
+type StatusKey = 'new' | 'appointment' | 'sales' | 'deposit_form' | 'contract' | 'failed';
 
 type Row = { id: number; name: string; email?: string; phone?: string; note?: string; customerStatus?: StatusKey | null; ownerId?: number };
 
@@ -22,7 +22,7 @@ const STATUS_LIST: { key: StatusKey; label: string; bg?: string; accent?: string
   { key: 'failed', label: 'Thất bại', bg: 'bg-red-50', accent: 'bg-red-600', icon: XCircle },
 ];
 
-export default function KhachTiemNangPage(){
+export default function KhachTiemNangPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<StatusKey | null>(null);
@@ -41,7 +41,10 @@ export default function KhachTiemNangPage(){
       const meta = res.meta ?? {};
       setTotal(meta.total ?? 0);
       setPage(meta.page ?? p);
-  const mapped = (users as any[]).map(u => ({ id: u.id, name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '', note: u.note ?? '', customerStatus: u.customerStatus ?? null, ownerId: u.ownerId ?? undefined }));
+      setPage(meta.page ?? p);
+
+      const safeUsers = Array.isArray(users) ? users : (Array.isArray((res as any)?.items) ? (res as any).items : []);
+      const mapped = (safeUsers as any[]).map(u => ({ id: u.id, name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '', note: u.note ?? '', customerStatus: u.customerStatus ?? null, ownerId: u.ownerId ?? undefined }));
       const statusKeys = STATUS_LIST.map(s => s.key);
       const filtered = mapped.filter(m => statusKeys.includes((m.customerStatus ?? 'new') as StatusKey));
       setRows(filtered);
@@ -56,7 +59,7 @@ export default function KhachTiemNangPage(){
     // load current user id to scope lists to this host
     (async () => {
       try {
-        const me = await userService.getMe();
+        const me = await userService.getProfile();
         if (me && me.id) setMeId(me.id);
       } catch (err) {
         // ignore
@@ -113,9 +116,9 @@ export default function KhachTiemNangPage(){
               key={s.key}
               onClick={() => setFilter(filter === s.key ? null : s.key)}
               className={`flex items-center gap-3 p-3 rounded-lg shadow-sm hover:shadow-md transition text-sm ${filter === s.key ? 'ring-2 ring-emerald-200' : (s.bg ?? 'bg-white')}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${s.accent ?? 'bg-slate-400'}`}>
-                  {s.icon ? <s.icon className="w-5 h-5" /> : s.label.charAt(0)}
-                </div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${s.accent ?? 'bg-slate-400'}`}>
+                {s.icon ? <s.icon className="w-5 h-5" /> : s.label.charAt(0)}
+              </div>
               <div className="text-left">
                 <div className="text-xs text-slate-500">{s.label}</div>
                 <div className="text-lg font-semibold">{counts[s.key] ?? 0}</div>
@@ -124,7 +127,7 @@ export default function KhachTiemNangPage(){
           ))}
         </div>
 
-        <AdminTable headers={["Mã khách hàng", "Tên","Email","Điện thoại","Ghi chú","Trạng thái","Hành động"]} loading={loading} emptyText="Chưa có khách tiềm năng">
+        <AdminTable headers={["Mã khách hàng", "Tên", "Email", "Điện thoại", "Ghi chú", "Trạng thái", "Hành động"]} loading={loading} emptyText="Chưa có khách tiềm năng">
           {displayRows.map(r => (
             <tr key={r.id} className="border-t">
               <td className="px-4 py-3 text-left">{r.id}</td>

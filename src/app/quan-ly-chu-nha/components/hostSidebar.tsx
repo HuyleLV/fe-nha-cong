@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { LayoutDashboard, Home, PlusCircle, CalendarDays, LogOut, ChevronDown, Users, BarChart2, FileText, DollarSign } from "lucide-react";
 import type { User } from "@/type/user";
 
@@ -141,7 +142,7 @@ export default function HostSidebar() {
       if (parent) {
         if (openMenu !== parent.href) {
           setOpenMenu(parent.href);
-          try { localStorage.setItem(STORAGE_KEY, parent.href); } catch {}
+          try { localStorage.setItem(STORAGE_KEY, parent.href); } catch { }
         }
         return;
       }
@@ -156,31 +157,34 @@ export default function HostSidebar() {
     try {
       if (openMenu) localStorage.setItem(STORAGE_KEY, openMenu);
       else localStorage.removeItem(STORAGE_KEY);
-    } catch {}
+    } catch { }
   }, [openMenu]);
 
   return (
-    <aside className="w-64 bg-white text-slate-700 flex flex-col min-h-screen border-r border-slate-200 shadow-sm pt-5">
+    <aside className="w-64 bg-white text-slate-700 dark:bg-slate-900 dark:text-slate-300 flex flex-col min-h-screen border-r border-slate-200 dark:border-slate-800 shadow-sm pt-5">
       <div className="px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white grid place-items-center">
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <div className="leading-tight">
-            <h1 className="font-semibold text-slate-800">Chủ nhà</h1>
-            <p className="text-xs text-slate-500">Bảng điều khiển</p>
+            <h1 className="font-semibold text-slate-800 dark:text-slate-200">Chủ nhà</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Bảng điều khiển</p>
           </div>
         </div>
       </div>
 
       <div className="px-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <div className="h-9 w-9 rounded-full bg-emerald-600 text-white grid place-items-center text-sm font-medium">
             {initials}
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-medium text-slate-800 truncate">{info?.name ?? "Chủ nhà"}</div>
-            {info?.email && <div className="text-xs text-slate-500 truncate">{info.email}</div>}
+            <div className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{info?.name ?? "Chủ nhà"}</div>
+            {info?.email && <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{info.email}</div>}
+          </div>
+          <div className="ml-auto">
+            <ThemeSwitcher />
           </div>
         </div>
       </div>
@@ -194,19 +198,19 @@ export default function HostSidebar() {
           if (label === "Cài đặt chung") {
             sectionHeader = (
               <div key="__settings_header__" className="px-1 pt-2 pb-1">
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cài đặt</div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Cài đặt</div>
               </div>
             );
           } else if (label === "Báo cáo bất động sản") {
             sectionHeader = (
               <div key="__reports_header__" className="px-1 pt-2 pb-1">
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Báo cáo</div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Báo cáo</div>
               </div>
             );
           } else if (label === "Danh mục dữ liệu") {
             sectionHeader = (
               <div key="__operations_header__" className="px-1 pt-2 pb-1">
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Vận hành</div>
+                <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">Vận hành</div>
               </div>
             );
           }
@@ -219,42 +223,40 @@ export default function HostSidebar() {
               <React.Fragment key={href}>
                 {sectionHeader}
                 <div>
-                <button
-                  onClick={() => setOpenMenu(openMenu === href ? null : href)}
-                  className={`w-full group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                    active
-                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                  }`}
-                >
-                  {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
-                  <Icon className="w-4.5 h-4.5" />
-                  <span className="truncate">{label}</span>
-                  <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${openMenu === href ? "rotate-180" : ""}`} />
-                </button>
+                  <button
+                    onClick={() => setOpenMenu(openMenu === href ? null : href)}
+                    className={`w-full group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${active
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-900/50"
+                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
+                      }`}
+                  >
+                    {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                    <Icon className="w-4.5 h-4.5" />
+                    <span className="truncate">{label}</span>
+                    <ChevronDown className={`ml-auto w-4 h-4 transition-transform ${openMenu === href ? "rotate-180" : ""}`} />
+                  </button>
 
-                {openMenu === href && (
-                  <div className="mt-1 space-y-1">
-                    {children.map(({ href: chHref, label: chLabel, icon: ChIcon }) => {
-                      const childActive = pathname.startsWith(chHref);
-                      return (
-                        <Link
-                          key={chHref}
-                          href={chHref}
-                          className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${
-                            childActive
-                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                              : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                          }`}
-                        >
-                          {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
-                          <ChIcon className="w-4 h-4" />
-                          <span className="truncate">{chLabel}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
+                  {openMenu === href && (
+                    <div className="mt-1 space-y-1">
+                      {children.map(({ href: chHref, label: chLabel, icon: ChIcon }) => {
+                        const childActive = pathname.startsWith(chHref);
+                        return (
+                          <Link
+                            key={chHref}
+                            href={chHref}
+                            className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${childActive
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-900/50"
+                              : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
+                              }`}
+                          >
+                            {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                            <ChIcon className="w-4 h-4" />
+                            <span className="truncate">{chLabel}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </React.Fragment>
             );
@@ -265,11 +267,10 @@ export default function HostSidebar() {
               {sectionHeader}
               <Link
                 href={href}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                  itemActive
-                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                }`}
+                className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${itemActive
+                  ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-900/50"
+                  : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
+                  }`}
               >
                 {itemActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
                 <Icon className="w-4.5 h-4.5" />
@@ -280,12 +281,12 @@ export default function HostSidebar() {
         })}
       </nav>
 
-      
 
-      <div className="mt-auto p-4 border-t border-slate-200">
+
+      <div className="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
         <button
           onClick={onLogout}
-          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition cursor-pointer dark:border-slate-700 dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-900"
         >
           <LogOut className="w-4.5 h-4.5" />
           <span>Đăng xuất</span>

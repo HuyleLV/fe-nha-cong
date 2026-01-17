@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { House, LayoutDashboard, LocationEdit, LogOut, Newspaper, ParkingMeter, Users, ChevronDown, ChevronRight, MapPin, Landmark, Building2, CalendarDays, Briefcase, Home, BarChart2, FileText, DollarSign, PlusCircle, Video, Bell } from "lucide-react";
 import { Me } from "@/type/user";
 import { useServiceRequestsSocket } from '@/hooks/useServiceRequestsSocket';
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -35,7 +36,7 @@ export default function Sidebar() {
     try {
       const parent = menuItems.find((m: any) => Array.isArray((m as any).children) && (m as any).children.some((c: any) => pathname.startsWith(c.href)));
       if (parent) setOpenMenu(parent.href as string);
-    } catch (e) {}
+    } catch (e) { }
   }, [pathname, ready]);
 
   const initials = useMemo(() => {
@@ -53,9 +54,9 @@ export default function Sidebar() {
     { href: "/admin/users", label: "Quản lý Người dùng", icon: Users },
     { href: "/admin/moderation", label: "Kiểm duyệt", icon: CalendarDays },
     { href: "/admin/location", label: "Quản lý Địa Điểm", icon: LocationEdit },
-  { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
-  { href: "/admin/news", label: "Quản lý Tin tức", icon: Newspaper },
-  { href: "/admin/short-review", label: "Quản lý Short Review", icon: Video },
+    { href: "/admin/blog", label: "Quản lý Bài Viết", icon: Newspaper },
+    { href: "/admin/news", label: "Quản lý Tin tức", icon: Newspaper },
+    { href: "/admin/short-review", label: "Quản lý Short Review", icon: Video },
     { href: "/admin/jobs", label: "Quản lý Tuyển dụng", icon: Briefcase },
     { href: "/admin/partner", label: "Quản lý Đối Tác", icon: ParkingMeter },
     { href: "/admin/yeu-cau", label: "Quản lý Yêu cầu", icon: Bell },
@@ -136,6 +137,9 @@ export default function Sidebar() {
             <div className="text-sm font-medium text-slate-800 truncate">{info?.name ?? "Admin"}</div>
             {info?.email && <div className="text-xs text-slate-500 truncate">{info.email}</div>}
           </div>
+          <div className="ml-auto">
+            <ThemeSwitcher />
+          </div>
         </div>
       </div>
 
@@ -166,11 +170,10 @@ export default function Sidebar() {
                 <button
                   type="button"
                   onClick={() => setOpenMenu((v) => (v === href ? null : href))}
-                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
-                    groupActive
+                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${groupActive
                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                       : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-3">
                     {groupActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
@@ -189,11 +192,10 @@ export default function Sidebar() {
                         <Link
                           key={ch.href}
                           href={ch.href}
-                          className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${
-                            childActive
+                          className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${childActive
                               ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                               : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                          }`}
+                            }`}
                         >
                           {childActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
                           <ChIcon className="w-4 h-4" />
@@ -220,11 +222,10 @@ export default function Sidebar() {
                 <button
                   type="button"
                   onClick={() => setModerationOpen((v) => !v)}
-                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
-                    moderationOpen || groupActive
+                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${moderationOpen || groupActive
                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                       : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-3">
                     {(moderationOpen || groupActive) && (
@@ -249,11 +250,10 @@ export default function Sidebar() {
                           <Link
                             key={shref}
                             href={shref}
-                            className={`flex items-center gap-2 px-2 py-2 rounded transition text-sm ${
-                              subActive
+                            className={`flex items-center gap-2 px-2 py-2 rounded transition text-sm ${subActive
                                 ? "text-emerald-700 bg-white shadow-sm ring-1 ring-emerald-100"
                                 : "text-emerald-800/80 hover:bg-white hover:text-emerald-700"
-                            }`}
+                              }`}
                           >
                             <SIcon className="w-4 h-4" />
                             <span>{slabel}</span>
@@ -272,16 +272,15 @@ export default function Sidebar() {
             if (href === "/admin/users") {
               return (
                 <div key={href} className="space-y-1">
-                        <div className="px-1 pt-2 pb-1">
-                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quản lý Admin</div>
-                        </div>
+                  <div className="px-1 pt-2 pb-1">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quản lý Admin</div>
+                  </div>
                   <Link
                     href={href}
-                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                      active
+                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${active
                         ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                         : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                    }`}
+                      }`}
                   >
                     {active && (
                       <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
@@ -302,11 +301,10 @@ export default function Sidebar() {
                 )}
                 <Link
                   href={href}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${
-                    active
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition text-sm ${active
                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                       : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                  }`}
+                    }`}
                 >
                   {active && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
@@ -336,48 +334,46 @@ export default function Sidebar() {
             <div key={href} className="space-y-1">
               <>
                 <button
-                type="button"
-                onClick={() => setLocationOpen((v) => !v)}
-                className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${
-                  locationOpen || groupActive
-                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                    : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  {(locationOpen || groupActive) && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                  type="button"
+                  onClick={() => setLocationOpen((v) => !v)}
+                  className={`w-full group relative flex items-center justify-between px-3 py-2.5 rounded-md transition text-sm ${locationOpen || groupActive
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                    }`}
+                >
+                  <span className="flex items-center gap-3">
+                    {(locationOpen || groupActive) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />
+                    )}
+                    <Icon className="w-4.5 h-4.5" />
+                    <span className="truncate">{label}</span>
+                  </span>
+                  {locationOpen ? (
+                    <ChevronDown className="w-4 h-4 opacity-80" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 opacity-80" />
                   )}
-                  <Icon className="w-4.5 h-4.5" />
-                  <span className="truncate">{label}</span>
-                </span>
-                {locationOpen ? (
-                  <ChevronDown className="w-4 h-4 opacity-80" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 opacity-80" />
-                )}
-              </button>
+                </button>
                 {locationOpen && (
                   <div className="mt-1 space-y-1">
-                      {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
-                        const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
-                        return (
-                          <Link
-                            key={shref}
-                            href={shref}
-                            className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${
-                              subActive
-                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                                : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                    {subLinks.map(({ href: shref, label: slabel, Icon: SIcon }) => {
+                      const subActive = pathname === shref || pathname.startsWith(`${shref}/`);
+                      return (
+                        <Link
+                          key={shref}
+                          href={shref}
+                          className={`group relative flex items-center gap-3 pl-10 pr-3 py-2 rounded-md transition text-sm ${subActive
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                              : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
                             }`}
-                          >
-                            {subActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
-                            <SIcon className="w-4 h-4" />
-                            <span className="truncate">{slabel}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
+                        >
+                          {subActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-emerald-600" />}
+                          <SIcon className="w-4 h-4" />
+                          <span className="truncate">{slabel}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
               </>
             </div>

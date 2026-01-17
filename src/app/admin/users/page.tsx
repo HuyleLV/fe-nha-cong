@@ -35,7 +35,7 @@ function AdminUsersPage() {
     try {
       setLoading(true);
       const res = await userService.listAdminUsers({ page, limit });
-      setItems(res.data || []);
+      setItems(Array.isArray(res.data) ? res.data : []);
       setMeta(res.meta || {});
     } catch (e: any) {
       toast.error(e?.response?.data?.message || "Không tải được danh sách người dùng");
@@ -62,7 +62,7 @@ function AdminUsersPage() {
   const handleNext = () => page < totalPages && goto(page + 1);
 
   return (
-  <div className="mx-auto max-w-screen-2xl p-4">
+    <div className="mx-auto max-w-screen-2xl p-4">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-emerald-900">QUẢN LÝ NGƯỜI DÙNG</h1>
@@ -100,13 +100,12 @@ function AdminUsersPage() {
             <td className="px-4 py-3">{u.phone || "—"}</td>
             <td className="px-4 py-3">
               <span
-                className={`px-2 py-0.5 rounded text-sm capitalize ${
-                  u.role === "admin"
+                className={`px-2 py-0.5 rounded text-sm capitalize ${u.role === "admin"
                     ? "bg-red-100 text-red-700"
                     : u.role === "host"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-slate-200 text-slate-700"
-                }`}
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-slate-200 text-slate-700"
+                  }`}
               >
                 {u.role === 'host' ? 'host' : u.role}
               </span>
