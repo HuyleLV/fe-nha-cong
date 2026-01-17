@@ -10,8 +10,7 @@ COPY next.config.ts ./
 COPY postcss.config.mjs ./
 
 # Install all dependencies (including dev dependencies)
-# Prefer locked install; fall back to npm install if package-lock.json is not present
-RUN if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+RUN npm ci
 
 # Expose port
 EXPOSE 3000
