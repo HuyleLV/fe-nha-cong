@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useState } from 'react';
+import { apiUrl } from '@/utils/apiUrl';
 import { useSearchParams } from 'next/navigation';
 import RenderInvoiceTemplate from '@/components/invoices';
 import { toast } from 'react-toastify';
@@ -17,7 +18,7 @@ function PrintInvoiceInner() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/invoices/${encodeURIComponent(id)}`);
+  const res = await fetch(apiUrl(`/api/invoices/${encodeURIComponent(id)}`));
         if (!res.ok) throw new Error('Không tải được hóa đơn');
         const json = await res.json();
         const data = json?.data ?? json;
