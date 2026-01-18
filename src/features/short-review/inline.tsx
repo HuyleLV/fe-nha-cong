@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { apartmentService } from "@/services/apartmentService";
+import { asImageSrc, asMediaSrc } from '@/utils/imageUrl';
 
   const isVideoUrl = (u?: string | null) => {
   if (!u) return false;
@@ -38,18 +39,19 @@ export default function ShortReviewInline({ limit = 5 }: { limit?: number }) {
     (async () => {
       setLoading(true);
       try {
-        const res = await apartmentService.getAll({ page: 1, limit: 24 });
+        const res = await apartmentService.getAll({ page: 1, limit: limit, shortOnly: true });
         const rows = (res.items || [])
-          .filter((a: any) => !!a.shortVideoUrl || !!a.shortVideoThumb || !!a.short_thumb)
+          .map((a: any) => ({ apt: a, videoUrl: findShortVideo(a) || null, thumb: a.shortVideoThumb ?? a.short_thumb ?? null }))
+          .filter((r: any) => !!r.videoUrl)
           .sort((a: any, b: any) => {
-            const ta = new Date(a.createdAt || a.created_at || 0).getTime() || 0;
-            const tb = new Date(b.createdAt || b.created_at || 0).getTime() || 0;
+            const ta = new Date(a.apt.createdAt || a.apt.created_at || 0).getTime() || 0;
+            const tb = new Date(b.apt.createdAt || b.apt.created_at || 0).getTime() || 0;
             if (tb !== ta) return tb - ta;
-            return (b.id || 0) - (a.id || 0);
+            return (b.apt.id || 0) - (a.apt.id || 0);
           })
           .slice(0, limit)
-          .map((a: any) => ({ apt: a, videoUrl: a.shortVideoUrl, thumb: a.shortVideoThumb ?? a.short_thumb ?? null }));
-        if (mounted) setItems(rows as any[]);
+          .map((r: any) => ({ apt: r.apt, videoUrl: r.videoUrl, thumb: r.thumb }));
+  if (mounted) setItems(rows.map(r => ({ apt: r.apt, videoUrl: asMediaSrc(r.videoUrl) ?? null, thumb: asImageSrc(r.thumb) ?? null })) as any[]);
       } catch (e) {
         // ignore
       } finally {
