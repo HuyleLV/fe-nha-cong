@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { locationService } from "@/services/locationService";
 import { apartmentService } from "@/services/apartmentService";
+import { asImageSrc, asMediaSrc } from '@/utils/imageUrl';
 import Link from "next/link";
 
 type LocationItem = { id: number; name: string; slug: string; level?: string };
@@ -57,29 +58,48 @@ export default function ShortReviewFeature() {
   }, []);
 
   useEffect(() => {
+    // fetch when activeSlug or page changes
     fetchVideos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSlug, page]);
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setPage(1);
   }, [activeSlug]);
+
+  const [meta, setMeta] = useState<{ total: number; page: number; limit: number; pageCount: number } | null>(null);
 
   async function fetchVideos() {
     setLoading(true);
     setErr(null);
     try {
-      const params: any = { page: 1, limit: 200 };
+      const params: any = { page, limit: perPage, shortOnly: true };
       if (activeSlug) params.locationSlug = activeSlug;
-      const { items } = await apartmentService.getAll(params);
+      const { items, meta: m } = await apartmentService.getAll(params);
       const cand = (items || [])
-        .filter((a: any) => !!a.shortVideoUrl)
+        // prefer explicit short fields but fallback to other video-like URLs
+        .map((a: any) => ({
+          apt: a,
+          videoUrl: findShortVideo(a) || null,
+          thumb: (a.shortVideoThumb ?? a.short_thumb ?? (Array.isArray(a.images) ? a.images.find((u: string) => !isVideoUrl(u)) : null)) || null,
+        }))
+        .filter((x: any) => !!x.videoUrl)
         .sort((a: any, b: any) => {
-          const ta = new Date(a.createdAt || a.created_at || 0).getTime() || 0;
-          const tb = new Date(b.createdAt || b.created_at || 0).getTime() || 0;
+          const ta = new Date(a.apt.createdAt || a.apt.created_at || 0).getTime() || 0;
+          const tb = new Date(b.apt.createdAt || b.apt.created_at || 0).getTime() || 0;
           if (tb !== ta) return tb - ta;
-          return (b.id || 0) - (a.id || 0);
-        })
-  .map((a: any) => ({ apt: a, videoUrl: a.shortVideoUrl, thumb: a.shortVideoThumb ?? a.short_thumb ?? null }));
-      setAllVideos(cand);
-      // reset to first page when filter changes
-      setPage(1);
+          return (b.apt.id || 0) - (a.apt.id || 0);
+        });
+
+  setAllVideos(cand);
+  // map backend PaginationMeta { page, limit, totalPages, total } to local shape with pageCount
+      if (m) {
+        const total = (m as any).total ?? 0;
+        const limitVal = (m as any).limit ?? perPage;
+        const pageCountVal = (m as any).totalPages ?? Math.max(1, Math.ceil(total / limitVal));
+        setMeta({ total, page: (m as any).page ?? page, limit: limitVal, pageCount: pageCountVal });
+      }
     } catch (e: any) {
       console.error(e);
       setErr(e?.message || "Lỗi tải dữ liệu");
@@ -125,23 +145,24 @@ export default function ShortReviewFeature() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {(allVideos.slice((page - 1) * perPage, page * perPage)).map((vItem: any) => {
+    {allVideos.map((vItem: any) => {
           const a = vItem.apt;
           const v = vItem.videoUrl;
           const title = a.title || `${a.buildingName || ""} - ${a.roomCode || ""}`;
-          const poster = a.shortVideoThumb ?? a.short_thumb ?? (a.coverImageUrl || (Array.isArray(a.images) ? a.images.find((u: string) => !isVideoUrl(u)) : null) || '');
+          const rawPoster = a.shortVideoThumb ?? a.short_thumb ?? (a.coverImageUrl || (Array.isArray(a.images) ? a.images.find((u: string) => !isVideoUrl(u)) : null) || '');
+          const poster = asImageSrc(rawPoster) ?? '';
           const address = a.addressPath || a.locationName || '';
           const priceText = a?.rentPrice ? `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Math.round(a.rentPrice))} đ/tháng` : '';
           return (
             <div key={a.id} className="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden">
               <button
-                onClick={() => { setSelected({ videoUrl: v, apt: a }); setOpen(true); }}
+                onClick={() => { setSelected({ videoUrl: asMediaSrc(v) ?? null, apt: a }); setOpen(true); }}
                 className="relative w-full block text-left group"
               >
                 <div className="relative w-full" style={{ paddingTop: '177.78%' }}>
                   {poster ? (
-                    <img src={poster} alt={title} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
+                      <img src={poster} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white">No preview</div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -166,11 +187,11 @@ export default function ShortReviewFeature() {
         })}
       </div>
       {/* Pagination */}
-      {allVideos.length > perPage && (
+      {meta && meta.pageCount > 1 && (
         <div className="mt-6 flex items-center justify-center gap-3">
           <button className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</button>
-          <div className="text-sm text-slate-600">{page} / {Math.max(1, Math.ceil(allVideos.length / perPage))}</div>
-          <button className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50" onClick={() => setPage(p => Math.min(Math.ceil(allVideos.length / perPage), p + 1))} disabled={page >= Math.ceil(allVideos.length / perPage)}>Next</button>
+          <div className="text-sm text-slate-600">{page} / {meta.pageCount}</div>
+          <button className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50" onClick={() => setPage(p => Math.min(meta.pageCount, p + 1))} disabled={page >= meta.pageCount}>Next</button>
         </div>
       )}
       {/* Modal player */}
