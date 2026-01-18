@@ -37,7 +37,7 @@ export default function BuildingFormPage() {
                 if (!isCreate) {
                     const building = await buildingService.getById(Number(id));
                     setValue("name", building.name);
-                    setValue("address", building.address);
+                    setValue("address", building.address ?? "");
                     setValue("slug", building.slug);
                     setValue("locationId", building.locationId ?? undefined);
                     setValue("description", building.description ?? "");

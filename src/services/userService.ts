@@ -6,6 +6,7 @@ export interface UserProfile {
     name: string;
     phone: string;
     avatarUrl?: string | null;
+    role: string;
     // other fields as used by FE
 }
 
