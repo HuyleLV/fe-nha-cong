@@ -26,13 +26,13 @@ type Floor = {
 function statusColor(s: Room["status"]) {
   switch (s) {
     case "vacant":
-      return "bg-emerald-100 border-emerald-300 text-emerald-700";
+      return "bg-emerald-100 border-emerald-300 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-700 dark:text-emerald-200";
     case "occupied":
-      return "bg-rose-100 border-rose-300 text-rose-700";
+      return "bg-rose-100 border-rose-300 text-rose-700 dark:bg-rose-900/40 dark:border-rose-700 dark:text-rose-200";
     case "reserved":
-      return "bg-amber-100 border-amber-300 text-amber-700";
+      return "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/40 dark:border-amber-700 dark:text-amber-200";
     case "maintenance":
-      return "bg-slate-100 border-slate-300 text-slate-700";
+      return "bg-slate-100 border-slate-300 text-slate-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300";
   }
 }
 
@@ -112,56 +112,66 @@ export default function FloorMapPage() {
     <div className="max-w-screen-2xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Sơ đồ căn hộ</h1>
-          <p className="text-sm text-slate-600">Xem trạng thái phòng theo từng tầng và chi tiết từng phòng</p>
+          <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">Sơ đồ căn hộ</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Xem trạng thái phòng theo từng tầng và chi tiết từng phòng</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/quan-ly-chu-nha" className="text-sm text-emerald-700 hover:underline">Quay về Bảng tin</Link>
+          <Link href="/quan-ly-chu-nha" className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">Quay về Bảng tin</Link>
         </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm text-slate-600 mb-1">Chọn tòa nhà</label>
-        <select className="h-10 rounded-lg border border-slate-300 px-3" value={selectedBuildingId ?? ""} onChange={async (e) => {
-          const v = e.target.value;
-          const parsed = v === "" ? undefined : Number(v);
-          setSelectedBuildingId(parsed ?? null);
-          await loadApartmentsForBuilding(parsed);
-        }}>
+      <div className="mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chọn tòa nhà</label>
+        <select
+          className="h-10 w-full max-w-md rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+          value={selectedBuildingId ?? ""}
+          onChange={async (e) => {
+            const v = e.target.value;
+            const parsed = v === "" ? undefined : Number(v);
+            setSelectedBuildingId(parsed ?? null);
+            await loadApartmentsForBuilding(parsed);
+          }}
+        >
           <option value="">-- Tất cả / Không thuộc tòa --</option>
-          {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id}-${String((b as any).name ?? (b as any).title ?? b.id)}`}</option>))}
+          {buildings.map(b => (<option key={b.id} value={String(b.id)}>{`${b.id} - ${(b as any).name ?? ''}`}</option>))}
         </select>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-4">
           {loading ? (
-            <div className="text-sm text-slate-500">Đang tải sơ đồ…</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 text-center py-10">Đang tải sơ đồ…</div>
           ) : floors.length === 0 ? (
-            <div className="text-sm text-slate-500">Không tìm thấy căn hộ nào.</div>
+            <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+              <p className="text-slate-500 dark:text-slate-400">Không tìm thấy căn hộ nào.</p>
+            </div>
           ) : floors.map((floor) => (
             <Panel key={floor.id} title={floor.name} className="!px-4">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                 {floor.rooms.map((room) => (
                   <div
                     key={room.id}
-                    className={`w-full text-left p-3 rounded-lg border ${statusColor(room.status)} hover:shadow-lg transition relative`}
+                    className={`w-full text-left p-3 rounded-lg border ${statusColor(room.status)} hover:shadow-lg transition relative group`}
                   >
-                    <div className="absolute top-10 right-2 px-2 py-0.5 rounded-full text-xs font-medium bg-white/70">
-                      {room.status === 'vacant' ? 'Trống' : room.status === 'occupied' ? 'Đã thuê' : room.status === 'reserved' ? 'Đang cọc' : 'Bảo trì'}
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/50 dark:bg-black/20 backdrop-blur-sm">
+                      {room.status === 'vacant' ? 'Trống' : room.status === 'occupied' ? 'Đã thuê' : room.status === 'reserved' ? 'Cọc' : 'Bảo trì'}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium">Phòng {room.name}</div>
-                      <div className="text-xs">{room.beds} giường</div>
+
+                    <div className="mt-4 mb-2">
+                      <div className="font-bold text-lg mb-0.5">{room.name}</div>
+                      <div className="text-xs opacity-80">{room.beds} giường</div>
                     </div>
-                    <div className="mt-2 text-sm text-slate-700">{typeof room.price === 'number' ? fNumber(room.price) : room.price ? String(room.price) : ''} đ</div>
+
+                    <div className="font-medium text-sm">
+                      {typeof room.price === 'number' ? fNumber(room.price) : room.price ? String(room.price) : '0'}
+                      <span className="text-xs opacity-70 font-normal"> đ</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </Panel>
           ))}
         </div>
-      </div>
-    </div>
+      </div>    </div>
   );
 }

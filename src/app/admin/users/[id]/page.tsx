@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { Save, CheckCircle2, Info, ChevronRight } from "lucide-react";
+import { Save, CheckCircle2, Info, ChevronRight, User as UserIcon, Calendar, MapPin, CreditCard, Lock, Key, Shield } from "lucide-react";
+import dayjs from "dayjs";
 
 import { userService } from "@/services/userService";
 import type { User } from "@/type/user";
@@ -16,19 +17,26 @@ type FormValues = {
   phone?: string;
   password?: string;
   role: User["role"]; // UI role: customer | host | admin
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string; // YYYY-MM-DD
+  address?: string;
+  idCardNumber?: string;
+  idIssueDate?: string;
+  idIssuePlace?: string;
+  note?: string;
 };
 
 const inputCls =
   "h-10 w-full rounded-lg border border-slate-300/80 dark:border-slate-600 focus:border-emerald-500 focus:ring-emerald-500 px-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 transition-colors";
 const textMuted = "text-sm text-slate-600 dark:text-slate-300";
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
-    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
-      <ChevronRight className="w-4 h-4 text-slate-400" />
+const Section = ({ title, icon: Icon, children }: { title: string; icon?: any; children: React.ReactNode }) => (
+  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors overflow-hidden">
+    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/50">
+      {Icon && <Icon className="w-4 h-4 text-emerald-600" />}
       <h3 className="font-semibold text-slate-700 dark:text-slate-200">{title}</h3>
     </div>
-    <div className="p-4">{children}</div>
+    <div className="p-5">{children}</div>
   </div>
 );
 
@@ -37,6 +45,7 @@ export default function AdminUserEditPage() {
   const router = useRouter();
   const isEdit = useMemo(() => id !== "create", [id]);
   const [loading, setLoading] = useState<boolean>(!!isEdit);
+  const [userData, setUserData] = useState<User | null>(null);
 
   const {
     register,
@@ -51,6 +60,7 @@ export default function AdminUserEditPage() {
       phone: "",
       password: "",
       role: "customer",
+      gender: "other", // default
     },
   });
 
@@ -61,6 +71,7 @@ export default function AdminUserEditPage() {
     phone: "Số điện thoại",
     password: "Mật khẩu",
     role: "Quyền",
+    idCardNumber: "Số CCCD",
   };
 
   useEffect(() => {
@@ -68,6 +79,7 @@ export default function AdminUserEditPage() {
     (async () => {
       try {
         const u = await userService.getAdminUser(Number(id));
+        setUserData(u);
         const uiRole = u.role as User['role'];
         reset({
           name: u.name || "",
@@ -75,6 +87,13 @@ export default function AdminUserEditPage() {
           phone: u.phone || "",
           password: "",
           role: uiRole,
+          gender: u.gender as any,
+          dateOfBirth: u.dateOfBirth ? dayjs(u.dateOfBirth).format("YYYY-MM-DD") : "",
+          address: u.address ?? "",
+          idCardNumber: u.idCardNumber ?? "",
+          idIssueDate: u.idIssueDate ? dayjs(u.idIssueDate).format("YYYY-MM-DD") : "",
+          idIssuePlace: u.idIssuePlace ?? "",
+          note: u.note ?? "",
         });
       } catch (e: any) {
         toast.error(e?.response?.data?.message || "Không tải được người dùng");
@@ -127,6 +146,13 @@ export default function AdminUserEditPage() {
         phone: values.phone?.trim() || undefined,
         password: values.password?.trim() || undefined,
         role: backendRole,
+        gender: values.gender,
+        dateOfBirth: values.dateOfBirth ? new Date(values.dateOfBirth) : null,
+        address: values.address,
+        idCardNumber: values.idCardNumber,
+        idIssueDate: values.idIssueDate ? new Date(values.idIssueDate) : null,
+        idIssuePlace: values.idIssuePlace,
+        note: values.note,
       };
       if (!payload.email) {
         toast.error("Vui lòng nhập email");
@@ -154,10 +180,10 @@ export default function AdminUserEditPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-5xl">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 transition-colors">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Save className="w-5 h-5 text-emerald-600" />
             <div>
@@ -179,7 +205,7 @@ export default function AdminUserEditPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Spinner /> <span>Đang lưu…</span>
+                  <Spinner className="w-4 h-4 border-white" /> <span>Đang lưu…</span>
                 </>
               ) : (
                 <>
@@ -201,9 +227,10 @@ export default function AdminUserEditPage() {
 
       {/* Body */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+        {/* Left Col */}
         <div className="lg:col-span-2 space-y-6">
-          <Section title="Thông tin cơ bản">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Section title="Thông tin cá nhân" icon={UserIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className={textMuted}>Họ tên (tuỳ chọn)</label>
                 <input className={inputCls} placeholder="Nguyễn Văn A" {...register("name")} />
@@ -222,28 +249,103 @@ export default function AdminUserEditPage() {
                 <input className={inputCls} placeholder="0901234567" {...register("phone")} />
               </div>
               <div>
-                <label className={textMuted}>{isEdit ? "Đổi mật khẩu (nếu nhập)" : "Mật khẩu (tuỳ chọn)"}</label>
-                <input type="password" className={inputCls} placeholder="••••••••" {...register("password")} />
+                <label className={textMuted}>Giới tính</label>
+                <select className={inputCls} {...register("gender")}>
+                  <option value="">-- Chọn --</option>
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+              <div>
+                <label className={textMuted}>Ngày sinh</label>
+                <input type="date" className={inputCls} {...register("dateOfBirth")} />
               </div>
             </div>
+          </Section>
+
+          <Section title="Giấy tờ tùy thân (CCCD/CMND)" icon={CreditCard}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className={textMuted}>Số CCCD</label>
+                <input className={inputCls} {...register("idCardNumber")} placeholder="Số căn cước..." />
+              </div>
+              <div>
+                <label className={textMuted}>Ngày cấp</label>
+                <input type="date" className={inputCls} {...register("idIssueDate")} />
+              </div>
+              <div className="col-span-2">
+                <label className={textMuted}>Nơi cấp</label>
+                <input className={inputCls} {...register("idIssuePlace")} placeholder="Cục CS QLHC..." />
+              </div>
+            </div>
+            {/* Images Display */}
+            {userData && (userData.idCardFront || userData.idCardBack) && (
+              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-700 aspect-video flex items-center justify-center relative overflow-hidden">
+                  {userData.idCardFront ? (
+                    <img src={userData.idCardFront} alt="Mặt trước" className="w-full h-full object-contain" />
+                  ) : <span className="text-xs text-slate-400">Chưa có ảnh mặt trước</span>}
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-700 aspect-video flex items-center justify-center relative overflow-hidden">
+                  {userData.idCardBack ? (
+                    <img src={userData.idCardBack} alt="Mặt sau" className="w-full h-full object-contain" />
+                  ) : <span className="text-xs text-slate-400">Chưa có ảnh mặt sau</span>}
+                </div>
+              </div>
+            )}
           </Section>
         </div>
 
+        {/* Right Col */}
         <div className="space-y-6">
-          <Section title="Quyền & trạng thái">
-            <div className="space-y-3">
+          <Section title="Quyền & Bảo mật" icon={Shield}>
+            <div className="space-y-4">
               <div>
-                <label className={textMuted}>Quyền</label>
+                <label className={textMuted}>Quyền truy cập</label>
                 <select className={inputCls} {...register("role", { required: true })}>
-                  <option value="customer">customer</option>
-                  <option value="host">host</option>
-                  <option value="admin">admin</option>
+                  <option value="customer">Customer (Cư dân)</option>
+                  <option value="host">Host (Chủ nhà)</option>
+                  <option value="admin">Admin (Quản trị)</option>
                 </select>
                 {errors.role && <p className="text-red-600 text-sm mt-1">Vui lòng chọn quyền</p>}
+                <p className="text-xs text-slate-500 mt-1">
+                  {/* Description based on selection could go here */}
+                  Admin: Quyền cao nhất. Host: Quản lý nhà. Customer: Tìm phòng/Thuê.
+                </p>
               </div>
-              <p className="text-xs text-slate-500">Quyền "host" dành cho Chủ nhà có thể đăng tin và quản lý căn hộ.</p>
+
+              <div>
+                <label className={textMuted}>{isEdit ? "Đổi mật khẩu" : "Mật khẩu"}</label>
+                <input type="password" className={inputCls} placeholder="••••••••" {...register("password")} />
+                {isEdit && <p className="text-xs text-slate-400 mt-1">Để trống nếu không muốn đổi.</p>}
+              </div>
             </div>
           </Section>
+
+          <Section title="Địa chỉ & Ghi chú" icon={MapPin}>
+            <div className="space-y-4">
+              <div>
+                <label className={textMuted}>Địa chỉ thường trú</label>
+                <textarea className={`${inputCls} h-24 py-2`} {...register("address")} placeholder="Địa chỉ hiện tại..." />
+              </div>
+              <div>
+                <label className={textMuted}>Ghi chú nội bộ</label>
+                <textarea className={`${inputCls} h-32 py-2`} {...register("note")} placeholder="Ghi chú về người dùng này..." />
+              </div>
+            </div>
+          </Section>
+
+          {isEdit && userData && (
+            <div className="p-5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20 text-xs text-slate-500">
+              <div className="flex justify-between mb-2">
+                <span>ID:</span> <span className="font-mono">#{userData.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Created:</span> <span>{dayjs(userData.createdAt).format("DD/MM/YYYY HH:mm")}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
